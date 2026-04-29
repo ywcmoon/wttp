@@ -275,13 +275,27 @@ body {
     }
 }
 
-.modal-content-value {
-    padding: 12px;
-    background: #f5f7fa;
+.form-editor {
+    min-height: 120px;
+    background: #fff;
     border-radius: 4px;
     border: 1px solid #e4e7ed;
-    color: #303133;
-    word-break: break-word;
+}
+
+.form-editor .ql-toolbar {
+    border: none;
+    border-bottom: 1px solid #e4e7ed;
+    border-radius: 4px 4px 0 0;
+}
+
+.form-editor .ql-container {
+    border: none;
+    font-size: 14px;
+    min-height: 80px;
+}
+
+.form-editor .ql-editor {
+    min-height: 80px;
     line-height: 1.6;
 }
 

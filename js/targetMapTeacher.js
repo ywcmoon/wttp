@@ -358,15 +358,6 @@
 
         const centerX = knowledgeCanvas.clientWidth / 2;
 
-        graphNodes.push({
-            id: 'ability-' + ability.id,
-            name: ability.name,
-            x: centerX,
-            y: 60,
-            type: 'root',
-            hasChildren: true
-        });
-
         const knowledgeNodes = findKnowledgeNodes(tree, ability.knowledgeIds);
         const spacing = Math.min(180, (knowledgeCanvas.clientWidth - 100) / Math.max(knowledgeNodes.length, 1));
         const startX = centerX - (knowledgeNodes.length - 1) * spacing / 2;
@@ -378,12 +369,10 @@
                 id: nodeId,
                 name: kn.name,
                 x: startX + i * spacing,
-                y: 200,
+                y: 60,
                 type: 'knowledge',
-                hasChildren: hasChildren,
-                parentId: 'ability-' + ability.id
+                hasChildren: hasChildren
             });
-            graphLinks.push({ source: 'ability-' + ability.id, target: nodeId });
 
             if (hasChildren) {
                 const childSpacing = Math.min(130, spacing / Math.max(kn.children.length, 1));
@@ -394,7 +383,7 @@
                         id: childId,
                         name: child.name,
                         x: childStartX + j * childSpacing,
-                        y: 340,
+                        y: 200,
                         type: 'child',
                         hasChildren: false,
                         parentId: nodeId
@@ -483,7 +472,7 @@
             const target = graphNodes.find(n => n.id === link.target);
             if (!source || !target) return;
 
-            const sourceR = source.type === 'root' ? 28 : 22;
+            const sourceR = source.type === 'knowledge' ? 22 : 18;
             const targetR = target.type === 'child' ? 18 : 22;
 
             const line = document.createElementNS(svgNS, 'path');
@@ -514,8 +503,8 @@
             g.setAttribute('transform', 'translate(' + node.x + ',' + node.y + ')');
             g.style.cursor = 'grab';
 
-            const r = node.type === 'root' ? 28 : node.type === 'knowledge' ? 22 : 18;
-            const fillColor = node.type === 'root' ? '#3a8bff' : node.type === 'knowledge' ? '#67c23a' : '#e6a23c';
+            const r = node.type === 'knowledge' ? 22 : 18;
+            const fillColor = node.type === 'knowledge' ? '#67c23a' : '#e6a23c';
 
             const shadow = document.createElementNS(svgNS, 'circle');
             shadow.setAttribute('cx', '2');
@@ -538,17 +527,17 @@
             nameText.setAttribute('y', '1');
             nameText.setAttribute('text-anchor', 'middle');
             nameText.setAttribute('dominant-baseline', 'middle');
-            nameText.setAttribute('font-size', node.type === 'root' ? '13' : '11');
+            nameText.setAttribute('font-size', node.type === 'knowledge' ? '12' : '11');
             nameText.setAttribute('fill', '#fff');
             nameText.setAttribute('font-weight', '600');
             nameText.setAttribute('style', 'pointer-events: none;');
 
             var nameLen = node.name.length;
-            var maxInnerLen = node.type === 'root' ? 4 : 3;
+            var maxInnerLen = node.type === 'knowledge' ? 3 : 2;
             if (nameLen <= maxInnerLen) {
                 nameText.textContent = node.name;
             } else {
-                var truncLen = node.type === 'root' ? 3 : 2;
+                var truncLen = node.type === 'knowledge' ? 2 : 2;
                 nameText.textContent = node.name.substring(0, truncLen) + '…';
             }
             g.appendChild(nameText);

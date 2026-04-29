@@ -1,4 +1,4 @@
-﻿
+
 /**
  * ======================= 问题图谱核心功能 =======================
  *
@@ -407,9 +407,44 @@
      */
     function bezier(x1, y1, x2, y2) {
         const cx = (x1 + x2) / 2;
-        // 完全水平连线在部分浏览器下会导致渐变描边不可见，给控制点一个极小弯曲量避免零高度包围盒
         const bend = Math.abs(y1 - y2) < 0.1 ? 0.5 : 0;
         return `M ${x1} ${y1} C ${cx} ${y1 + bend}, ${cx} ${y2 - bend}, ${x2} ${y2}`;
+    }
+
+    function getFoldedBlockCoord(blockId, pointType) {
+        const svgRect = svg.getBoundingClientRect();
+        const originalBlock = document.getElementById(blockId);
+        if (originalBlock && !originalBlock.classList.contains('original-hidden') && originalBlock.offsetParent) {
+            const blockRect = originalBlock.getBoundingClientRect();
+            if (pointType === 'start') {
+                return { x: blockRect.right - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+            } else {
+                return { x: blockRect.left - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+            }
+        }
+
+        const foldedBlock = document.querySelector(`.folded-block[data-source-id="${blockId}"]`);
+        if (foldedBlock) {
+            const foldGroup = foldedBlock.closest('.fold-group');
+            if (foldGroup) {
+                const groupRect = foldGroup.getBoundingClientRect();
+                if (pointType === 'start') {
+                    return { x: groupRect.right - svgRect.left, y: groupRect.top + groupRect.height / 2 - svgRect.top };
+                } else {
+                    return { x: groupRect.left - svgRect.left, y: groupRect.top + groupRect.height / 2 - svgRect.top };
+                }
+            }
+            const blockRect = foldedBlock.getBoundingClientRect();
+            if (pointType === 'start') {
+                return { x: blockRect.right - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+            } else {
+                return { x: blockRect.left - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+            }
+        }
+
+        const info = svgConnectorPoints.get(`${blockId}-${pointType}`);
+        if (info) return getSvgPointCoord(`${blockId}-${pointType}`);
+        return { x: 0, y: 0 };
     }
 
     // ==================== 连接关系查询 ====================
@@ -573,66 +608,49 @@
 
                 if (!startInvolved && !endInvolved) return;
 
-                const sbHidden = startBlock && startBlock.classList.contains('original-hidden');
-                const ebHidden = endBlock && endBlock.classList.contains('original-hidden');
-
-                // 只保留两种情况：
-                // 1. 起点是A卡片，终点是B层第一层
-                // 2. 起点是X层第一层，终点是Y层第一层（相邻层级）
                 let shouldDraw = false;
-                const startLevel = startBlock ? startBlock.id[0] : '1';
-                const endLevel = endBlock ? endBlock.id[0] : '2';
 
-                if (startBlock === aBlock) {
-                    // A层出发的连线，只保留到B层第一层的连线
-                    const bFirstBlock = levelFirstBlocks.get('b');
-
-                    if (bFirstBlock && endBlock === bFirstBlock) {
-                        shouldDraw = true;
-                    }
-                } else {
-                    // 相邻层级之间，只保留从一层第一层到另一层第一层的连线
+                if (startBlock === aBlock && endInvolved) {
+                    shouldDraw = true;
+                } else if (startInvolved && endInvolved) {
+                    const startLevel = startBlock ? startBlock.id[0] : '1';
+                    const endLevel = endBlock ? endBlock.id[0] : '2';
                     const isAdjacentLevel = (endLevel.charCodeAt(0) - startLevel.charCodeAt(0)) === 1;
-                    const startIsFirst = startBlock === levelFirstBlocks.get(startLevel);
-                    const endIsFirst = endBlock === levelFirstBlocks.get(endLevel);
-
-                    if (isAdjacentLevel && startIsFirst && endIsFirst) {
+                    if (isAdjacentLevel) {
                         shouldDraw = true;
                     }
                 }
 
                 if (!shouldDraw) return;
 
-                const startElement = svgConnectorPoints.get(`${startBlock.id}-start`)?.element;
-                const endElement = svgConnectorPoints.get(`${endBlock.id}-end`)?.element;
+                const s = getFoldedBlockCoord(startBlock.id, 'start');
+                const e = getFoldedBlockCoord(endBlock.id, 'end');
 
-                if (startElement && endElement) {
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                if (s.x === 0 && s.y === 0 && e.x === 0 && e.y === 0) return;
 
-                    const startLevelNum = startBlock ? startBlock.classList[1].replace('level-', '') : '1';
-                    const endLevelNum = endBlock ? endBlock.classList[1].replace('level-', '') : '2';
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-                    let lineClass = 'fold-group-line';
-                    if (startLevelNum === '1' && endLevelNum === '2') {
-                        lineClass += ' level-1-to-level-2';
-                    } else if (startLevelNum === '2' && endLevelNum === '3') {
-                        lineClass += ' level-2-to-level-3';
-                    } else if (startLevelNum === '3' && endLevelNum === '4') {
-                        lineClass += ' level-3-to-level-4';
-                    } else if (startLevelNum === '4' && endLevelNum === '5') {
-                        lineClass += ' level-4-to-level-5';
-                    } else {
-                        lineClass += ` level-${startLevelNum}-to-level-${endLevelNum}`;
-                    }
+                const startLevelNum = startBlock ? startBlock.classList[1].replace('level-', '') : '1';
+                const endLevelNum = endBlock ? endBlock.classList[1].replace('level-', '') : '2';
 
-                    line.setAttribute('class', lineClass);
-                    line.setAttribute('style', 'visibility: visible;');
-                    const s = getPointCoord(startElement);
-                    const e = getPointCoord(endElement);
-                    line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
-                    svg.insertBefore(line, connectorGroup);
-                    foldGroupLines.set(`${conn.id}-folded-${aBlock.id}`, line);
+                let lineClass = 'fold-group-line';
+                if (startLevelNum === '1' && endLevelNum === '2') {
+                    lineClass += ' level-1-to-level-2';
+                } else if (startLevelNum === '2' && endLevelNum === '3') {
+                    lineClass += ' level-2-to-level-3';
+                } else if (startLevelNum === '3' && endLevelNum === '4') {
+                    lineClass += ' level-3-to-level-4';
+                } else if (startLevelNum === '4' && endLevelNum === '5') {
+                    lineClass += ' level-4-to-level-5';
+                } else {
+                    lineClass += ` level-${startLevelNum}-to-level-${endLevelNum}`;
                 }
+
+                line.setAttribute('class', lineClass);
+                line.setAttribute('style', 'visibility: visible;');
+                line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
+                svg.insertBefore(line, connectorGroup);
+                foldGroupLines.set(`${conn.id}-folded-${aBlock.id}`, line);
             });
 
             // 智能堆叠连接：如果相邻层级第一层之间没有直接连接，则创建一条
@@ -661,36 +679,34 @@
                     });
 
                     if (!hasDirectConnection) {
-                        const startElement = svgConnectorPoints.get(`${firstCurrentBlock.id}-start`)?.element;
-                        const endElement = svgConnectorPoints.get(`${firstNextBlock.id}-end`)?.element;
+                        const s = getFoldedBlockCoord(firstCurrentBlock.id, 'start');
+                        const e = getFoldedBlockCoord(firstNextBlock.id, 'end');
 
-                        if (startElement && endElement) {
-                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        if (s.x === 0 && s.y === 0 && e.x === 0 && e.y === 0) continue;
 
-                            const startLevel = firstCurrentBlock ? firstCurrentBlock.classList[1].replace('level-', '') : '1';
-                            const endLevel = firstNextBlock ? firstNextBlock.classList[1].replace('level-', '') : '1';
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-                            let lineClass = 'fold-group-line';
-                            if (startLevel === '1' && endLevel === '2') {
-                                lineClass += ' level-1-to-level-2';
-                            } else if (startLevel === '2' && endLevel === '3') {
-                                lineClass += ' level-2-to-level-3';
-                            } else if (startLevel === '3' && endLevel === '4') {
-                                lineClass += ' level-3-to-level-4';
-                            } else if (startLevel === '4' && endLevel === '5') {
-                                lineClass += ' level-4-to-level-5';
-                            } else {
-                                lineClass += ` level-${startLevel}-to-level-${endLevel}`;
-                            }
+                        const startLevel = firstCurrentBlock ? firstCurrentBlock.classList[1].replace('level-', '') : '1';
+                        const endLevel = firstNextBlock ? firstNextBlock.classList[1].replace('level-', '') : '1';
 
-                            line.setAttribute('class', lineClass);
-                            line.setAttribute('style', 'visibility: visible;');
-                            const s = getPointCoord(startElement);
-                            const e = getPointCoord(endElement);
-                            line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
-                            svg.insertBefore(line, connectorGroup);
-                            foldGroupLines.set(`${firstCurrentBlock.id}-${firstNextBlock.id}-smart-${aBlock.id}`, line);
+                        let lineClass = 'fold-group-line';
+                        if (startLevel === '1' && endLevel === '2') {
+                            lineClass += ' level-1-to-level-2';
+                        } else if (startLevel === '2' && endLevel === '3') {
+                            lineClass += ' level-2-to-level-3';
+                        } else if (startLevel === '3' && endLevel === '4') {
+                            lineClass += ' level-3-to-level-4';
+                        } else if (startLevel === '4' && endLevel === '5') {
+                            lineClass += ' level-4-to-level-5';
+                        } else {
+                            lineClass += ` level-${startLevel}-to-level-${endLevel}`;
                         }
+
+                        line.setAttribute('class', lineClass);
+                        line.setAttribute('style', 'visibility: visible;');
+                        line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
+                        svg.insertBefore(line, connectorGroup);
+                        foldGroupLines.set(`${firstCurrentBlock.id}-${firstNextBlock.id}-smart-${aBlock.id}`, line);
                     }
                 }
             }
@@ -1154,18 +1170,14 @@
         tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
         const startLevel = block ? (block.className.match(/level-(\d+)/) || [])[1] || '1' : '1';
+        const pointType = g.classList.contains('svg-start-point') ? 'start' : 'end';
 
         let tempPathClass = 'path-line';
-        if (startLevel === '1') {
-            tempPathClass += ' level-1-to-level-1';
-        } else if (startLevel === '2') {
-            tempPathClass += ' level-2-to-level-2';
-        } else if (startLevel === '3') {
-            tempPathClass += ' level-3-to-level-3';
-        } else if (startLevel === '4') {
-            tempPathClass += ' level-4-to-level-4';
-        } else if (startLevel === '5') {
-            tempPathClass += ' level-5-to-level-5';
+        if (pointType === 'start') {
+            tempPathClass += ` level-${startLevel}-to-level-${startLevel}`;
+        } else {
+            const prevLevel = String(Math.max(1, parseInt(startLevel, 10) - 1));
+            tempPathClass += ` level-${prevLevel}-to-level-${startLevel}`;
         }
 
         tempPath.setAttribute('class', tempPathClass);
@@ -1370,35 +1382,49 @@
                     return connStartId === startDataId && connEndId === targetInfo.dataId;
                 });
 
-                if (diff === 1 && (isStartToEnd && isForward) && !existingConnection) {
+                if (diff === 1 && ((isStartToEnd && isForward) || (isEndToStart && !isForward)) && !existingConnection) {
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-                    const startLevel = (startBlock.className.match(/level-(\d+)/) || [])[1] || '1';
-                    const endLevel = (endBlock.className.match(/level-(\d+)/) || [])[1] || '1';
+                    let actualStartBlock, actualEndBlock, actualStartPt, actualEndPt;
+                    if (isStartToEnd && isForward) {
+                        actualStartBlock = startBlock;
+                        actualEndBlock = endBlock;
+                        actualStartPt = curStartPt;
+                        actualEndPt = targetInfo.element;
+                    } else {
+                        actualStartBlock = endBlock;
+                        actualEndBlock = startBlock;
+                        actualStartPt = targetInfo.element;
+                        actualEndPt = curStartPt;
+                    }
+
+                    const actualStartLevel = (actualStartBlock.className.match(/level-(\d+)/) || [])[1] || '1';
+                    const actualEndLevel = (actualEndBlock.className.match(/level-(\d+)/) || [])[1] || '1';
 
                     let pathClass = 'path-line';
-                    if (startLevel === '1' && endLevel === '2') {
+                    if (actualStartLevel === '1' && actualEndLevel === '2') {
                         pathClass += ' level-1-to-level-2';
-                    } else if (startLevel === '2' && endLevel === '3') {
+                    } else if (actualStartLevel === '2' && actualEndLevel === '3') {
                         pathClass += ' level-2-to-level-3';
-                    } else if (startLevel === '3' && endLevel === '4') {
+                    } else if (actualStartLevel === '3' && actualEndLevel === '4') {
                         pathClass += ' level-3-to-level-4';
-                    } else if (startLevel === '4' && endLevel === '5') {
+                    } else if (actualStartLevel === '4' && actualEndLevel === '5') {
                         pathClass += ' level-4-to-level-5';
                     } else {
-                        pathClass += ` level-${startLevel}-to-level-${endLevel}`;
+                        pathClass += ` level-${actualStartLevel}-to-level-${actualEndLevel}`;
                     }
 
                     path.setAttribute('class', pathClass);
 
-                    const endCoord = getSvgPointCoord(targetInfo.dataId);
-                    path.setAttribute('d', bezier(startX, startY, endCoord.x, endCoord.y));
+                    const actualStartCoord = getSvgPointCoord(actualStartPt.getAttribute('data-id'));
+                    const actualEndCoord = getSvgPointCoord(actualEndPt.getAttribute('data-id'));
+                    path.setAttribute('d', bezier(actualStartCoord.x, actualStartCoord.y, actualEndCoord.x, actualEndCoord.y));
                     svg.insertBefore(path, connectorGroup);
 
                     connections.push({
                         id: connId++,
-                        startElement: curStartPt,
-                        endElement: targetInfo.element,
+                        startElement: actualStartPt,
+                        endElement: actualEndPt,
                         element: path
                     });
 
@@ -3414,11 +3440,13 @@
 
         // 点击卡片事件（仅展开状态有效）
         block.addEventListener('click', (e) => {
-            console.log('卡片点击事件触发:', e);
-
-            // 排除按钮点击
             if (e.target.closest('.w_contp_btn, .action-btn, .w_teachbtn, .toggle-collapse, .w_block_btns, .svg-connector-point, .card-drag-handle')) {
-                console.log('点击了按钮或连接点，忽略导航1');
+                return;
+            }
+
+            if (block.classList.contains('folded-block')) {
+                e.preventDefault();
+                e.stopPropagation();
                 return;
             }
 
@@ -3429,11 +3457,9 @@
                 return;
             }
 
-            // 检查是否为展开状态
             const isExpanded = !foldState.get(block);
 
             if (isExpanded) {
-                // 实现卡片导航功能
                 const cardId = block.id;
                 navigateToQuestionMapDetail(cardId);
             }
@@ -3449,9 +3475,12 @@
             const block = e.target.closest('.draggable-block');
             if (!block) return;
 
-            // 排除按钮点击
             if (e.target.closest('.w_contp_btn, .action-btn, .w_teachbtn, .toggle-collapse, .w_block_btns, .svg-connector-point, .card-drag-handle')) {
-                console.log('点击了按钮或连接点，忽略导航2');
+                return;
+            }
+
+            if (block.classList.contains('folded-block')) {
+                e.stopPropagation();
                 return;
             }
 
@@ -3460,11 +3489,9 @@
                 return;
             }
 
-            // 检查是否为展开状态
             const isExpanded = !foldState.get(block);
 
             if (isExpanded) {
-                // 实现卡片导航功能
                 const cardId = block.id;
                 navigateToQuestionMapDetail(cardId);
             }

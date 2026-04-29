@@ -564,10 +564,6 @@
         path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        var startLevel = parseInt(startBlockId[1]) || 1;
-        var endLevel = startLevel + 1;
-        path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
-
         var startTransform = startPt.getAttribute('transform');
         var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
         if (!startMatch) return;
@@ -580,6 +576,34 @@
         var ex = parseFloat(endMatch[1]);
         var ey = parseFloat(endMatch[2]);
 
+        var startLevelKey = startBlockId[0].toLowerCase();
+        var endBlockId = endPt.getAttribute('data-block-id') || '';
+        var endLevelKey = endBlockId ? endBlockId[0].toLowerCase() : String.fromCharCode(startLevelKey.charCodeAt(0) + 1);
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
+
+        var gradientId = 'grad-' + startBlockId + '-' + (endBlockId || 'end') + '-' + Date.now();
+        var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(sx));
+        lg.setAttribute('y1', String(sy));
+        lg.setAttribute('x2', String(ex));
+        lg.setAttribute('y2', String(ey));
+        var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
         path.setAttribute('d', bezier(sx, sy, ex, ey));
 
         svg.insertBefore(path, connectorGroup);
@@ -803,13 +827,33 @@
         path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        var startLevel = parseInt(startId[1]) || 1;
-        var endLevel = parseInt(endId[1]) || 2;
-        var levelDiff = endLevel - startLevel;
-        if (levelDiff === 1) {
-            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
-        }
+        var startLevelKey = startId[0].toLowerCase();
+        var endLevelKey = endId[0].toLowerCase();
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
 
+        var gradientId = 'grad-' + startId + '-' + endId + '-' + Date.now();
+        var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(sx));
+        lg.setAttribute('y1', String(sy));
+        lg.setAttribute('x2', String(ex));
+        lg.setAttribute('y2', String(ey));
+        var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
         path.setAttribute('d', bezier(sx, sy, ex, ey));
 
         svg.insertBefore(path, connectorGroup);
@@ -828,29 +872,6 @@
         const svgNS = 'http://www.w3.org/2000/svg';
 
         const defs = document.createElementNS(svgNS, 'defs');
-        var gradients = [
-            { id: 'gradient-level-1-to-level-2', c1: '#409eff', c2: '#67c23a' },
-            { id: 'gradient-level-2-to-level-3', c1: '#67c23a', c2: '#e6a23c' },
-            { id: 'gradient-level-3-to-level-4', c1: '#e6a23c', c2: '#f56c6c' },
-            { id: 'gradient-level-4-to-level-5', c1: '#f56c6c', c2: '#E372DB' }
-        ];
-        gradients.forEach(function (g) {
-            var lg = document.createElementNS(svgNS, 'linearGradient');
-            lg.setAttribute('id', g.id);
-            lg.setAttribute('x1', '0%');
-            lg.setAttribute('y1', '0%');
-            lg.setAttribute('x2', '100%');
-            lg.setAttribute('y2', '0%');
-            var s1 = document.createElementNS(svgNS, 'stop');
-            s1.setAttribute('offset', '0%');
-            s1.setAttribute('stop-color', g.c1);
-            var s2 = document.createElementNS(svgNS, 'stop');
-            s2.setAttribute('offset', '100%');
-            s2.setAttribute('stop-color', g.c2);
-            lg.appendChild(s1);
-            lg.appendChild(s2);
-            defs.appendChild(lg);
-        });
         svg.appendChild(defs);
 
         var linesGroup = document.createElementNS(svgNS, 'g');
@@ -1123,14 +1144,6 @@
         var startBlockId = startPt.getAttribute('data-block-id') || '';
         var endBlockId = endPt.getAttribute('data-block-id') || '';
 
-        var startLevel = parseInt(startBlockId[1]) || 1;
-        var endLevel = parseInt(endBlockId[1]) || 2;
-
-        var levelDiff = endLevel - startLevel;
-        if (levelDiff === 1) {
-            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
-        }
-
         var startTransform = startPt.getAttribute('transform');
         var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
         if (!startMatch) return;
@@ -1143,6 +1156,33 @@
         var endX = parseFloat(endMatch[1]);
         var endY = parseFloat(endMatch[2]);
 
+        var startLevelKey = startBlockId[0].toLowerCase();
+        var endLevelKey = endBlockId[0].toLowerCase();
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
+
+        var gradientId = 'grad-' + startBlockId + '-' + endBlockId + '-' + Date.now();
+        var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(startX));
+        lg.setAttribute('y1', String(startY));
+        lg.setAttribute('x2', String(endX));
+        lg.setAttribute('y2', String(endY));
+        var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
         path.setAttribute('d', bezier(startX, startY, endX, endY));
 
         var connection = {

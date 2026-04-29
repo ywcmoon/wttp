@@ -400,10 +400,15 @@ body {
     line-height: 20px;
     text-align: right;
     cursor: pointer;
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: -8px;
 }
 
 .target_display:hover {
     opacity: 0.8;
+    background: rgba(58, 139, 255, 0.08);
+    border-radius: 4px;
 }
 
 .target_active {
@@ -458,10 +463,13 @@ body {
     text-decoration: none;
     z-index: 10;
     cursor: pointer;
+    padding: 6px 10px;
 }
 
 .knowledge_associ:hover {
     opacity: 0.8;
+    background: rgba(58, 139, 255, 0.08);
+    border-radius: 4px;
 }
 
 .knowledge_canvas {
@@ -647,7 +655,7 @@ body {
 }
 
 .visibility-setting {
-    padding: 30px;
+    padding: 20px 24px;
 }
 
 .visibility-title {
@@ -656,10 +664,11 @@ body {
     font-size: 14px;
     font-weight: 600;
     line-height: 20px;
+    text-align: left;
 }
 
 .visibility-card {
-    padding: 20px 20px 0;
+    padding: 16px 0 0;
     border-radius: 4px;
     background: #f7f8fa;
 }
@@ -667,10 +676,12 @@ body {
 .visibility-subtitle {
     width: 100%;
     padding-bottom: 15px;
+    padding-left: 16px;
     color: #474c59;
     font-size: 14px;
     font-weight: 600;
     line-height: 20px;
+    text-align: left;
 }
 
 .visibility-checkboxes {
@@ -739,7 +750,6 @@ body {
 
 .knowledge-modal-left {
     flex: 1;
-    border-right: 1px solid #f2f2f2;
     display: flex;
     flex-direction: column;
 }
@@ -747,6 +757,7 @@ body {
 .knowledge-modal-left-header {
     padding: 14px 18px;
     border-bottom: 1px solid #f2f2f2;
+    text-align: left;
 }
 
 .knowledge-count {
@@ -770,7 +781,7 @@ body {
     position: relative;
 }
 
-.knowledge-tree li:hover {
+.knowledge-tree .tree-main:hover {
     background: #f0f6ff;
 }
 
@@ -780,6 +791,7 @@ body {
     padding: 12px 52px 12px 14px;
     cursor: pointer;
     min-height: 20px;
+    position: relative;
 }
 
 .knowledge-tree .tree-arrow {

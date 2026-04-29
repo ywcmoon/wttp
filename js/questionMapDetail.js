@@ -279,12 +279,10 @@
             <div class="block-actions">
                 <button class="action-btn edit-btn" data-card-id="${block.id}" data-title="${block.title}" >
                     <div class="xcustomSvg">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>
-                            <path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>
-                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>
-                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>
-                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.207 1.293a1 1 0 0 1 1.414 0l2.086 2.086a1 1 0 0 1 0 1.414l-8.379 8.379a1 1 0 0 1-.414.243l-2.828.943a.5.5 0 0 1-.632-.632l.943-2.828a1 1 0 0 1 .243-.414l8.379-8.379z" fill="#606266"/>
+                            <path d="M9.5 2.5l4 4" stroke="#606266" stroke-width="0"/>
+                            <path d="M2 14h12" stroke="#606266" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
                     </div>
                     编辑
@@ -339,29 +337,6 @@
         const svgNS = 'http://www.w3.org/2000/svg';
 
         const defs = document.createElementNS(svgNS, 'defs');
-        var gradients = [
-            { id: 'gradient-level-1-to-level-2', c1: '#409eff', c2: '#67c23a' },
-            { id: 'gradient-level-2-to-level-3', c1: '#67c23a', c2: '#e6a23c' },
-            { id: 'gradient-level-3-to-level-4', c1: '#e6a23c', c2: '#f56c6c' },
-            { id: 'gradient-level-4-to-level-5', c1: '#f56c6c', c2: '#E372DB' }
-        ];
-        gradients.forEach(function (g) {
-            var lg = document.createElementNS(svgNS, 'linearGradient');
-            lg.setAttribute('id', g.id);
-            lg.setAttribute('x1', '0%');
-            lg.setAttribute('y1', '0%');
-            lg.setAttribute('x2', '100%');
-            lg.setAttribute('y2', '0%');
-            var s1 = document.createElementNS(svgNS, 'stop');
-            s1.setAttribute('offset', '0%');
-            s1.setAttribute('stop-color', g.c1);
-            var s2 = document.createElementNS(svgNS, 'stop');
-            s2.setAttribute('offset', '100%');
-            s2.setAttribute('stop-color', g.c2);
-            lg.appendChild(s1);
-            lg.appendChild(s2);
-            defs.appendChild(lg);
-        });
         svg.appendChild(defs);
 
         var linesGroup = document.createElementNS(svgNS, 'g');
@@ -533,13 +508,36 @@
         path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        var startLevel = parseInt(conn.startId[1]) || 1;
-        var endLevel = parseInt(conn.endId[1]) || 2;
+        var startBlock = startInfo.block;
+        var endBlock = endInfo.block;
+        var startLevelKey = startBlock ? startBlock.getAttribute('data-card-id')[0].toLowerCase() : 'a';
+        var endLevelKey = endBlock ? endBlock.getAttribute('data-card-id')[0].toLowerCase() : 'b';
 
-        var levelDiff = endLevel - startLevel;
-        if (levelDiff === 1) {
-            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
-        }
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
+
+        var gradientId = 'conn-grad-' + conn.startId + '-' + conn.endId;
+        var lg = document.createElementNS(svgNS, 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(startX));
+        lg.setAttribute('y1', String(startY));
+        lg.setAttribute('x2', String(endX));
+        lg.setAttribute('y2', String(endY));
+        var s1 = document.createElementNS(svgNS, 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS(svgNS, 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
 
         var cx = (startX + endX) / 2;
         var bend = Math.abs(startY - endY) < 0.1 ? 0.5 : 0;
@@ -689,11 +687,8 @@
         groupOffsetY = clientY - dragStartY;
 
         applyGroupTransform();
-
-        // 延迟更新连接
-        setTimeout(() => {
-            updateConnections();
-        }, 30);
+        updateSvgConnectorPositions();
+        drawConnections();
     }
 
     function handleDragEnd() {
@@ -749,7 +744,6 @@
         currentEditingBlock = cardId;
         editBlockNameInput.value = title;
 
-        // 获取完整数据来填充教师参考信息
         const fullData = localStorage.getItem('fullHierarchyData');
         let teacherNote = '';
         if (fullData) {
@@ -760,14 +754,43 @@
             }
         }
 
-        // 设置描述和教师参考信息
-        editBlockDesc.innerHTML = desc;
-        editBlockTeacher.innerHTML = teacherNote || '暂无教师参考';
+        if (!window.editBlockEditorDesc) {
+            window.editBlockEditorDesc = new Quill('#edit-block-desc', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+        }
 
-        // 显示弹窗
+        if (!window.editBlockEditorTeacher) {
+            window.editBlockEditorTeacher = new Quill('#edit-block-teacher', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+        }
+
+        window.editBlockEditorDesc.root.innerHTML = desc || '';
+        window.editBlockEditorTeacher.root.innerHTML = teacherNote || '';
+
         editModal.classList.add('show');
         document.body.style.overflow = 'hidden';
-
     }
 
     function hideEditModal() {
@@ -784,11 +807,12 @@
             return;
         }
 
-        // 更新卡片数据
-        updateBlockData(currentEditingBlock, newTitle);
+        const newDesc = window.editBlockEditorDesc ? window.editBlockEditorDesc.root.innerHTML : '';
+        const newTeacher = window.editBlockEditorTeacher ? window.editBlockEditorTeacher.root.innerHTML : '';
+
+        updateBlockData(currentEditingBlock, newTitle, newDesc, newTeacher);
         hideEditModal();
 
-        // 重新渲染页面
         if (localStorage.getItem('relationChain')) {
             showRelationChain(JSON.parse(localStorage.getItem('relationChain')));
         } else {
@@ -796,13 +820,15 @@
         }
     }
 
-    function updateBlockData(cardId, newTitle) {
+    function updateBlockData(cardId, newTitle, newDesc, newTeacher) {
         const fullData = localStorage.getItem('fullHierarchyData');
         if (fullData) {
             const data = JSON.parse(fullData);
             const block = findBlockById(data, cardId);
             if (block) {
                 block.title = newTitle;
+                if (newDesc !== undefined) block.desc = newDesc;
+                if (newTeacher !== undefined) block.teacherNote = newTeacher;
                 localStorage.setItem('fullHierarchyData', JSON.stringify(data));
             }
         }
