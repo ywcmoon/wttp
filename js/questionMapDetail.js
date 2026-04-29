@@ -239,7 +239,7 @@
         if (!container) return;
 
         const cardElement = document.createElement('div');
-        cardElement.className = 'w_contp_item';
+        cardElement.className = `w_contp_item level-${level}`;
         cardElement.id = `card-${block.id}`;
         cardElement.setAttribute('data-card-id', block.id);
         cardElement.setAttribute('data-level', level);

@@ -121,7 +121,7 @@
     // 启用卡片组拖拽功能
     function enableCardGroupDrag() {
         // 移除可能存在的旧事件，避免重复绑定
-        const cards = document.querySelectorAll('.golink-card');
+        const cards = document.querySelectorAll('.w_contp_item');
         cards.forEach(card => {
             card.removeEventListener('mousedown', handleCardMouseDown);
             card.removeEventListener('touchstart', handleCardTouchStart, { passive: false });
@@ -156,7 +156,7 @@
     function handleCardMouseDown(e) {
         if (currentMode !== 'drag') return; // 仅在拖拽模式下生效
 
-        const card = e.target.closest('.golink-card');
+        const card = e.target.closest('.w_contp_item');
         if (!card) return; // 确保点击的是卡片区域
 
         // 阻止默认行为和冒泡，避免干扰其他事件
@@ -168,7 +168,7 @@
         dragStartY = e.clientY - groupOffsetY;
         dragActive = true;
         // 改变所有卡片的鼠标样式为拖拽中
-        document.querySelectorAll('.golink-card').forEach(c => {
+        document.querySelectorAll('.w_contp_item').forEach(c => {
             c.style.cursor = 'grabbing';
         });
     }
@@ -177,7 +177,7 @@
     function handleCardTouchStart(e) {
         if (currentMode !== 'drag') return; // 仅在拖拽模式下生效
 
-        const card = e.target.closest('.golink-card');
+        const card = e.target.closest('.w_contp_item');
         if (!card) return; // 确保触摸的是卡片区域
 
         e.preventDefault();
@@ -189,7 +189,7 @@
         dragStartY = touch.clientY - groupOffsetY;
         dragActive = true;
         // 改变所有卡片的鼠标样式为拖拽中
-        document.querySelectorAll('.golink-card').forEach(c => {
+        document.querySelectorAll('.w_contp_item').forEach(c => {
             c.style.cursor = 'grabbing';
         });
     }
@@ -269,7 +269,7 @@
     function handleDragEnd() {
         // 恢复鼠标样式并重置拖拽状态
         if (dragActive) {
-            document.querySelectorAll('.golink-card').forEach(c => c.style.cursor = 'grab');
+            document.querySelectorAll('.w_contp_item').forEach(c => c.style.cursor = 'grab');
         }
         dragActive = false;
     }
@@ -726,40 +726,43 @@
             }
         }
 
-    // 渲染单个卡片
     function renderCard(card, level, maxChainLength) {
         const container = document.getElementById(`golink-level-${level}-cards`);
         if (!container) return;
 
-        // 检查是否为最下游层级
         const isLastLevel = level === maxChainLength;
+        const levelClass = `level-${level}`;
 
         const cardElement = document.createElement('div');
-        cardElement.className = 'golink-card';
+        cardElement.className = `w_contp_item ${levelClass}`;
         cardElement.id = `card-${card.id}`;
         cardElement.setAttribute('data-card-id', card.id);
         cardElement.setAttribute('data-level', level);
 
+        let badge = '';
+        if (!isLastLevel) {
+            badge = `<div class="w_contp_inum">0</div>`;
+        }
+
         cardElement.innerHTML = `
-            <div class="golink-card-title">${card.title}</div>
-            <div class="golink-card-desc">${card.desc}</div>
-            <div class="golink-card-more">
-                <a href="javascript:;" class="golink-more-btn" data-card-id="${card.id}" data-title="${card.title}">
-                    详情
-                    <i class="fas fa-chevron-right"></i>
-                </a>
+            <div class="block-header">
+                <span class="block-title">${card.title}</span>
             </div>
+            <div class="block-content">
+                <div class="block-content-text">${card.desc}</div>
+                <span class="w_contp_btn golink-more-btn" data-card-id="${card.id}" data-title="${card.title}">详情<i class="fas fa-chevron-right"></i></span>
+            </div>
+            ${badge}
             ${!isLastLevel ? `<div class="connector-point start-point" data-id="${card.id}-start">0</div>` : ''}
             ${level > 1 ? `<div class="connector-point end-point" data-id="${card.id}-end"></div>` : ''}
         `;
 
-        // 绑定详情按钮事件
         const moreBtn = cardElement.querySelector('.golink-more-btn');
         if (moreBtn) {
             moreBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 const title = this.getAttribute('data-title');
-                const content = this.closest('.golink-card').querySelector('.golink-card-desc').textContent;
+                const content = this.closest('.w_contp_item').querySelector('.block-content-text').textContent;
                 showDetailModal(title, content);
             });
         }
@@ -882,7 +885,7 @@
         startY = coord.y;
 
         tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const startCard = curStartPt.closest('.golink-card');
+        const startCard = curStartPt.closest('.w_contp_item');
         const startLevel = parseInt(startCard.getAttribute('data-level'));
         let color = '#409eff';
         if (startLevel === 1) color = '#409eff';
@@ -921,7 +924,7 @@
         const thresholdLength = 100;
 
         // 获取起始卡片的层级
-        const startCard = curStartPt.closest('.golink-card');
+        const startCard = curStartPt.closest('.w_contp_item');
         const startLevel = parseInt(startCard.getAttribute('data-level'));
 
         // 当拖拽长度超过阈值时，应用渐变色效果
@@ -990,8 +993,8 @@
     }
 
     function validateConnection(startPt, endPt) {
-        const startCard = startPt.closest('.golink-card');
-        const endCard = endPt.closest('.golink-card');
+        const startCard = startPt.closest('.w_contp_item');
+        const endCard = endPt.closest('.w_contp_item');
 
         if (!startCard || !endCard) return false;
         if (startCard === endCard) return false;
@@ -1015,8 +1018,8 @@
         path.setAttribute('stroke-width', '3');
         path.setAttribute('fill', 'none');
 
-        const startCard = startPt.closest('.golink-card');
-        const endCard = endPt.closest('.golink-card');
+        const startCard = startPt.closest('.w_contp_item');
+        const endCard = endPt.closest('.w_contp_item');
         const startLevel = parseInt(startCard.getAttribute('data-level'));
         const endLevel = parseInt(endCard.getAttribute('data-level'));
 
@@ -1207,15 +1210,15 @@
             });
             
             // 更新卡片右上角的连接数徽章显示
-            document.querySelectorAll('.golink-card-count').forEach(badge => {
-                const cardId = badge.getAttribute('data-card-id');
+            document.querySelectorAll('.w_contp_inum').forEach(badge => {
+                const card = badge.closest('.w_contp_item');
+                const cardId = card ? card.getAttribute('data-card-id') : '';
                 const count = countMap.get(cardId) || 0;
                 badge.textContent = count;
             });
     
-            // 所有层级卡片：更新右侧连接点的连接数
             for (let level = 1; level <= 5; level++) {
-                document.querySelectorAll(`#golink-level-${level} .golink-card .connector-point.start-point`).forEach(connector => {
+                document.querySelectorAll(`#golink-level-${level} .w_contp_item .connector-point.start-point`).forEach(connector => {
                     const cardId = connector.getAttribute('data-id').replace('-start', '');
                     const count = countMap.get(cardId) || 0;
                     connector.textContent = count;

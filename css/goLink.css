@@ -1,90 +1,5 @@
 /* goLink 页面特定样式 */
 
-/* 探索模式图例 */
-.w_explorehead {
-    background: #fff;
-    padding: 16px 24px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.w_explorehead .dis-flex.align-items-c {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.w_explorehead .vaname {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-    margin-right: 24px;
-    padding: 8px 16px;
-    background: #f5f7fa;
-    border-radius: 6px;
-    border-left: 4px solid #409eff;
-}
-
-.w_explorehead .vanhtab {
-    display: flex;
-    gap: 16px;
-    margin-right: 40px;
-    background: #f0f2f5;
-    padding: 8px;
-    border-radius: 8px;
-}
-
-.w_explorehead .vanhtab p {
-    font-size: 14px;
-    color: #606266;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-weight: 500;
-    background: #fff;
-    border: 2px solid transparent;
-}
-
-.w_explorehead .vanhtab p:hover {
-    background: #409eff;
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-}
-
-.w_explorehead .vanhtab p:active {
-    transform: translateY(0);
-}
-
-.w_explorehead .explorebtn a {
-    padding: 12px 32px;
-    background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-    color: #fff;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s;
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
-    border: 2px solid #409eff;
-}
-
-.w_explorehead .explorebtn a:hover {
-    background: linear-gradient(135deg, #66b1ff 0%, #8cc5ff 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
-    border-color: #66b1ff;
-}
-
-.w_explorehead .explorebtn a:active {
-    transform: translateY(0);
-}
-
-/* 头部工具栏 */
 .w_head {
     background: #fff;
     padding: 16px 24px;
@@ -107,7 +22,6 @@
     gap: 12px;
 }
 
-/* 主工作区 */
 .golink-main {
     padding: 0;
     position: relative;
@@ -115,7 +29,6 @@
     overflow-y: visible;
 }
 
-/* 容器布局 */
 .golink-cont {
     display: flex;
     gap: 40px;
@@ -125,7 +38,6 @@
     padding: 20px;
     position: relative;
     transition: none;
-    /* 移除过渡效果，确保拖拽实时响应 */
 }
 
 .golink-box {
@@ -134,19 +46,6 @@
     width: 100px;
 }
 
-/* 右侧功能区 */
-.golink-right-panel {
-    flex-shrink: 0;
-}
-
-.golink-buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: center;
-}
-
-/* 按钮样式 */
 .golink-btn {
     display: flex;
     align-items: center;
@@ -166,7 +65,6 @@
     font-size: 14px;
 }
 
-/* 终止探索按钮 */
 .golink-btn-stop {
     background: #f5f7fa;
     color: #909399;
@@ -179,7 +77,6 @@
     border-color: #b3d8ff;
 }
 
-/* 提交按钮 */
 .golink-btn-submit {
     background: #409eff;
     color: white;
@@ -189,257 +86,6 @@
     background: #66b1ff;
 }
 
-/* 卡片样式 */
-.golink-card {
-    background: #fff;
-    border: 2px solid #e4e7ed;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all 0.3s;
-    cursor: pointer;
-    position: relative;
-}
-
-/* 层级特定左侧边框颜色 */
-#golink-level-1 .golink-card {
-    border-left: 4px solid #409eff;
-}
-
-#golink-level-2 .golink-card {
-    border-left: 4px solid #67c23a;
-}
-
-#golink-level-3 .golink-card {
-    border-left: 4px solid #e6a23c;
-}
-
-#golink-level-4 .golink-card {
-    border-left: 4px solid #f56c6c;
-}
-
-#golink-level-5 .golink-card {
-    border-left: 4px solid #E372DB;
-}
-
-/* 选中状态 - 仅显示 border-color 效果 */
-.golink-card.selected {
-    /* 禁用阴影、背景色变化等效果 */
-    /* 保持原样，仅保持原有的 border-color */
-}
-
-/* 卡片标题 */
-.golink-card-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-    margin-bottom: 12px;
-    line-height: 1.4;
-}
-
-/* 卡片描述 */
-.golink-card-desc {
-    font-size: 14px;
-    color: #606266;
-    line-height: 1.6;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 12px;
-}
-
-/* 查看更多按钮 */
-.golink-card-more {
-    text-align: right;
-}
-
-.golink-card-more a {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: #409eff;
-    font-size: 13px;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.golink-card-more a:hover {
-    color: #66b1ff;
-}
-
-.golink-card-more a i {
-    font-size: 12px;
-}
-
-/* 连接点样式 */
-.connector-point {
-     position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 600;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    cursor: default;
-    border: 2px solid;
-    z-index: 1001;
-    background:white;
-}
-
-/* A列连接点稍大，便于拖拽 */
-.golink-card[id^="a"] .real-connector.connector-point {
-    width: 20px;
-    height: 20px;
-    right: -10px;
-    border-width: 2px;
-    z-index: 1001;
-}
-
- 
-
-
-.connector-point.dragging {
-    transform: scale(1.3);
-    background: #409eff;
-    color: white;
-    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.4);
-}
-
-/* 第一层级 - 右侧中间连接点 */
-#golink-level-1 .golink-card .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 第二层级 - 左右两侧连接点 */
-#golink-level-2 .golink-card .connector-point.end-point {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-#golink-level-2 .golink-card .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 通用连接点定位 */
-.golink-card .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.golink-card .connector-point.end-point {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 第一层级 - 右侧中间连接点 */
-.golink-card[data-level="1"] .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 其他层级 - 左右两侧连接点 */
-.golink-card[data-level="2"] .connector-point.end-point,
-.golink-card[data-level="3"] .connector-point.end-point,
-.golink-card[data-level="4"] .connector-point.end-point,
-.golink-card[data-level="5"] .connector-point.end-point {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.golink-card[data-level="2"] .connector-point.start-point,
-.golink-card[data-level="3"] .connector-point.start-point,
-.golink-card[data-level="4"] .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 第三层级 - 连接点 */
-#golink-level-3 .golink-card .connector-point.end-point {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-#golink-level-3 .golink-card .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 层级特定连接点颜色 */
-#golink-level-1 .connector-point {
-    border-color: #409eff;
-    color: #409eff;
-}
-
-#golink-level-1 .connector-point:hover,
-#golink-level-1 .connector-point.dragging {
-    background: #409eff;
-    color: white;
-}
-
-#golink-level-2 .connector-point {
-    border-color: #67c23a;
-    color: #67c23a;
-}
-
-#golink-level-2 .connector-point:hover,
-#golink-level-2 .connector-point.dragging {
-    background: #67c23a;
-    color: white;
-}
-
-#golink-level-3 .connector-point {
-    border-color: #e6a23c;
-    color: #e6a23c;
-}
-
-#golink-level-3 .connector-point:hover,
-#golink-level-3 .connector-point.dragging {
-    background: #e6a23c;
-    color: white;
-}
-
-#golink-level-4 .connector-point {
-    border-color: #f56c6c;
-    color: #f56c6c;
-}
-
-#golink-level-4 .connector-point:hover,
-#golink-level-4 .connector-point.dragging {
-    background: #f56c6c;
-    color: white;
-}
-
-#golink-level-5 .connector-point {
-    border-color: #E372DB;
-    color: #E372DB;
-}
-
-#golink-level-5 .connector-point:hover,
-#golink-level-5 .connector-point.dragging {
-    background: #E372DB;
-    color: white;
-}
-
-/* 连接数徽章 - 右上角 */
 .golink-card-count {
     position: absolute;
     top: -8px;
@@ -457,24 +103,64 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* SVG 连接线样式 */
-.connections-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
+.connector-point.dragging {
+    transform: scale(1.3);
+    background: #409eff;
+    color: white;
+    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.4);
 }
 
-.path-line {
-    fill: none;
-    stroke-width: 2.5;
-    transition: stroke-dashoffset 0.5s;
+.w_contp_item .connector-point.start-point {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-/* 弹窗 */
+.w_contp_item .connector-point.end-point {
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.ABox .w_contp_item .connector-point.start-point {
+    width: 20px;
+    height: 20px;
+    right: -10px;
+    font-size: 12px;
+    border-width: 2px;
+    z-index: 1001;
+}
+
+.ABox .connector-point:hover,
+.ABox .connector-point.dragging {
+    background: #409eff;
+    color: white;
+}
+
+.BBox .connector-point:hover,
+.BBox .connector-point.dragging {
+    background: #67c23a;
+    color: white;
+}
+
+.CBox .connector-point:hover,
+.CBox .connector-point.dragging {
+    background: #e6a23c;
+    color: white;
+}
+
+.DBox .connector-point:hover,
+.DBox .connector-point.dragging {
+    background: #f56c6c;
+    color: white;
+}
+
+.EBox .connector-point:hover,
+.EBox .connector-point.dragging {
+    background: #E372DB;
+    color: white;
+}
+
 .golink-modal {
     position: fixed;
     top: 0;
@@ -492,7 +178,6 @@
     display: flex;
 }
 
-/* 遮罩层 */
 .golink-modal-overlay {
     position: absolute;
     top: 0;
@@ -504,7 +189,6 @@
     z-index: 1;
 }
 
-/* 弹窗内容 */
 .golink-modal-content {
     position: relative;
     background: #ffffff;
@@ -520,28 +204,15 @@
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* 弹窗头部 */
 .golink-modal-header {
     display: flex;
     justify-content: space-between;
@@ -580,7 +251,6 @@
     background: #ecf5ff;
 }
 
-/* 弹窗主体 */
 .golink-modal-body {
     padding: 28px;
     overflow-y: auto;
@@ -600,7 +270,6 @@
     word-break: break-word;
 }
 
-/* 响应式布局 */
 @media (max-width: 1024px) {
     .golink-cont {
         gap: 20px;
@@ -625,16 +294,6 @@
     .golink-box {
         min-width: 100%;
         width: 100%;
-    }
-
-    .golink-right-panel {
-        width: 100%;
-        padding: 0;
-    }
-
-    .golink-buttons {
-        flex-direction: row;
-        position: static;
     }
 
     .golink-btn {
@@ -665,67 +324,5 @@
 
     #golink-modal-desc {
         font-size: 15px;
-    }
-}
-
-/* 浏览器兼容性优化 */
-@supports (-ms-ime-align: auto) {
-
-    /* IE11 及以下 */
-    .w_explorehead {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-    }
-
-    .w_explorehead .dis-flex.align-items-c {
-        display: flex !important;
-        align-items: center !important;
-        gap: 24px !important;
-    }
-
-    .w_explorehead .vanhtab {
-        display: flex !important;
-        gap: 16px !important;
-    }
-
-    .golink-card {
-        min-width: 240px;
-    }
-}
-
-@-moz-document url-prefix() {
-
-    /* Firefox */
-    .w_explorehead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .w_explorehead .vanhtab {
-        gap: 16px;
-    }
-
-    .golink-card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-
-    /* Chrome, Safari */
-    .w_explorehead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .w_explorehead .vanhtab {
-        gap: 16px;
-    }
-
-    .golink-card:hover {
-        transform: translateY(-4px) scale(1.02);
     }
 }

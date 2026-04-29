@@ -1,6 +1,5 @@
-/* questionMapDetail 页面样式 */
+/* questionMapDetail 页面特定样式 */
 
-/* 全局样式重置 */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +13,6 @@ body {
     overflow: hidden;
 }
 
-/* 主容器 */
 .map-detail-container {
     position: relative;
     width: 100%;
@@ -22,7 +20,6 @@ body {
     overflow: hidden;
 }
 
-/* 左上角返回按钮 */
 .back-btn-container {
     position: absolute;
     top: 20px;
@@ -53,7 +50,6 @@ body {
     box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
 }
 
-/* 地图容器 */
 .map-container {
     position: relative;
     width: 100%;
@@ -61,7 +57,6 @@ body {
     overflow: hidden;
 }
 
-/* 内容容器 - 这部分会被缩放 */
 .content-container {
     position: absolute;
     top: 0;
@@ -73,24 +68,11 @@ body {
     z-index: 1;
 }
 
-/* SVG 画布 - 确保连线在所有卡片之上显示 */
-.connections-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1000;
-}
-
-/* 层级容器 */
 .w_cont_problem {
     position: relative;
     z-index: 10;
 }
 
-/* 确保卡片和连接点可以正常交互 */
 .w_contp_item {
     position: relative;
     z-index: 20;
@@ -101,204 +83,12 @@ body {
     z-index: 30;
 }
 
-/* 主工作区 */
-.w_main {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-}
-
-/* 四列布局容器 */
 .w_cont {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
     flex-wrap: nowrap;
     position: relative;
     z-index: 2;
 }
 
-/* 每一列卡片样式 */
-.w_cont_problem {
-    flex: 1;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    min-width: 0;
-    overflow: hidden;
-    padding: 20px;
-}
-
-.w_contp_head {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.w_contp_title_container {
-    display: flex;
-    align-items: center;
-}
-
-.w_contp_icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    font-size: 18px;
-    color: #fff;
-}
-
-.w_contp_txt {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-}
-
-.w_contp_main {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* 可拖拽卡片卡片 */
-.w_contp_item {
-    background: #fff;
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
-    transition: all 0.3s;
-    position: relative;
-}
-
-.w_contp_item:hover {
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-}
-
-.ABox .w_contp_item {
-    border-left: 4px solid #409eff;
-}
-
-/* .ABox .w_contp_item[id^="a"] .connector-point {
-    width: 20px;
-    height: 20px;
-    right: -10px;
-    border-width: 2px;
-    z-index: 1001;
-} */
-
-.ABox .w_contp_item:hover {
-    border-color: #409eff;
-}
-
-.BBox .w_contp_item {
-    border-left: 4px solid #67c23a;
-}
-
-.BBox .w_contp_item:hover {
-    border-color: #67c23a;
-}
-
-.CBox .w_contp_item {
-    border-left: 4px solid #e6a23c;
-}
-
-.CBox .w_contp_item:hover {
-    border-color: #e6a23c;
-}
-
-.DBox .w_contp_item {
-    border-left: 4px solid #f56c6c;
-}
-
-.DBox .w_contp_item:hover {
-    border-color: #f56c6c;
-}
-
-.EBox .w_contp_item {
-    border-left: 4px solid #E372DB;
-}
-
-.EBox .w_contp_item:hover {
-    border-color: #E372DB;
-}
-
-/* 卡片标题 */
-.block-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.block-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
-}
-
-/* 卡片内容 */
-.block-content {
-    margin-bottom: 12px;
-}
-
-/* 卡片描述 */
-.block-content-text {
-    font-size: 14px;
-    color: #606266;
-    line-height: 1.6;
-    margin-bottom: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 卡片右上角数字徽章（用于显示连接数） */
-.w_contp_inum {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.ABox .w_contp_inum {
-    background: #409eff;
-}
-
-.BBox .w_contp_inum {
-    background: #67c23a;
-}
-
-.CBox .w_contp_inum {
-    background: #e6a23c;
-}
-
-.DBox .w_contp_inum {
-    background: #f56c6c;
-}
-
-.EBox .w_contp_inum {
-    background: #E372DB;
-}
-
-/* 卡片操作按钮 */
 .block-actions {
     display: flex;
     gap: 8px;
@@ -326,41 +116,11 @@ body {
     border-color: #409eff;
 }
 
-/* SVG 图标容器 */
-.xcustomSvg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.ABox .connector-point {
+    background: #409eff;
+    border-color: #409eff;
 }
 
-.xcustomSvg svg {
-    width: 14px;
-    height: 14px;
-}
-
-.action-btn:hover svg path {
-    fill: #fff !important;
-}
-
-/* SVG 画布 */
-.connections-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* 连接线 */
-.path-line {
-    fill: none;
-    stroke-width: 3;
-    stroke-linecap: round; 
-}
-
-/* 左下角缩放控制 */
 .zoom-control-container {
     position: absolute;
     bottom: 20px;
@@ -407,24 +167,6 @@ body {
     color: #303133;
 }
 
-/* 弹窗样式 */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-overlay.show {
-    display: flex;
-}
-
 .modal-content {
     background: #fff;
     border-radius: 8px;
@@ -446,113 +188,6 @@ body {
     }
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e4e7ed;
-}
-
-.modal-header h3 {
-    font-size: 20px;
-    color: #303133;
-    margin: 0;
-}
-
-.modal-close {
-    background: transparent;
-    border: none;
-    color: #909399;
-    font-size: 20px;
-    cursor: pointer;
-    transition: color 0.3s;
-}
-
-.modal-close:hover {
-    color: #409eff;
-}
-
-.modal-body {
-    font-size: 14px;
-    color: #606266;
-    line-height: 1.8;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #e4e7ed;
-}
-
-.btn {
-    padding: 10px 24px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: none;
-}
-
-.btn-cancel {
-    background: #f5f7fa;
-    color: #606266;
-    border: 1px solid #e4e7ed;
-}
-
-.btn-cancel:hover {
-    background: #e4e7ed;
-    border-color: #c0c4cc;
-}
-
-.btn-confirm {
-    background: #409eff;
-    color: #fff;
-}
-
-.btn-confirm:hover {
-    background: #66b1ff;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #303133;
-    margin-bottom: 8px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #e4e7ed;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #606266;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #409eff;
-}
-
-.required {
-    color: #f56c6c;
-    margin-left: 4px;
-}
-
 .modal-content-value {
     padding: 12px;
     background: #f5f7fa;
@@ -563,171 +198,28 @@ body {
     line-height: 1.6;
 }
 
-/* 详情按钮样式 - 参考index页面 */
-.w_contp_btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: #409eff;
-    cursor: pointer;
-    font-size: 14px;
-    text-decoration: none;
-    transition: all 0.3s;
-}
-
-.w_contp_btn:hover {
-    text-decoration: underline;
-}
-
-/* 连接点圆圈样式 */
-.connector-point {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 600;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-    cursor: default;
-    border: 2px solid;
-    z-index: 1001;
-    background:white;
-}
- 
-
-.connector-point.start-point {
-    right: -8px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.connector-point.end-point {
-    left: -8px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* 第一层级起点圆圈 20px */
-.ABox .connector-point.start-point {
-    width: 20px;
-    height: 20px;
-    right: -10px;
-    font-size: 12px;
-       
-    border-width: 2px;
-    z-index: 1001;
-}
-
-/* 各层级连接点颜色 */
-.ABox .connector-point {
-    background: #409eff;
-    border-color: #409eff;
-}
-
-.BBox .connector-point {  
-    border-color: #67c23a;
-}
-
-.CBox .connector-point {  
-    border-color: #e6a23c;
-}
-
-.DBox .connector-point {  
-    border-color: #f56c6c;
-}
-
-.EBox .connector-point { 
-    border-color: #E372DB;
-}
-
-/* 卡片右上角数字徽章（用于显示连接数） */
-.w_contp_inum {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: #409eff;
-    color: #fff;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 25;
-}
-
-.BBox .w_contp_inum {
-    background: #67c23a;
-}
-
-.CBox .w_contp_inum {
-    background: #e6a23c;
-}
-
-.DBox .w_contp_inum {
-    background: #f56c6c;
-}
-
-.EBox .w_contp_inum {
-    background: #E372DB;
-}
-
-/* 响应式布局 */
-@media (max-width: 1200px) {
-    .w_cont {
-        gap: 10px;
-    }
-    
-    .w_contp_item {
-        padding: 12px;
-    }
-    
-    .w_contp_head {
-        margin-bottom: 15px;
-    }
-}
-
-@media (max-width: 992px) {
-    .w_cont {
-        flex-wrap: wrap;
-    }
-    
-    .w_cont_problem {
-        flex: 0 0 calc(50% - 10px);
-        min-width: 0;
-    }
-}
-
 @media (max-width: 768px) {
     .back-btn-container {
         top: 10px;
         left: 10px;
     }
-    
+
     .back-btn {
         padding: 8px 16px;
         font-size: 14px;
     }
-    
+
     .content-container {
         padding: 70px 10px 10px;
     }
-    
-    .w_cont_problem {
-        flex: 0 0 100%;
-        margin-bottom: 15px;
-    }
-    
+
     .zoom-control-container {
         bottom: 10px;
         left: 10px;
+    }
+
+    .modal-content {
+        max-width: 90%;
     }
 }
 
@@ -737,61 +229,40 @@ body {
         height: 28px;
         font-size: 14px;
     }
-    
+
     .w_contp_txt {
         font-size: 14px;
     }
-    
+
     .block-title {
         font-size: 14px;
     }
-    
+
     .block-content-text {
         font-size: 12px;
     }
-    
+
     .action-btn {
         padding: 4px 8px;
         font-size: 12px;
     }
-    
-    /* 弹窗响应式 */
+
     .modal-content {
         width: 95%;
         padding: 16px;
         margin: 10px;
     }
-    
+
     .modal-header h3 {
         font-size: 18px;
     }
-    
+
     .modal-body {
         max-height: 50vh;
     }
-    
+
     .btn {
         padding: 8px 16px;
         font-size: 13px;
-    }
-}
-
-/* 弹窗响应式 */
-@media (max-width: 768px) {
-    .modal-content {
-        max-width: 90%;
-    }
-}
-
-/* 浏览器兼容性优化 */
-@supports (-ms-ime-align: auto) {
-    .w_contp_item {
-        min-width: 240px;
-    }
-}
-
-@-moz-document url-prefix() {
-    .w_contp_item {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 }
