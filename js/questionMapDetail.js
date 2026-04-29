@@ -23,16 +23,22 @@
     const editBlockTeacher = document.getElementById('edit-block-teacher');
 
     // ==================== 核心状态变量 ====================
-    let currentZoom = 100; // 缩放等级，百分比
-    let dragActive = false; // 是否激活拖拽
-    let dragStartX = 0; // 拖拽起始 X 坐标
-    let dragStartY = 0; // 拖拽起始 Y 坐标
-    let groupOffsetX = 0; // 卡片组整体 X 偏移
-    let groupOffsetY = 0; // 卡片组整体 Y 偏移
-    let currentBlockId = null; // 当前卡片 ID
-    let connections = []; // 连接数据
-    let connectionCountMap = new Map(); // 连接数映射
-    let currentEditingBlock = null; // 当前编辑的卡片
+    let currentZoom = 100;
+    let dragActive = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let groupOffsetX = 0;
+    let groupOffsetY = 0;
+    let currentBlockId = null;
+    let connections = [];
+    let connectionCountMap = new Map();
+    let currentEditingBlock = null;
+    let svgConnectorPoints = new Map();
+    let connectorGroup = null;
+
+    const LEVEL_COLORS = {
+        a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB'
+    };
 
     // ==================== 初始化 ====================
     document.addEventListener('DOMContentLoaded', function () {
@@ -66,6 +72,13 @@
 
         // 初始化弹窗
         initModal();
+
+        window.addEventListener('resize', function () {
+            if (typeof updateSvgConnectorPositions === 'function') {
+                updateSvgConnectorPositions();
+            }
+            drawConnections();
+        });
     });
 
     // ==================== 加载卡片数据 ====================
@@ -244,25 +257,25 @@
         cardElement.setAttribute('data-card-id', block.id);
         cardElement.setAttribute('data-level', level);
 
-        // 获取连接数
-        const count = connectionCountMap.get(block.id) || 0;
-
-        // 判断是否需要显示起点/终点连接点
         const isFirstLevel = level === 1;
         const isLastLevel = level === maxLevel;
 
-        // 构建卡片HTML
+        let badge = '';
+        if (!isFirstLevel && !isLastLevel) {
+            badge = `<div class="w_contp_inum">0</div>`;
+        }
+
         let html = `
             <div class="block-header">
                 <span class="block-title">${block.title}</span>
             </div>
             <div class="block-content">
                 <div class="block-content-text">${block.desc}</div>
+                <span class="w_contp_btn detail-btn" data-card-id="${block.id}" data-title="${block.title}" >
+                    详情
+                    <i class="fas fa-chevron-right"></i>
+                </span>
             </div>
-            <span class="w_contp_btn detail-btn" data-card-id="${block.id}" data-title="${block.title}" >
-                详情
-                <i class="fas fa-chevron-right"></i>
-            </span>
             <div class="block-actions">
                 <button class="action-btn edit-btn" data-card-id="${block.id}" data-title="${block.title}" >
                     <div class="xcustomSvg">
@@ -277,35 +290,11 @@
                     编辑
                 </button>
             </div>
+            ${badge}
         `;
-
-        // 添加连接点 - 第一层右边显示起点圆圈，最后一层右边不要连接点，其余层级左右都显示
-        if (isFirstLevel) {
-            if (count > 0) {
-                html += `<div class="connector-point start-point">${count}</div>`;
-            } else {
-                html += `<div class="connector-point start-point" style="font-size:10px;">0</div>`;
-            }
-        } else {
-            // 不是第一层，添加右上角连接数徽章
-            html += `<div class="w_contp_inum">${count}</div>`;
-
-            // 不是第一层，左边显示终点圆圈
-            html += `<div class="connector-point end-point"></div>`;
-
-            // 不是最后一层，右边显示起点圆圈
-            if (!isLastLevel) {
-                if (count > 0) {
-                    html += `<div class="connector-point start-point">${count}</div>`;
-                } else {
-                    html += `<div class="connector-point start-point" style="font-size:10px;">0</div>`;
-                }
-            }
-        }
 
         cardElement.innerHTML = html;
 
-        // 绑定详情按钮事件
         const moreBtn = cardElement.querySelector('.detail-btn');
         if (moreBtn) {
             moreBtn.addEventListener('click', function (e) {
@@ -316,16 +305,13 @@
             });
         }
 
-        // 绑定编辑按钮事件
         const editBtn = cardElement.querySelector('.edit-btn');
         if (editBtn) {
             editBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
-
                 const cardId = this.getAttribute('data-card-id');
                 const title = this.getAttribute('data-title');
                 const content = this.closest('.w_contp_item').querySelector('.block-content-text').textContent;
-
                 showEditModal(cardId, title, content);
             });
         }
@@ -338,91 +324,229 @@
         connectionCountMap.clear();
 
         connections.forEach(conn => {
-            // 增加起始点的连接数
             if (connectionCountMap.has(conn.startId)) {
                 connectionCountMap.set(conn.startId, connectionCountMap.get(conn.startId) + 1);
             } else {
                 connectionCountMap.set(conn.startId, 1);
-            }
-            // 增加结束点的连接数
-            if (connectionCountMap.has(conn.endId)) {
-                connectionCountMap.set(conn.endId, connectionCountMap.get(conn.endId) + 1);
-            } else {
-                connectionCountMap.set(conn.endId, 1);
             }
         });
     }
 
     // 绘制连接线
     function drawConnections() {
-
-        // 清空SVG内容，保留defs
-        const defs = svg.querySelector('defs');
         svg.innerHTML = '';
-        if (defs) {
-            svg.appendChild(defs);
+
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        const defs = document.createElementNS(svgNS, 'defs');
+        var gradients = [
+            { id: 'gradient-level-1-to-level-2', c1: '#409eff', c2: '#67c23a' },
+            { id: 'gradient-level-2-to-level-3', c1: '#67c23a', c2: '#e6a23c' },
+            { id: 'gradient-level-3-to-level-4', c1: '#e6a23c', c2: '#f56c6c' },
+            { id: 'gradient-level-4-to-level-5', c1: '#f56c6c', c2: '#E372DB' }
+        ];
+        gradients.forEach(function (g) {
+            var lg = document.createElementNS(svgNS, 'linearGradient');
+            lg.setAttribute('id', g.id);
+            lg.setAttribute('x1', '0%');
+            lg.setAttribute('y1', '0%');
+            lg.setAttribute('x2', '100%');
+            lg.setAttribute('y2', '0%');
+            var s1 = document.createElementNS(svgNS, 'stop');
+            s1.setAttribute('offset', '0%');
+            s1.setAttribute('stop-color', g.c1);
+            var s2 = document.createElementNS(svgNS, 'stop');
+            s2.setAttribute('offset', '100%');
+            s2.setAttribute('stop-color', g.c2);
+            lg.appendChild(s1);
+            lg.appendChild(s2);
+            defs.appendChild(lg);
+        });
+        svg.appendChild(defs);
+
+        var linesGroup = document.createElementNS(svgNS, 'g');
+        linesGroup.setAttribute('class', 'svg-lines-group');
+        svg.appendChild(linesGroup);
+
+        connectorGroup = document.createElementNS(svgNS, 'g');
+        connectorGroup.setAttribute('id', 'connector-points-group');
+        svg.appendChild(connectorGroup);
+
+        svgConnectorPoints.clear();
+
+        var allCards = document.querySelectorAll('.w_contp_item');
+        var maxLevel = 0;
+        allCards.forEach(function (card) {
+            var m = card.className.match(/level-(\d+)/);
+            if (m) maxLevel = Math.max(maxLevel, parseInt(m[1], 10));
+        });
+
+        allCards.forEach(function (card) {
+            var cardId = card.getAttribute('data-card-id');
+            if (!cardId) return;
+            var levelMatch = card.className.match(/level-(\d+)/);
+            var level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+            var isFirstLevel = level === 1;
+            var isLastLevel = level === maxLevel;
+
+            if (!isLastLevel) {
+                createSvgConnectorPoint(card, 'start', cardId);
+            }
+            if (!isFirstLevel) {
+                createSvgConnectorPoint(card, 'end', cardId);
+            }
+        });
+
+        updateSvgConnectorPositions();
+
+        connections.forEach(function (conn) {
+            drawConnection(conn, linesGroup);
+        });
+
+        updateBadges();
+    }
+
+    function createSvgConnectorPoint(block, type, blockId) {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var dataId = blockId + '-' + type;
+        var levelKey = blockId[0].toLowerCase();
+        var color = LEVEL_COLORS[levelKey] || '#409eff';
+        var radius = blockId.startsWith('a') ? 10 : 8;
+
+        var g = document.createElementNS(svgNS, 'g');
+        g.setAttribute('class', 'svg-connector-point svg-' + type + '-point');
+        g.setAttribute('data-id', dataId);
+        g.setAttribute('data-block-id', blockId);
+
+        var outerCircle = document.createElementNS(svgNS, 'circle');
+        outerCircle.setAttribute('r', String(radius));
+        outerCircle.setAttribute('fill', type === 'start' && blockId.startsWith('a') ? color : '#fff');
+        outerCircle.setAttribute('stroke', color);
+        outerCircle.setAttribute('stroke-width', '2');
+        outerCircle.setAttribute('class', 'svg-connector-outer');
+        g.appendChild(outerCircle);
+
+        if (type === 'start' && blockId.startsWith('a')) {
+            var text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            text.setAttribute('fill', '#fff');
+            text.setAttribute('font-size', '10');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('class', 'svg-connector-badge-text');
+            text.textContent = '0';
+            g.appendChild(text);
         }
-        console.log(connections, 'connections');
-        // 绘制每条连接线
-        connections.forEach((conn) => {
-            drawConnection(conn);
+
+        connectorGroup.appendChild(g);
+
+        svgConnectorPoints.set(dataId, {
+            element: g,
+            outerCircle: outerCircle,
+            block: block,
+            type: type,
+            dataId: dataId
         });
     }
 
-    // 绘制单条连接线
-    function drawConnection(conn) {
-        const startCard = document.getElementById(`card-${conn.startId}`);
-        const endCard = document.getElementById(`card-${conn.endId}`);
+    function updateSvgConnectorPositions() {
+        var svgRect = svg.getBoundingClientRect();
 
-        if (!startCard || !endCard) return;
+        svgConnectorPoints.forEach(function (info) {
+            var element = info.element;
+            var block = info.block;
+            var type = info.type;
 
-        // 获取连接点
-        const startPoint = startCard.querySelector('.start-point');
-        const endPoint = endCard.querySelector('.end-point');
+            if (!block || !block.offsetParent) {
+                element.style.display = 'none';
+                return;
+            }
 
-        if (!startPoint || !endPoint) return;
+            element.style.display = '';
 
-        // 获取连接点和 SVG 的位置
-        const svgRect = svg.getBoundingClientRect();
-        const startRect = startPoint.getBoundingClientRect();
-        const endRect = endPoint.getBoundingClientRect();
+            var blockRect = block.getBoundingClientRect();
+            var cx, cy;
 
-        // 计算连接点在 SVG 坐标系中的位置
-        const startX = startRect.left + startRect.width / 2 - svgRect.left;
-        const startY = startRect.top + startRect.height / 2 - svgRect.top;
-        const endX = endRect.left + endRect.width / 2 - svgRect.left;
-        const endY = endRect.top + endRect.height / 2 - svgRect.top;
+            if (type === 'start') {
+                cx = blockRect.right - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            } else {
+                cx = blockRect.left - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            }
 
-        // 创建贝塞尔曲线路径
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            element.setAttribute('transform', 'translate(' + cx + ',' + cy + ')');
+        });
+    }
+
+    function updateBadges() {
+        var map = new Map();
+        svgConnectorPoints.forEach(function (info) {
+            if (info.type === 'start') {
+                map.set(info.dataId, 0);
+            }
+        });
+        connections.forEach(function (c) {
+            var sDataId = c.startId + '-start';
+            if (map.has(sDataId)) {
+                map.set(sDataId, map.get(sDataId) + 1);
+            }
+        });
+        map.forEach(function (cnt, dataId) {
+            var info = svgConnectorPoints.get(dataId);
+            if (!info) return;
+            var block = info.block;
+            if (block && block.getAttribute('data-card-id') && block.getAttribute('data-card-id').startsWith('a')) {
+                var textEl = info.element.querySelector('.svg-connector-badge-text');
+                if (textEl) textEl.textContent = cnt;
+            } else if (block) {
+                var badge = block.querySelector('.w_contp_inum');
+                if (badge) badge.textContent = cnt;
+            }
+        });
+    }
+
+    function drawConnection(conn, linesGroup) {
+        var startInfo = svgConnectorPoints.get(conn.startId + '-start');
+        var endInfo = svgConnectorPoints.get(conn.endId + '-end');
+
+        if (!startInfo || !endInfo) return;
+
+        var startElement = startInfo.element;
+        var endElement = endInfo.element;
+
+        var startTransform = startElement.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var startX = parseFloat(startMatch[1]);
+        var startY = parseFloat(startMatch[2]);
+
+        var endTransform = endElement.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var endX = parseFloat(endMatch[1]);
+        var endY = parseFloat(endMatch[2]);
+
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var path = document.createElementNS(svgNS, 'path');
         path.setAttribute('class', 'path-line');
-        path.setAttribute('stroke-width', String(3)); // 保持线条粗细
+        path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        // 根据起始层级设置渐变色
-        const startLevel = parseInt(conn.startId[1]) || 1;
-        let gradientId = `gradient-level-${startLevel}-to-level-${startLevel + 1}`;
-        path.setAttribute('stroke', `url(#${gradientId})`);
+        var startLevel = parseInt(conn.startId[1]) || 1;
+        var endLevel = parseInt(conn.endId[1]) || 2;
 
-        // 贝塞尔曲线 - 更平滑
-        const controlX1 = startX + (endX - startX) * 0.4;
-        const controlX2 = startX + (endX - startX) * 0.6;
-        const d = `M ${startX} ${startY} C ${controlX1} ${startY}, ${controlX2} ${endY}, ${endX} ${endY}`;
+        var levelDiff = endLevel - startLevel;
+        if (levelDiff === 1) {
+            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
+        }
+
+        var cx = (startX + endX) / 2;
+        var bend = Math.abs(startY - endY) < 0.1 ? 0.5 : 0;
+        var d = 'M ' + startX + ' ' + startY + ' C ' + cx + ' ' + (startY + bend) + ', ' + cx + ' ' + (endY - bend) + ', ' + endX + ' ' + endY;
         path.setAttribute('d', d);
-        
-        svg.appendChild(path); 
-        if ((conn.startId == 'b1' && conn.endId == 'c2')) {
-            console.log(conn.startId)
-            console.log(conn.endId)
-            console.log(endY)
-            console.log(d)
-        }
-        if ((conn.startId == 'b1' && conn.endId == 'c3')) {
-            console.log(conn.startId)
-            console.log(conn.endId)
-            console.log(endY)
-            console.log(d)
-        }
+
+        linesGroup.appendChild(path);
     }
 
 

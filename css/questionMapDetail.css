@@ -74,13 +74,104 @@ body {
 }
 
 .w_contp_item {
-    position: relative;
     z-index: 20;
 }
 
 .connector-point {
     position: absolute;
     z-index: 30;
+}
+
+#connector-points-group {
+    pointer-events: none;
+}
+
+.svg-connector-point {
+    pointer-events: all;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.svg-connector-outer {
+    transition: fill 0.15s, stroke 0.15s;
+}
+
+.svg-connector-badge-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+.path-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+}
+
+.path-line.level-1-to-level-2 {
+    stroke: url(#gradient-level-1-to-level-2);
+}
+
+.path-line.level-2-to-level-3 {
+    stroke: url(#gradient-level-2-to-level-3);
+}
+
+.path-line.level-3-to-level-4 {
+    stroke: url(#gradient-level-3-to-level-4);
+}
+
+.path-line.level-4-to-level-5 {
+    stroke: url(#gradient-level-4-to-level-5);
+}
+
+.w_contp_inum {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #409eff;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.level-2 .w_contp_inum {
+    background: #67c23a;
+}
+
+.level-3 .w_contp_inum {
+    background: #e6a23c;
+}
+
+.level-4 .w_contp_inum {
+    background: #f56c6c;
+}
+
+.level-5 .w_contp_inum {
+    background: #E372DB;
+}
+
+.w_contp_btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #409eff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.w_contp_btn:hover {
+    text-decoration: none;
 }
 
 .w_cont {
@@ -94,6 +185,7 @@ body {
     gap: 8px;
     justify-content: flex-end;
     margin-top: 12px;
+    position: relative;
 }
 
 .action-btn {
@@ -113,11 +205,6 @@ body {
 .action-btn:hover {
     background: #409eff;
     color: #fff;
-    border-color: #409eff;
-}
-
-.ABox .connector-point {
-    background: #409eff;
     border-color: #409eff;
 }
 

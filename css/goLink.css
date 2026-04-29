@@ -103,62 +103,100 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.connector-point.dragging {
-    transform: scale(1.3);
+#connector-points-group {
+    pointer-events: none;
+}
+
+.svg-connector-point {
+    pointer-events: all;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.svg-connector-point.dragging {
+    filter: drop-shadow(0 4px 8px rgba(64, 158, 255, 0.5));
+}
+
+.svg-connector-outer {
+    transition: fill 0.15s, stroke 0.15s;
+}
+
+.svg-connector-badge-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+.path-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+}
+
+.path-line.level-1-to-level-2 {
+    stroke: url(#gradient-level-1-to-level-2);
+}
+
+.path-line.level-2-to-level-3 {
+    stroke: url(#gradient-level-2-to-level-3);
+}
+
+.path-line.level-3-to-level-4 {
+    stroke: url(#gradient-level-3-to-level-4);
+}
+
+.path-line.level-4-to-level-5 {
+    stroke: url(#gradient-level-4-to-level-5);
+}
+
+.w_contp_inum {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     background: #409eff;
-    color: white;
-    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.4);
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.w_contp_item .connector-point.start-point {
-    right: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.w_contp_item .connector-point.end-point {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.ABox .w_contp_item .connector-point.start-point {
-    width: 20px;
-    height: 20px;
-    right: -10px;
-    font-size: 12px;
-    border-width: 2px;
-    z-index: 1001;
-}
-
-.ABox .connector-point:hover,
-.ABox .connector-point.dragging {
-    background: #409eff;
-    color: white;
-}
-
-.BBox .connector-point:hover,
-.BBox .connector-point.dragging {
+.level-2 .w_contp_inum {
     background: #67c23a;
-    color: white;
 }
 
-.CBox .connector-point:hover,
-.CBox .connector-point.dragging {
+.level-3 .w_contp_inum {
     background: #e6a23c;
-    color: white;
 }
 
-.DBox .connector-point:hover,
-.DBox .connector-point.dragging {
+.level-4 .w_contp_inum {
     background: #f56c6c;
-    color: white;
 }
 
-.EBox .connector-point:hover,
-.EBox .connector-point.dragging {
+.level-5 .w_contp_inum {
     background: #E372DB;
-    color: white;
+}
+
+.w_contp_btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #409eff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.w_contp_btn:hover {
+    text-decoration: none;
 }
 
 .golink-modal {

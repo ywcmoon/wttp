@@ -368,7 +368,7 @@
         });
 
         const knowledgeNodes = findKnowledgeNodes(tree, ability.knowledgeIds);
-        const spacing = Math.min(140, (knowledgeCanvas.clientWidth - 100) / Math.max(knowledgeNodes.length, 1));
+        const spacing = Math.min(180, (knowledgeCanvas.clientWidth - 100) / Math.max(knowledgeNodes.length, 1));
         const startX = centerX - (knowledgeNodes.length - 1) * spacing / 2;
 
         knowledgeNodes.forEach((kn, i) => {
@@ -386,7 +386,7 @@
             graphLinks.push({ source: 'ability-' + ability.id, target: nodeId });
 
             if (hasChildren) {
-                const childSpacing = Math.min(100, spacing / Math.max(kn.children.length, 1));
+                const childSpacing = Math.min(130, spacing / Math.max(kn.children.length, 1));
                 const childStartX = startX + i * spacing - (kn.children.length - 1) * childSpacing / 2;
                 kn.children.forEach((child, j) => {
                     const childId = 'kn-' + child.id;
@@ -454,15 +454,16 @@
         const defs = document.createElementNS(svgNS, 'defs');
         const marker = document.createElementNS(svgNS, 'marker');
         marker.setAttribute('id', 'arrowhead');
-        marker.setAttribute('markerWidth', '10');
-        marker.setAttribute('markerHeight', '7');
-        marker.setAttribute('refX', '10');
-        marker.setAttribute('refY', '3.5');
+        marker.setAttribute('markerWidth', '8');
+        marker.setAttribute('markerHeight', '6');
+        marker.setAttribute('refX', '8');
+        marker.setAttribute('refY', '3');
         marker.setAttribute('orient', 'auto');
-        const polygon = document.createElementNS(svgNS, 'polygon');
-        polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
-        polygon.setAttribute('fill', '#c0c4cc');
-        marker.appendChild(polygon);
+        marker.setAttribute('markerUnits', 'userSpaceOnUse');
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M0,0 L8,3 L0,6 L2,3 Z');
+        path.setAttribute('fill', '#909399');
+        marker.appendChild(path);
         defs.appendChild(marker);
         knowledgeSvg.appendChild(defs);
 
@@ -487,9 +488,9 @@
 
             const line = document.createElementNS(svgNS, 'path');
             const sx = source.x;
-            const sy = source.y + sourceR;
+            const sy = source.y + sourceR + 4;
             const tx = target.x;
-            const ty = target.y - targetR;
+            const ty = target.y - targetR - 8;
             const midY = (sy + ty) / 2;
             const d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
             line.setAttribute('d', d);
@@ -532,32 +533,38 @@
             circle.setAttribute('stroke-width', '2');
             g.appendChild(circle);
 
-            const iconText = document.createElementNS(svgNS, 'text');
-            iconText.setAttribute('x', '0');
-            iconText.setAttribute('y', '1');
-            iconText.setAttribute('text-anchor', 'middle');
-            iconText.setAttribute('dominant-baseline', 'middle');
-            iconText.setAttribute('font-size', node.type === 'root' ? '16' : '12');
-            iconText.setAttribute('fill', '#fff');
-            iconText.setAttribute('font-weight', '600');
-            if (node.type === 'root') {
-                iconText.textContent = '\u26A1';
-            } else if (node.type === 'knowledge') {
-                iconText.textContent = '\u2605';
-            } else {
-                iconText.textContent = '\u25CF';
-            }
-            g.appendChild(iconText);
+            const nameText = document.createElementNS(svgNS, 'text');
+            nameText.setAttribute('x', '0');
+            nameText.setAttribute('y', '1');
+            nameText.setAttribute('text-anchor', 'middle');
+            nameText.setAttribute('dominant-baseline', 'middle');
+            nameText.setAttribute('font-size', node.type === 'root' ? '13' : '11');
+            nameText.setAttribute('fill', '#fff');
+            nameText.setAttribute('font-weight', '600');
+            nameText.setAttribute('style', 'pointer-events: none;');
 
-            const text = document.createElementNS(svgNS, 'text');
-            text.setAttribute('x', '0');
-            text.setAttribute('y', r + 16);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('font-size', '12');
-            text.setAttribute('fill', '#181e33');
-            text.setAttribute('font-weight', '500');
-            text.textContent = node.name;
-            g.appendChild(text);
+            var nameLen = node.name.length;
+            var maxInnerLen = node.type === 'root' ? 4 : 3;
+            if (nameLen <= maxInnerLen) {
+                nameText.textContent = node.name;
+            } else {
+                var truncLen = node.type === 'root' ? 3 : 2;
+                nameText.textContent = node.name.substring(0, truncLen) + '…';
+            }
+            g.appendChild(nameText);
+
+            if (nameLen > maxInnerLen) {
+                var outerText = document.createElementNS(svgNS, 'text');
+                outerText.setAttribute('x', '0');
+                outerText.setAttribute('y', String(r + 16));
+                outerText.setAttribute('text-anchor', 'middle');
+                outerText.setAttribute('font-size', '11');
+                outerText.setAttribute('fill', '#181e33');
+                outerText.setAttribute('font-weight', '500');
+                outerText.setAttribute('style', 'pointer-events: none;');
+                outerText.textContent = nameLen > 8 ? node.name.substring(0, 7) + '…' : node.name;
+                g.appendChild(outerText);
+            }
 
             if (node.hasChildren) {
                 const isCollapsed = collapsedNodes.has(node.id);
@@ -687,9 +694,9 @@
 
             const line = document.createElementNS(svgNS, 'path');
             const sx = source.x;
-            const sy = source.y + sourceR;
+            const sy = source.y + sourceR + 4;
             const tx = target.x;
-            const ty = target.y - targetR;
+            const ty = target.y - targetR - 8;
             const midY = (sy + ty) / 2;
             const d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
             line.setAttribute('d', d);
@@ -851,17 +858,17 @@
         const hasChildren = node.children && node.children.length > 0;
 
         const main = document.createElement('div');
-        main.className = 'tree_main';
+        main.className = 'tree-main';
         main.style.paddingLeft = (14 + level * 20) + 'px';
 
         if (hasChildren) {
             const arrow = document.createElement('span');
-            arrow.className = 'tree_arrow';
+            arrow.className = 'tree-arrow';
             arrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
             arrow.addEventListener('click', function (e) {
                 e.stopPropagation();
                 arrow.classList.toggle('expanded');
-                const children = li.querySelector('.tree_children');
+                const children = li.querySelector('.tree-children');
                 if (children) children.classList.toggle('expanded');
             });
             main.appendChild(arrow);
@@ -874,14 +881,14 @@
         }
 
         const text = document.createElement('span');
-        text.className = 'tree_text';
+        text.className = 'tree-text';
         text.textContent = node.name;
         text.addEventListener('click', function () {
             if (hasChildren) {
-                const arrow = main.querySelector('.tree_arrow');
+                const arrow = main.querySelector('.tree-arrow');
                 if (arrow) {
                     arrow.classList.toggle('expanded');
-                    const children = li.querySelector('.tree_children');
+                    const children = li.querySelector('.tree-children');
                     if (children) children.classList.toggle('expanded');
                 }
             }
@@ -889,7 +896,7 @@
         main.appendChild(text);
 
         const check = document.createElement('span');
-        check.className = 'tree_check' + (tempSelectedKnowledge.includes(node.id) ? ' checked' : '');
+        check.className = 'tree-check' + (tempSelectedKnowledge.includes(node.id) ? ' checked' : '');
         check.addEventListener('click', function (e) {
             e.stopPropagation();
             toggleKnowledgeSelection(node.id);
@@ -901,14 +908,14 @@
 
         if (hasChildren) {
             const childrenUl = document.createElement('ul');
-            childrenUl.className = 'tree_children';
+            childrenUl.className = 'tree-children';
             node.children.forEach(child => {
                 childrenUl.appendChild(createTreeNode(child, level + 1));
             });
             li.appendChild(childrenUl);
 
             if (tempSelectedKnowledge.some(id => node.children.some(c => c.id === id))) {
-                const arrow = main.querySelector('.tree_arrow');
+                const arrow = main.querySelector('.tree-arrow');
                 if (arrow) arrow.classList.add('expanded');
                 childrenUl.classList.add('expanded');
             }
@@ -935,14 +942,15 @@
         tempSelectedKnowledge.forEach(id => {
             const name = findKnowledgeName(tree, id);
             if (!name) return;
-            const li = document.createElement('li');
-            li.innerHTML = '<span class="zpSpan">' + name + '</span><span class="zpPele" data-id="' + id + '"></span>';
-            li.querySelector('.zpPele').addEventListener('click', function () {
+            const div = document.createElement('div');
+            div.className = 'knowledge-selected-item';
+            div.innerHTML = '<span>' + name + '</span><span class="remove-btn" data-id="' + id + '"></span>';
+            div.querySelector('.remove-btn').addEventListener('click', function () {
                 toggleKnowledgeSelection(id);
                 renderKnowledgeTree(tree);
                 updateKnowledgeSelectedList();
             });
-            knowledgeSelectedList.appendChild(li);
+            knowledgeSelectedList.appendChild(div);
         });
     }
 
@@ -1001,6 +1009,9 @@
         updateChart();
         renderAbilities();
         renderKnowledgeGraph();
+        if (!selectedAbilityId && abilities.length > 0) {
+            selectAbility(abilities[0].id);
+        }
     }
 
     function init() {

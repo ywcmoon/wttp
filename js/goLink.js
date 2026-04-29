@@ -12,10 +12,17 @@
     const submitBtn = document.getElementById('golink-submit-btn'); // 提交/下一步按钮
 
     // ==================== 核心状态变量 ====================
-    let connections = []; // 存储所有连线数据
-    let connId = 0; // 连线 ID 计数器，用于生成唯一 ID
-    let isDraggingConn = false; // 是否正在拖拽连线
-    let startX, startY, curStartPt = null, tempPath = null; // 连线拖拽临时变量
+    let connections = [];
+    let connId = 0;
+    let isDraggingConn = false;
+    let startX, startY, curStartPt = null, tempPath = null;
+
+    let svgConnectorPoints = new Map();
+    let connectorGroup = null;
+
+    const LEVEL_COLORS = {
+        a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB'
+    };
 
     // 状态管理
     let currentMode = 'connect'; // 当前模式：'connect'（连线模式）| 'compare'（对比模式）| 'drag'（拖拽模式）
@@ -87,33 +94,26 @@
     // ==================== 渲染不同视图 ====================
  
 
-    // 渲染对比模式视图
     function renderCompareView() {
-        // 清除现有连线
         clearAllConnections();
+        updateSvgConnectorPositions();
 
-        // 读取标准答案和学生答案
         const ls1 = JSON.parse(localStorage.getItem('ls1') || '{"connections":[]}');
         const ls3 = JSON.parse(localStorage.getItem('ls3') || '{"connections":[]}');
 
-        // 渲染所有连线（标准答案+学生答案）
         renderCompareConnections(ls1.connections, ls3.connections);
     }
 
     function renderDragView() {
-        // 清除现有连线
         clearAllConnections();
+        updateSvgConnectorPositions();
 
-        // 读取标准答案
         const ls1 = JSON.parse(localStorage.getItem('ls1') || '{"connections":[]}');
 
-        // 渲染正确的实线
         renderCorrectConnections(ls1.connections);
 
-        // 显示缩放指示器
         showZoomIndicator();
 
-        // 启用卡片组拖拽
         enableCardGroupDrag();
     }
 
@@ -329,52 +329,43 @@
         return '#409eff';
     }
 
-    // ==================== 渲染单条连线 ====================
     function renderLine(startId, endId, style, color) {
-        const startPt = document.querySelector(`[data-id="${startId}-start"]`) ||
-            document.querySelector(`[data-id="${startId}-end"]`);
-        const endPt = document.querySelector(`[data-id="${endId}-end"]`) ||
-            document.querySelector(`[data-id="${startId}-start"]`);
+        var startInfo = svgConnectorPoints.get(startId + '-start');
+        var endInfo = svgConnectorPoints.get(endId + '-end');
 
-        // 确保找到正确的点对
-        let actualStart = null, actualEnd = null;
+        if (!startInfo || !endInfo) return;
 
-        // 查找正确的起点和终点
-        const possibleStartPoints = document.querySelectorAll(`[data-id^="${startId}-"]`);
-        const possibleEndPoints = document.querySelectorAll(`[data-id^="${endId}-"]`);
+        var startElement = startInfo.element;
+        var endElement = endInfo.element;
 
-        possibleStartPoints.forEach(s => {
-            if (s.classList.contains('start-point')) actualStart = s;
-        });
+        var startTransform = startElement.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var sx = parseFloat(startMatch[1]);
+        var sy = parseFloat(startMatch[2]);
 
-        possibleEndPoints.forEach(e => {
-            if (e.classList.contains('end-point')) actualEnd = e;
-        });
+        var endTransform = endElement.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var ex = parseFloat(endMatch[1]);
+        var ey = parseFloat(endMatch[2]);
 
-        if (!actualStart) actualStart = possibleStartPoints[0];
-        if (!actualEnd) actualEnd = possibleEndPoints[0];
-
-        if (!actualStart || !actualEnd) return;
-
-        const sCoord = getPointCoord(actualStart);
-        const eCoord = getPointCoord(actualEnd);
-
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', bezier(sCoord.x, sCoord.y, eCoord.x, eCoord.y));
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', bezier(sx, sy, ex, ey));
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', color);
-        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-width', '2.5');
 
         if (style === 'dashed') {
             path.setAttribute('stroke-dasharray', '8,4');
         }
 
-        svg.appendChild(path);
+        svg.insertBefore(path, connectorGroup);
 
         connections.push({
             id: connId++,
-            startElement: actualStart,
-            endElement: actualEnd,
+            startElement: startElement,
+            endElement: endElement,
             element: path
         });
     }
@@ -491,21 +482,6 @@
         }
     }
 
-    // 显示/隐藏顶部导航
-    function showExploreHeader() {
-        const header = document.querySelector('.w_explorehead');
-        if (header) {
-            header.style.display = 'flex';
-        }
-    }
-
-    function hideExploreHeader() {
-        const header = document.querySelector('.w_explorehead');
-        if (header) {
-            header.style.display = 'none';
-        }
-    }
-
     function handleZoomWheel(e) {
         if (currentMode !== 'drag') return;
 
@@ -561,55 +537,52 @@
             renderCards();
            
             setTimeout(() => {
-                // 初始化连接点并绘制完整的层级连线，
                 initConnectionPoints();
-                
-                // 加载用户之前保存的连线数据
+                drawFullHierarchyConnections();
                 loadLs3Connections();
+                updateBadges();
             }, 100);
         }
 
-        /**
-         * 根据 ls1 中的 connections 连接关系绘制连线
-         * 
-         * 该函数从本地存储中获取 ls1 数据，读取其中的 connections 数组，
-         * 根据每个连接关系的 startId 和 endId 查找对应的连接点元素，
-         * 然后调用 drawDefaultConnection 方法绘制连线。
-         * 
-         * @returns {void}
-         */
         function drawFullHierarchyConnections() {
             const ls1 = JSON.parse(localStorage.getItem('ls1') || '{"connections":[]}');
             const connections = ls1.connections || [];
 
             connections.forEach(conn => {
-                const startPt = document.querySelector(`[data-id="${conn.startId}-start"]`);
-                const endPt = document.querySelector(`[data-id="${conn.endId}-end"]`);
+                const startInfo = svgConnectorPoints.get(conn.startId + '-start');
+                const endInfo = svgConnectorPoints.get(conn.endId + '-end');
 
-                // 确保起始和结束锚点元素存在后，绘制连线
-                if (startPt && endPt) {
-                    const startLevel = parseInt(conn.startId[1]) || 1;
-                    drawDefaultConnection(startPt, endPt, startLevel);
+                if (startInfo && endInfo) {
+                    drawDefaultConnection(startInfo.element, endInfo.element, conn.startId);
                 }
             });
         }
 
-    // 绘制默认连线
-    function drawDefaultConnection(startPt, endPt, fromLevel) {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    function drawDefaultConnection(startPt, endPt, startBlockId) {
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'path-line');
-        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        // 根据层级设置渐变色
-        let gradientId = `gradient-level-${fromLevel}-to-level-${fromLevel + 1}`;
-        path.setAttribute('stroke', `url(#${gradientId})`);
+        var startLevel = parseInt(startBlockId[1]) || 1;
+        var endLevel = startLevel + 1;
+        path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
 
-        const sCoord = getPointCoord(startPt);
-        const eCoord = getPointCoord(endPt);
-        path.setAttribute('d', bezier(sCoord.x, sCoord.y, eCoord.x, eCoord.y));
+        var startTransform = startPt.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var sx = parseFloat(startMatch[1]);
+        var sy = parseFloat(startMatch[2]);
 
-        svg.appendChild(path);
+        var endTransform = endPt.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var ex = parseFloat(endMatch[1]);
+        var ey = parseFloat(endMatch[2]);
+
+        path.setAttribute('d', bezier(sx, sy, ex, ey));
+
+        svg.insertBefore(path, connectorGroup);
     }
 
         /**
@@ -730,6 +703,7 @@
         const container = document.getElementById(`golink-level-${level}-cards`);
         if (!container) return;
 
+        const isFirstLevel = level === 1;
         const isLastLevel = level === maxChainLength;
         const levelClass = `level-${level}`;
 
@@ -740,7 +714,7 @@
         cardElement.setAttribute('data-level', level);
 
         let badge = '';
-        if (!isLastLevel) {
+        if (!isFirstLevel && !isLastLevel) {
             badge = `<div class="w_contp_inum">0</div>`;
         }
 
@@ -753,8 +727,6 @@
                 <span class="w_contp_btn golink-more-btn" data-card-id="${card.id}" data-title="${card.title}">详情<i class="fas fa-chevron-right"></i></span>
             </div>
             ${badge}
-            ${!isLastLevel ? `<div class="connector-point start-point" data-id="${card.id}-start">0</div>` : ''}
-            ${level > 1 ? `<div class="connector-point end-point" data-id="${card.id}-end"></div>` : ''}
         `;
 
         const moreBtn = cardElement.querySelector('.golink-more-btn');
@@ -805,153 +777,283 @@
         }
     }
 
-    /**
-     * 渲染两个学生节点之间的连接线
-     * @param {string} startId - 起始节点的ID
-     * @param {string} endId - 结束节点的ID
-     */
     function renderStudentConnection(startId, endId) {
-        // 找到对应的连接点
-        const startPt = document.querySelector(`[data-id="${startId}-start"]`);
-        const endPt = document.querySelector(`[data-id="${endId}-end"]`);
+        var startPt = svgConnectorPoints.get(startId + '-start');
+        var endPt = svgConnectorPoints.get(endId + '-end');
 
-        if (startPt && endPt) {
-            const sCoord = getPointCoord(startPt);
-            const eCoord = getPointCoord(endPt);
+        if (!startPt || !endPt) return;
 
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        var startElement = startPt.element;
+        var endElement = endPt.element;
 
-            // 根据起始节点ID的首字母确定层级，并设置对应的渐变色
-            const startLevel = startId[0].toLowerCase();
-            let gradientId = '';
-            if (startLevel === 'a') gradientId = 'gradient-level-1-to-level-2';
-            else if (startLevel === 'b') gradientId = 'gradient-level-2-to-level-3';
-            else if (startLevel === 'c') gradientId = 'gradient-level-3-to-level-4';
-            else if (startLevel === 'd') gradientId = 'gradient-level-4-to-level-5';
+        var startTransform = startElement.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var sx = parseFloat(startMatch[1]);
+        var sy = parseFloat(startMatch[2]);
 
-            path.setAttribute('class', 'path-line');
-            path.setAttribute('stroke', gradientId ? `url(#${gradientId})` : '#409eff');
-            path.setAttribute('d', bezier(sCoord.x, sCoord.y, eCoord.x, eCoord.y));
+        var endTransform = endElement.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var ex = parseFloat(endMatch[1]);
+        var ey = parseFloat(endMatch[2]);
 
-            svg.appendChild(path);
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'path-line');
+        path.setAttribute('stroke-width', '2.5');
+        path.setAttribute('fill', 'none');
 
-            // 记录连接信息以便后续管理
-            connections.push({
-                id: connId++,
-                startElement: startPt,
-                endElement: endPt,
-                element: path
-            });
-
-            
+        var startLevel = parseInt(startId[1]) || 1;
+        var endLevel = parseInt(endId[1]) || 2;
+        var levelDiff = endLevel - startLevel;
+        if (levelDiff === 1) {
+            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
         }
+
+        path.setAttribute('d', bezier(sx, sy, ex, ey));
+
+        svg.insertBefore(path, connectorGroup);
+
+        connections.push({
+            id: connId++,
+            startElement: startElement,
+            endElement: endElement,
+            element: path
+        });
     }
 
-    // ==================== 初始化连接点 ====================
     function initConnectionPoints() {
-        const startPoints = document.querySelectorAll('.connector-point.start-point');
-        const endPoints = document.querySelectorAll('.connector-point.end-point');
+        svg.innerHTML = '';
 
-        startPoints.forEach(pt => {
-            pt.addEventListener('mousedown', startDrag);
-            // pt.addEventListener('touchstart', startDrag, { passive: false });
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        const defs = document.createElementNS(svgNS, 'defs');
+        var gradients = [
+            { id: 'gradient-level-1-to-level-2', c1: '#409eff', c2: '#67c23a' },
+            { id: 'gradient-level-2-to-level-3', c1: '#67c23a', c2: '#e6a23c' },
+            { id: 'gradient-level-3-to-level-4', c1: '#e6a23c', c2: '#f56c6c' },
+            { id: 'gradient-level-4-to-level-5', c1: '#f56c6c', c2: '#E372DB' }
+        ];
+        gradients.forEach(function (g) {
+            var lg = document.createElementNS(svgNS, 'linearGradient');
+            lg.setAttribute('id', g.id);
+            lg.setAttribute('x1', '0%');
+            lg.setAttribute('y1', '0%');
+            lg.setAttribute('x2', '100%');
+            lg.setAttribute('y2', '0%');
+            var s1 = document.createElementNS(svgNS, 'stop');
+            s1.setAttribute('offset', '0%');
+            s1.setAttribute('stop-color', g.c1);
+            var s2 = document.createElementNS(svgNS, 'stop');
+            s2.setAttribute('offset', '100%');
+            s2.setAttribute('stop-color', g.c2);
+            lg.appendChild(s1);
+            lg.appendChild(s2);
+            defs.appendChild(lg);
+        });
+        svg.appendChild(defs);
+
+        var linesGroup = document.createElementNS(svgNS, 'g');
+        linesGroup.setAttribute('class', 'svg-lines-group');
+        svg.appendChild(linesGroup);
+
+        connectorGroup = document.createElementNS(svgNS, 'g');
+        connectorGroup.setAttribute('id', 'connector-points-group');
+        svg.appendChild(connectorGroup);
+
+        svgConnectorPoints.clear();
+
+        var allCards = document.querySelectorAll('.w_contp_item');
+        var maxLevel = 0;
+        allCards.forEach(function (card) {
+            var m = card.className.match(/level-(\d+)/);
+            if (m) maxLevel = Math.max(maxLevel, parseInt(m[1], 10));
         });
 
-        endPoints.forEach(pt => {
-            pt.addEventListener('mouseup', endDrag);
-            // pt.addEventListener('touchend', endDrag);
+        allCards.forEach(function (card) {
+            var cardId = card.getAttribute('data-card-id');
+            if (!cardId) return;
+            var levelMatch = card.className.match(/level-(\d+)/);
+            var level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+            var isFirstLevel = level === 1;
+            var isLastLevel = level === maxLevel;
+
+            if (!isLastLevel) {
+                createSvgConnectorPoint(card, 'start', cardId);
+            }
+            if (!isFirstLevel) {
+                createSvgConnectorPoint(card, 'end', cardId);
+            }
         });
 
+        updateSvgConnectorPositions();
+
+        connectorGroup.addEventListener('mousedown', onSvgPointDown);
+        connectorGroup.addEventListener('mouseup', endDrag);
         document.addEventListener('mousemove', onDrag);
-        // document.addEventListener('touchmove', onDrag, { passive: false });
-
         document.addEventListener('mouseup', cancelDrag);
-        // document.addEventListener('touchend', cancelDrag);
     }
 
-    // ==================== 拖拽连线功能 ====================
-    function startDrag(e) {
+    function createSvgConnectorPoint(block, type, blockId) {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var dataId = blockId + '-' + type;
+        var levelKey = blockId[0].toLowerCase();
+        var color = LEVEL_COLORS[levelKey] || '#409eff';
+        var radius = blockId.startsWith('a') ? 10 : 8;
+
+        var g = document.createElementNS(svgNS, 'g');
+        g.setAttribute('class', 'svg-connector-point svg-' + type + '-point');
+        g.setAttribute('data-id', dataId);
+        g.setAttribute('data-block-id', blockId);
+        g.style.cursor = 'crosshair';
+        g.style.pointerEvents = 'all';
+
+        var outerCircle = document.createElementNS(svgNS, 'circle');
+        outerCircle.setAttribute('r', String(radius));
+        outerCircle.setAttribute('fill', type === 'start' && blockId.startsWith('a') ? color : '#fff');
+        outerCircle.setAttribute('stroke', color);
+        outerCircle.setAttribute('stroke-width', '2');
+        outerCircle.setAttribute('class', 'svg-connector-outer');
+        g.appendChild(outerCircle);
+
+        if (type === 'start' && blockId.startsWith('a')) {
+            var text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            text.setAttribute('fill', '#fff');
+            text.setAttribute('font-size', '10');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('class', 'svg-connector-badge-text');
+            text.textContent = '0';
+            g.appendChild(text);
+        }
+
+        connectorGroup.appendChild(g);
+
+        svgConnectorPoints.set(dataId, {
+            element: g,
+            outerCircle: outerCircle,
+            block: block,
+            type: type,
+            dataId: dataId
+        });
+    }
+
+    function updateSvgConnectorPositions() {
+        var svgRect = svg.getBoundingClientRect();
+
+        svgConnectorPoints.forEach(function (info) {
+            var element = info.element;
+            var block = info.block;
+            var type = info.type;
+
+            if (!block || !block.offsetParent) {
+                element.style.display = 'none';
+                return;
+            }
+
+            element.style.display = '';
+
+            var blockRect = block.getBoundingClientRect();
+            var cx, cy;
+
+            if (type === 'start') {
+                cx = blockRect.right - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            } else {
+                cx = blockRect.left - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            }
+
+            element.setAttribute('transform', 'translate(' + cx + ',' + cy + ')');
+        });
+    }
+
+    function updateBadges() {
+        var map = new Map();
+        svgConnectorPoints.forEach(function (info) {
+            if (info.type === 'start') {
+                map.set(info.dataId, 0);
+            }
+        });
+        connections.forEach(function (c) {
+            var sDataId = c.startElement.getAttribute('data-id');
+            if (sDataId && map.has(sDataId)) {
+                map.set(sDataId, map.get(sDataId) + 1);
+            }
+        });
+        map.forEach(function (cnt, dataId) {
+            var info = svgConnectorPoints.get(dataId);
+            if (!info) return;
+            var block = info.block;
+            if (block && block.getAttribute('data-card-id') && block.getAttribute('data-card-id').startsWith('a')) {
+                var textEl = info.element.querySelector('.svg-connector-badge-text');
+                if (textEl) textEl.textContent = cnt;
+            } else if (block) {
+                var badge = block.querySelector('.w_contp_inum');
+                if (badge) badge.textContent = cnt;
+            }
+        });
+    }
+
+    function onSvgPointDown(e) {
         if (currentMode !== 'connect') return;
+
+        var target = e.target.closest('.svg-connector-point');
+        if (!target) return;
+
+        var dataId = target.getAttribute('data-id');
+        if (!dataId || !dataId.endsWith('-start')) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        curStartPt = e.currentTarget;
+        curStartPt = target;
         isDraggingConn = true;
         curStartPt.classList.add('dragging');
 
-        const coord = getPointCoord(curStartPt);
-        startX = coord.x;
-        startY = coord.y;
+        var transform = curStartPt.getAttribute('transform');
+        var match = transform && transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!match) return;
+        startX = parseFloat(match[1]);
+        startY = parseFloat(match[2]);
 
         tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const startCard = curStartPt.closest('.w_contp_item');
-        const startLevel = parseInt(startCard.getAttribute('data-level'));
-        let color = '#409eff';
-        if (startLevel === 1) color = '#409eff';
-        else if (startLevel === 2) color = '#67c23a';
-        else if (startLevel === 3) color = '#e6a23c';
-        else if (startLevel === 4) color = '#f56c6c';
-
         tempPath.setAttribute('fill', 'none');
         tempPath.setAttribute('stroke', '#409eff');
         tempPath.setAttribute('stroke-width', '3');
-        tempPath.setAttribute('stroke-dasharray', ''); // 拖拽时使用实线
-        svg.appendChild(tempPath);
+        svg.insertBefore(tempPath, connectorGroup);
     }
 
     function onDrag(e) {
         if (!isDraggingConn || !tempPath || currentMode !== 'connect') return;
         e.preventDefault();
 
-        let clientX, clientY;
-        if (e.touches) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-
-        const svgRect = svg.getBoundingClientRect();
-        const x = clientX - svgRect.left;
-        const y = clientY - svgRect.top;
+        var svgRect = svg.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        var x = clientX - svgRect.left;
+        var y = clientY - svgRect.top;
 
         tempPath.setAttribute('d', bezier(startX, startY, x, y));
 
-        // 计算拖拽长度
-        const dragLength = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
-        const thresholdLength = 100;
+        var dragLength = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+        var thresholdLength = 100;
 
-        // 获取起始卡片的层级
-        const startCard = curStartPt.closest('.w_contp_item');
-        const startLevel = parseInt(startCard.getAttribute('data-level'));
+        var startBlockId = curStartPt.getAttribute('data-block-id') || '';
+        var startLevelKey = startBlockId[0].toLowerCase();
 
-        // 当拖拽长度超过阈值时，应用渐变色效果
         if (dragLength >= thresholdLength) {
-            const progress = Math.min((dragLength - thresholdLength) / 100, 1);
-
-            if (startLevel === 1) {
-                // 从蓝色到绿色渐变
-                tempPath.style.stroke = `rgb(${(64 - progress * 20)}, ${(158 + progress * 76)}, ${(255 - progress * 200)})`;
-            } else if (startLevel === 2) {
-                // 从绿色到橙色渐变
-                tempPath.style.stroke = `rgb(${(103 + progress * 127)}, ${(194 - progress * 91)}, ${(58 + progress * 100)})`;
-            } else if (startLevel === 3) {
-                // 从橙色到红色渐变
-                tempPath.style.stroke = `rgb(${(230 - progress * 30)}, ${(162 - progress * 60)}, ${(60 + progress * 100)})`;
-            } else if (startLevel === 4) {
-                // 从红色到紫色渐变
-                tempPath.style.stroke = `rgb(${(245 - progress * 45)}, ${(108 + progress * 124)}, ${(108 + progress * 100)})`;
-            }
+            var progress = Math.min((dragLength - thresholdLength) / 100, 1);
+            var startColor = LEVEL_COLORS[startLevelKey] || '#409eff';
+            var nextLevelKey = String.fromCharCode(startLevelKey.charCodeAt(0) + 1);
+            var endColor = LEVEL_COLORS[nextLevelKey] || startColor;
+            var r = Math.round(parseInt(startColor.slice(1, 3), 16) * (1 - progress) + parseInt(endColor.slice(1, 3), 16) * progress);
+            var g = Math.round(parseInt(startColor.slice(3, 5), 16) * (1 - progress) + parseInt(endColor.slice(3, 5), 16) * progress);
+            var b = Math.round(parseInt(startColor.slice(5, 7), 16) * (1 - progress) + parseInt(endColor.slice(5, 7), 16) * progress);
+            tempPath.style.stroke = `rgb(${r}, ${g}, ${b})`;
         } else {
-            // 未超过阈值时，恢复原始颜色
-            let color = '#409eff';
-            if (startLevel === 1) color = '#409eff';
-            else if (startLevel === 2) color = '#67c23a';
-            else if (startLevel === 3) color = '#e6a23c';
-            else if (startLevel === 4) color = '#f56c6c';
-            tempPath.style.stroke = color;
+            tempPath.style.stroke = LEVEL_COLORS[startLevelKey] || '#409eff';
         }
     }
 
@@ -960,19 +1062,19 @@
         e.preventDefault();
         e.stopPropagation();
 
-        const endPt = e.currentTarget;
+        var target = e.target.closest('.svg-connector-point');
 
-        if (endPt && endPt !== curStartPt) {
-            const canConnect = validateConnection(curStartPt, endPt);
+        if (target && target !== curStartPt) {
+            var canConnect = validateConnection(curStartPt, target);
 
             if (canConnect) {
-                const exists = connections.some(c =>
-                    (c.startElement === curStartPt && c.endElement === endPt) ||
-                    (c.startElement === endPt && c.endElement === curStartPt)
+                var exists = connections.some(c =>
+                    (c.startElement === curStartPt && c.endElement === target) ||
+                    (c.startElement === target && c.endElement === curStartPt)
                 );
 
                 if (!exists) {
-                    createConnection(curStartPt, endPt);
+                    createConnection(curStartPt, target);
                 }
             }
         }
@@ -993,98 +1095,83 @@
     }
 
     function validateConnection(startPt, endPt) {
-        const startCard = startPt.closest('.w_contp_item');
-        const endCard = endPt.closest('.w_contp_item');
+        var startBlockId = startPt.getAttribute('data-block-id') || '';
+        var endBlockId = endPt.getAttribute('data-block-id') || '';
 
-        if (!startCard || !endCard) return false;
-        if (startCard === endCard) return false;
+        if (!startBlockId || !endBlockId) return false;
+        if (startBlockId === endBlockId) return false;
 
-        const startLevel = parseInt(startCard.getAttribute('data-level'));
-        const endLevel = parseInt(endCard.getAttribute('data-level'));
+        var startDataId = startPt.getAttribute('data-id') || '';
+        var endDataId = endPt.getAttribute('data-id') || '';
 
-        const isStartToEnd = startPt.classList.contains('start-point') && endPt.classList.contains('end-point');
-        const isEndToStart = startPt.classList.contains('end-point') && endPt.classList.contains('start-point');
+        var isStartToEnd = startDataId.endsWith('-start') && endDataId.endsWith('-end');
+        if (!isStartToEnd) return false;
 
-        const isValidDirection = isStartToEnd || isEndToStart;
+        var startLevelKey = startBlockId[0].toLowerCase();
+        var endLevelKey = endBlockId[0].toLowerCase();
+        var diff = Math.abs(startLevelKey.charCodeAt(0) - endLevelKey.charCodeAt(0));
 
-        const isValidLevel = Math.abs(startLevel - endLevel) === 1;
-
-        return isValidDirection && isValidLevel;
+        return diff === 1;
     }
 
     function createConnection(startPt, endPt) {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('class', 'path-line');
-        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-width', '2.5');
         path.setAttribute('fill', 'none');
 
-        const startCard = startPt.closest('.w_contp_item');
-        const endCard = endPt.closest('.w_contp_item');
-        const startLevel = parseInt(startCard.getAttribute('data-level'));
-        const endLevel = parseInt(endCard.getAttribute('data-level'));
+        var startBlockId = startPt.getAttribute('data-block-id') || '';
+        var endBlockId = endPt.getAttribute('data-block-id') || '';
 
-        // 根据层级设置渐变色
-        let gradientId = '';
-        if (startLevel === 1 && endLevel === 2) gradientId = 'gradient-level-1-to-level-2';
-        else if (startLevel === 2 && endLevel === 3) gradientId = 'gradient-level-2-to-level-3';
-        else if (startLevel === 3 && endLevel === 4) gradientId = 'gradient-level-3-to-level-4';
-        else if (startLevel === 4 && endLevel === 5) gradientId = 'gradient-level-4-to-level-5';
+        var startLevel = parseInt(startBlockId[1]) || 1;
+        var endLevel = parseInt(endBlockId[1]) || 2;
 
-        // 如果是反向连接，使用相反的渐变色
-        if (startLevel === 2 && endLevel === 1) gradientId = 'gradient-level-1-to-level-2';
-        else if (startLevel === 3 && endLevel === 2) gradientId = 'gradient-level-2-to-level-3';
-        else if (startLevel === 4 && endLevel === 3) gradientId = 'gradient-level-3-to-level-4';
-        else if (startLevel === 5 && endLevel === 4) gradientId = 'gradient-level-4-to-level-5';
-
-        path.setAttribute('stroke', gradientId ? `url(#${gradientId})` : '#409eff');
-
-        let actualStart = startPt;
-        let actualEnd = endPt;
-
-        if (startLevel > endLevel) {
-            if (startPt.classList.contains('end-point') && endPt.classList.contains('start-point')) {
-                actualStart = endPt;
-                actualEnd = startPt;
-            }
+        var levelDiff = endLevel - startLevel;
+        if (levelDiff === 1) {
+            path.classList.add('level-' + startLevel + '-to-level-' + endLevel);
         }
 
-        const sCoord = getPointCoord(actualStart);
-        const eCoord = getPointCoord(actualEnd);
-        path.setAttribute('d', bezier(sCoord.x, sCoord.y, eCoord.x, eCoord.y));
+        var startTransform = startPt.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var startX = parseFloat(startMatch[1]);
+        var startY = parseFloat(startMatch[2]);
 
-        const connection = {
+        var endTransform = endPt.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var endX = parseFloat(endMatch[1]);
+        var endY = parseFloat(endMatch[2]);
+
+        path.setAttribute('d', bezier(startX, startY, endX, endY));
+
+        var connection = {
             id: connId++,
-            startElement: actualStart,
-            endElement: actualEnd,
+            startElement: startPt,
+            endElement: endPt,
             element: path
         };
 
         connections.push(connection);
 
-        
+        svg.insertBefore(path, connectorGroup);
 
-        svg.appendChild(path);
-
-        updateAllConnections();
-        updateConnectionCounts(); 
+        updateBadges();
     }
 
  
 
-    // ==================== 保存到 ls3 ====================
     function saveLs3Connections() {
         try {
             const ls3Data = {
                 connections: connections.map(c => ({
-                    startId: c.startElement.getAttribute('data-id').replace('-start', '').replace('-end', ''),
-                    endId: c.endElement.getAttribute('data-id').replace('-start', '').replace('-end', '')
+                    startId: c.startElement.getAttribute('data-block-id'),
+                    endId: c.endElement.getAttribute('data-block-id')
                 })),
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem('ls3', JSON.stringify(ls3Data));
-            console.log('学生连线已保存到 ls3');
 
-            // 同时保存探索进度
             saveExploreProgress();
         } catch (e) {
             console.error('保存 ls3 失败:', e);
@@ -1108,8 +1195,8 @@
 
             // 获取学生已完成的连接
             const studentConnections = connections.map(c => ({
-                startId: c.startElement.getAttribute('data-id').replace('-start', '').replace('-end', ''),
-                endId: c.endElement.getAttribute('data-id').replace('-start', '').replace('-end', '')
+                startId: c.startElement.getAttribute('data-block-id'),
+                endId: c.endElement.getAttribute('data-block-id')
             }));
 
             // 计算完成的进度
@@ -1170,20 +1257,22 @@
 
     // ==================== 连线更新和坐标计算 ====================
     function updateAllConnections() {
+        updateSvgConnectorPositions();
         connections.forEach(c => {
-            const s = getPointCoord(c.startElement);
-            const e = getPointCoord(c.endElement);
-            c.element.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
-        });
-    }
+            var startTransform = c.startElement.getAttribute('transform');
+            var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+            if (!startMatch) return;
+            var sx = parseFloat(startMatch[1]);
+            var sy = parseFloat(startMatch[2]);
 
-    function getPointCoord(pt) {
-        const svgRect = svg.getBoundingClientRect();
-        const ptRect = pt.getBoundingClientRect();
-        return {
-            x: ptRect.left + ptRect.width / 2 - svgRect.left,
-            y: ptRect.top + ptRect.height / 2 - svgRect.top
-        };
+            var endTransform = c.endElement.getAttribute('transform');
+            var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+            if (!endMatch) return;
+            var ex = parseFloat(endMatch[1]);
+            var ey = parseFloat(endMatch[2]);
+
+            c.element.setAttribute('d', bezier(sx, sy, ex, ey));
+        });
     }
 
     function bezier(x1, y1, x2, y2) {
@@ -1191,39 +1280,8 @@
         return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
     }
 
-        /**
-         * 更新所有连接点的连接数量显示。
-         * 
-         * 该函数遍历所有连接关系，统计每个卡片（通过 data-id 标识）参与的连接总数，
-         * 并将统计结果更新到页面上对应的徽章元素和连接器点元素中。
-         */
         function updateConnectionCounts() {
-            const countMap = new Map();
-    
-            // 遍历所有连接，统计每个起始和结束元素的连接次数
-            connections.forEach(c => {
-                const startId = c.startElement.getAttribute('data-id').replace('-start', '').replace('-end', '');
-                // const endId = c.endElement.getAttribute('data-id').replace('-start', '').replace('-end', '');
-    
-                countMap.set(startId, (countMap.get(startId) || 0) + 1);
-                // countMap.set(endId, (countMap.get(endId) || 0) + 1);
-            });
-            
-            // 更新卡片右上角的连接数徽章显示
-            document.querySelectorAll('.w_contp_inum').forEach(badge => {
-                const card = badge.closest('.w_contp_item');
-                const cardId = card ? card.getAttribute('data-card-id') : '';
-                const count = countMap.get(cardId) || 0;
-                badge.textContent = count;
-            });
-    
-            for (let level = 1; level <= 5; level++) {
-                document.querySelectorAll(`#golink-level-${level} .w_contp_item .connector-point.start-point`).forEach(connector => {
-                    const cardId = connector.getAttribute('data-id').replace('-start', '');
-                    const count = countMap.get(cardId) || 0;
-                    connector.textContent = count;
-                });
-            }
+            updateBadges();
         }
 
     // ==================== 弹窗功能 ====================
