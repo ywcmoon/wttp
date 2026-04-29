@@ -1,0 +1,43 @@
+
+/* 选项卡导航 */
+.tab-nav {
+    display: flex;
+    /* margin-bottom: 40px; */
+    padding: 6px;
+    background: linear-gradient(135deg, #f0f6ff 0%, #e6f7ff 100%);
+    border-radius: 12px;
+    gap: 8px;
+}
+
+.tab-item {
+    flex: 1;
+    padding: 16px 32px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #606266;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tab-item:hover {
+    background: rgba(64, 158, 255, 0.08);
+    color: #409eff;
+    transform: translateY(-2px);
+}
+
+.tab-item.active {
+    color: #fff;
+    background: linear-gradient(135deg, #3a8bff 0%, #6cc7ff 100%);
+    box-shadow: 0 4px 16px rgba(58, 139, 255, 0.3);
+}
+
+.tab-item i {
+    font-size: 20px;
+}

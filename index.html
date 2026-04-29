@@ -1,0 +1,1275 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖拽连线</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/index.css">
+    <!-- Quill 富文本编辑器样式 -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <!-- <script src="js/jquery-4.0.0.min.js"></script> -->
+    <!-- Quill 富文本编辑器核心库 -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Tailwind CSS 实用工具库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <!-- 公共导航 -->
+    <div class="tab-nav">
+        <div class="tab-item active" data-tab="question">
+            <i class="fas fa-question-circle"></i> 问题图谱
+        </div>
+        <div class="tab-item" data-tab="ability">
+            <i class="fas fa-brain"></i> 能力图谱
+        </div>
+    </div>
+    <!-- 头部工具栏 -->
+    <div class="w_head" id="original-w_head">
+        <div class="w_head_txt">提示请设置主线问题并将其与具体的知识点进行关联</div>
+        <div class="w_head_btnwrap">
+            <div class="w_head_btn_wrap">
+                <a class="w_head_btn" id="explore-mode-btn">
+                    <i class="fas fa-compass" class="mr-1"></i>
+                    探索模式
+                </a>
+                <div class="explora-icon-wrap">
+                    <span class="explora-icon" id="explora-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </span>
+                </div>
+                <!-- 探索模式相关弹窗 -->
+                <div class="explora-popup-container">
+                    <!-- 探索模式设置弹窗 -->
+                    <div class="explora-set-popup" id="explora-set-popup">
+                        <div class="explora-set-content">
+                            <h3 class="exploratit">探索模式设置</h3>
+                            <div class="dis-flex wexploratit-switch">
+                                <p>探索模式</p>
+                                <div class="wswitch">
+                                    <input type="checkbox" id="s_courseCenter">
+                                    <label for="s_courseCenter">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="w_exploraflow" id="w_exploraflow">
+                                <h3 class="w_exploraflow_name">请选择探索项</h3>
+                                <ul class="w_exploraflow_ul">
+                                    <li class="dis-flex align-items-c">
+                                        <span class="ddCheck">
+                                            <input type="checkbox" name="checkbox" id="exploralink" value="link"
+                                                checked>
+                                            <i></i>
+                                        </span>
+                                        <label class="w_lab_txt flex-num-1" for="exploralink">连线</label>
+                                    </li>
+                                    <li class="dis-flex align-items-c">
+                                        <span class="ddCheck">
+                                            <input type="checkbox" name="checkbox" id="exploratopic" value="topic"
+                                                checked>
+                                            <i></i>
+                                        </span>
+                                        <label class="w_lab_txt flex-num-1" for="exploratopic">匹配</label>
+                                    </li>
+                                    <li class="dis-flex align-items-c">
+                                        <span class="ddCheck">
+                                            <input type="checkbox" name="checkbox" id="exploraanswer" value="answer">
+                                            <i></i>
+                                        </span>
+                                        <label class="w_lab_txt flex-num-1" for="exploraanswer">简答</label>
+                                    </li>
+                                </ul>
+                            </div>
+                            <p class="w_explorabtn">
+                                <a href="javascript:;" id="explora-set-confirm">确定</a>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- 学生端探索模式图例演示弹窗 -->
+                    <div class="explora-help-popup" id="explora-help-popup">
+                        <div class="explora-help-content">
+                            <h3 class="exploratit">学生端探索模式图例演示</h3>
+                            <p class="exploratxt">建议选择两组问题方可进行探索点击问题之后进入选中状态再次点击即可取消。</p>
+                            <div class="explorbanner">
+                                <img src="img/学生端探索模式.png" alt="学生端探索模式">
+                            </div>
+                            <div class="exploraBot clearAfter">
+                                <a href="javascript:;" class="bntWhite" id="explora-simulate-btn">模拟体验</a>
+                                <a href="javascript:;" class="bntLinear fr" id="explora-know-btn">我知道了</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a class="w_head_btn" id="batch-import-btn">
+                批量导入
+                <i class="fas fa-upload" class="ml-1"></i>
+            </a>
+            <a class="w_head_btn" id="batch-delete-btn">
+                批量删除
+                <i class="fas fa-trash-alt" class="ml-1"></i>
+            </a>
+            <a class="w_head_btn" id="export-btn">
+                一键导出
+                <i class="fas fa-download" class="ml-1"></i>
+            </a>
+            <a class="w_head_btn" id="expand-all-btn">
+                全部展开
+                <i class="fas fa-expand-arrows-alt" class="ml-1"></i>
+            </a>
+            <a class="w_head_btn setbtn">
+                设置
+                <i class="fas fa-cog" class="ml-1"></i>
+            </a>
+        </div>
+    </div>
+    <!-- 批量删除工具栏 -->
+    <div class="w_head delete-mode-head" id="delete-mode-head" style="display: none;">
+        <div class="delete-mode-left">
+            <label class="delete-select-all">
+                <input type="checkbox" id="select-all-checkbox">
+                <span>[全选]</span>
+                <span class="card-count">[0]个问题</span>
+                <span class="selected-count">，已选中[0]</span>
+            </label>
+        </div>
+        <div class="delete-mode-right">
+            <a class="w_head_btn" id="cancel-delete-btn">取消</a>
+            <a class="w_head_btn delete-btn" id="confirm-delete-btn">删除</a>
+        </div>
+    </div>
+    <!-- 主工作区，包含 SVG 画布和四列内容 -->
+    <div class="w_main" id="workspace-container">
+        <!-- SVG 画布，用于绘制所有连接线 -->
+        <svg id="connections-svg">
+            <defs>
+                <!-- 渐变色定义 -->
+                <linearGradient id="gradient-level-1-to-level-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#409eff" />
+                    <stop offset="100%" stop-color="#67c23a" />
+                </linearGradient>
+                <linearGradient id="gradient-level-2-to-level-3" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#67c23a" />
+                    <stop offset="100%" stop-color="#e6a23c" />
+                </linearGradient>
+                <linearGradient id="gradient-level-3-to-level-4" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#e6a23c" />
+                    <stop offset="100%" stop-color="#f56c6c" />
+                </linearGradient>
+                <linearGradient id="gradient-level-4-to-level-5" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#f56c6c" />
+                    <stop offset="100%" stop-color="#E372DB" />
+                </linearGradient>
+            </defs>
+        </svg>
+        <!-- 内容区域 -->
+        <div class="w_cont">
+            <!-- 第一层级（A组）：起点列 -->
+            <div class="w_cont_problem ABox">
+                <div class="w_contp_head">
+                    <div class="w_contp_icon" style="background: #409eff;">
+                        <i class="fas fa-question"></i>
+                    </div>
+                    <div class="w_contp_title_container">
+                        <p class="w_contp_txt">第一层级（3）</p>
+                        <i class="fas fa-edit w_contp_edit"
+                            class="ml-2 text-secondary cursor-pointer"></i>
+                    </div>
+                </div>
+                <p class="w_contp_tips">第一层级描述</p>
+                <div class="w_contp_main">
+                    <!-- A1 卡片 -->
+                    <div class="w_contp_item level-1 draggable-block" id="a1">
+                        <div class="block-header">
+                            <span class="block-title">A1</span>
+                            <span class="toggle-collapse"><i class="fas fa-chevron-up"></i></span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">
+                                内容：机器人跑马拉松已经是科技照进现实，没想到连机器人都配上了专属"救护车"，这一幕就真实发生在北京亦庄的街头。
+                                近日，北京亦庄一场别开生面的"夜跑"悄然启动。70余支机器人队伍沿着21公里的完整赛道，开始了"2026北京亦庄人形机器人半程马拉松"的全流程"彩排测试"。与去年相比，今年不仅参赛队伍从20多支猛增至上百支，技术难度和规模都达到了前所未有的高度。
+                                赛道上，人形机器人步履铿锵，试图挑战人类极限；赛道下，却发生了一些让人忍俊不禁的"小插曲"。有的机器人"健步如飞"，极限速度达到10米/秒，把陪跑的工程师远远甩在身后；有的跑着突然"腿脚失灵"，原地摔倒，引得围观网友直呼"笑不活了"。然而，真正让网友们"破防"的，是现场一个意外的发现——这些机器人，竟然也有专属的"救护车"！测试现场，一辆车身印有"机器人救护车"标识的纯电轻客在赛道上忙碌巡场。当有机器人在比赛中"受伤"无法完赛时，这辆"救护车"便第一时间赶到现场，将"伤员"运走——这一幕被观众拍下后迅速在社交网络传播，成为测试当天一大"爆点"。而这辆引发全网好奇的"机器人救护车"，正是福田图雅诺。
+                            </div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                                <span class="bluebtn">重点</span>
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>1</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                    </div>
+                    <div class="w_contp_item level-1 draggable-block" id="a2">
+                        <div class="block-header">
+                            <span class="block-title">A2</span>
+                            <span class="toggle-collapse"><i class="fas fa-chevron-up"></i></span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">起点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>2</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                    </div>
+                    <div class="w_contp_item level-1 draggable-block" id="a3">
+                        <div class="block-header">
+                            <span class="block-title">A3</span>
+                            <span class="toggle-collapse"><i class="fas fa-chevron-up"></i></span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">起点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                    </div>
+                    <div class="w_addbtn">
+                        <i class="fas fa-plus"></i>
+                        <span>添加</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 第二层级（B组）：中间节点列 -->
+            <div class="w_cont_problem BBox">
+                <div class="w_contp_head">
+                    <div class="w_contp_icon" style="background: #67c23a;">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="w_contp_title_container">
+                        <p class="w_contp_txt">第二层级（3）</p>
+                        <i class="fas fa-edit w_contp_edit"
+                            class="ml-2 text-secondary cursor-pointer"></i>
+                    </div>
+                </div>
+                <p class="w_contp_tips">第二层级描述</p>
+                <div class="w_contp_main">
+                    <!-- 非折叠区（正常显示的B组卡片） -->
+                    <div>
+                        <div class="w_contp_item level-2 draggable-block" id="b1">
+                            <div class="block-header">
+                                <span class="block-title">B1</span>
+                            </div>
+                            <div class="block-content">
+                                <div class="block-content-text">中间节点</div>
+                                <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                            </div>
+                            <div class="block-action-row">
+                                <div class="w_contp_ibtn">
+                                </div>
+                                <div class="block-actions">
+                                    <span class="action-btn edit-btn" title="编辑"><i class="fas fa-edit"></i></span>
+                                    <span class="action-btn connect-btn" title="关联子级"><i class="fas fa-link"></i></span>
+                                    <span class="action-btn delete-btn" title="删除卡片"><i class="fas fa-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="w_block_btns">
+                                <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                                <div class="w_teachbtn">教师参考</div>
+                            </div>
+                            <div class="w_contp_inum">0</div>
+                        </div>
+                        <div class="w_contp_item level-2 draggable-block" id="b2">
+                            <div class="block-header">
+                                <span class="block-title">B2</span>
+                            </div>
+                            <div class="block-content">
+                                <div class="block-content-text">中间节点</div>
+                                <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                            </div>
+                            <div class="block-action-row">
+                                <div class="w_contp_ibtn">
+                                </div>
+                                <div class="block-actions">
+                                    <span class="action-btn edit-btn" title="编辑"><i class="fas fa-edit"></i></span>
+                                    <span class="action-btn connect-btn" title="关联子级"><i class="fas fa-link"></i></span>
+                                    <span class="action-btn delete-btn" title="删除卡片"><i class="fas fa-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="w_block_btns">
+                                <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                                <div class="w_teachbtn">教师参考</div>
+                            </div>
+                            <div class="w_contp_inum">0</div>
+                        </div>
+                        <div class="w_contp_item level-2 draggable-block" id="b3">
+                            <div class="block-header">
+                                <span class="block-title">B3</span>
+                            </div>
+                            <div class="block-content">
+                                <div class="block-content-text">中间节点</div>
+                                <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                            </div>
+                            <div class="block-action-row">
+                                <div class="w_contp_ibtn">
+                                </div>
+                                <div class="block-actions">
+                                    <span class="action-btn edit-btn" title="编辑"><i class="fas fa-edit"></i></span>
+                                    <span class="action-btn connect-btn" title="关联子级"><i class="fas fa-link"></i></span>
+                                    <span class="action-btn delete-btn" title="删除卡片"><i class="fas fa-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="w_block_btns">
+                                <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                                <div class="w_teachbtn">教师参考</div>
+                            </div>
+                            <div class="w_contp_inum">0</div>
+                        </div>
+                        <div class="w_contp_item level-2 draggable-block" id="b4">
+                            <div class="block-header">
+                                <span class="block-title">B4</span>
+                            </div>
+                            <div class="block-content">
+                                <div class="block-content-text">中间节点</div>
+                                <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                            </div>
+                            <div class="block-action-row">
+                                <div class="w_contp_ibtn">
+                                </div>
+                                <div class="block-actions">
+                                    <span class="action-btn edit-btn" title="编辑"><i class="fas fa-edit"></i></span>
+                                    <span class="action-btn connect-btn" title="关联子级"><i class="fas fa-link"></i></span>
+                                    <span class="action-btn delete-btn" title="删除卡片"><i class="fas fa-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="w_block_btns">
+                                <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                                <div class="w_teachbtn">教师参考</div>
+                            </div>
+                            <div class="w_contp_inum">0</div>
+                        </div>
+                        <div class="w_contp_item level-2 draggable-block" id="b5">
+                            <div class="block-header">
+                                <span class="block-title">B5</span>
+                            </div>
+                            <div class="block-content">
+                                <div class="block-content-text">中间节点</div>
+                                <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                            </div>
+                            <div class="block-action-row">
+                                <div class="w_contp_ibtn">
+                                </div>
+                                <div class="block-actions">
+                                    <span class="action-btn edit-btn" title="编辑"><i class="fas fa-edit"></i></span>
+                                    <span class="action-btn connect-btn" title="关联子级"><i class="fas fa-link"></i></span>
+                                    <span class="action-btn delete-btn" title="删除卡片"><i class="fas fa-trash"></i></span>
+                                </div>
+                            </div>
+                            <div class="w_block_btns">
+                                <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                                <div class="w_teachbtn">教师参考</div>
+                            </div>
+                            <div class="w_contp_inum">0</div>
+                        </div>
+                    </div>
+                    <div class="w_addbtn">
+                        <i class="fas fa-plus"></i>
+                        <span>添加</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 第三层级（C组） -->
+            <div class="w_cont_problem CBox">
+                <div class="w_contp_head">
+                    <div class="w_contp_icon" style="background: #e6a23c;">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <div class="w_contp_title_container">
+                        <p class="w_contp_txt">第三层级（3）</p>
+                        <i class="fas fa-edit w_contp_edit"
+                            class="ml-2 text-secondary cursor-pointer"></i>
+                    </div>
+                </div>
+                <p class="w_contp_tips">第三层级描述</p>
+                <div class="w_contp_main">
+                    <div class="w_contp_item level-3 draggable-block" id="c1">
+                        <div class="block-header">
+                            <span class="block-title">C1</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_contp_item level-3 draggable-block" id="c2">
+                        <div class="block-header">
+                            <span class="block-title">C2</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_contp_item level-3 draggable-block" id="c3">
+                        <div class="block-header">
+                            <span class="block-title">C3</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_contp_item level-3 draggable-block" id="c4">
+                        <div class="block-header">
+                            <span class="block-title">C4</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_addbtn">
+                        <i class="fas fa-plus"></i>
+                        <span>添加</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 第四层级（D组） -->
+            <div class="w_cont_problem DBox">
+                <div class="w_contp_head">
+                    <div class="w_contp_icon" style="background: #f56c6c;">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="w_contp_title_container">
+                        <p class="w_contp_txt">第四层级（0）</p>
+                        <i class="fas fa-edit w_contp_edit"
+                            class="ml-2 text-secondary cursor-pointer"></i>
+                    </div>
+                </div>
+                <p class="w_contp_tips">第四层级描述</p>
+                <div class="w_contp_main">
+                    <div class="w_contp_item level-4 draggable-block" id="d1">
+                        <div class="block-header">
+                            <span class="block-title">D1</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_contp_item level-4 draggable-block" id="d2">
+                        <div class="block-header">
+                            <span class="block-title">D2</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_contp_item level-4 draggable-block" id="d3">
+                        <div class="block-header">
+                            <span class="block-title">D3</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z"
+                                                fill="#606266"></path>
+                                            <path
+                                                d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z"
+                                                fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266">
+                                            </path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z"
+                                                fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_addbtn">
+                        <i class="fas fa-plus"></i>
+                        <span>添加</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 第五层级（E组） -->
+            <!-- <div class="w_cont_problem EBox">
+                <div class="w_contp_head">
+                    <div class="w_contp_icon" style="background: #E372DB;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="w_contp_title_container">
+                        <p class="w_contp_txt">第五层级（0）</p>
+                        <i class="fas fa-edit w_contp_edit"
+                            class="ml-2 text-secondary cursor-pointer"></i>
+                    </div>
+                </div>
+                <p class="w_contp_tips">第五层级描述</p>
+                <div class="w_contp_main">
+                    <div class="w_contp_item level-5 draggable-block" id="e1">
+                        <div class="block-header">
+                            <span class="block-title">E1</span>
+                        </div>
+                        <div class="block-content">
+                            <div class="block-content-text">中间节点</div>
+                            <span class="w_contp_btn">详情<i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="block-action-row">
+                            <div class="w_contp_ibtn">
+                            </div>
+                            <div class="block-actions">
+                                <span class="action-btn edit-btn" title="编辑">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>
+                                            <path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>
+                                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>
+                                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>
+                                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn connect-btn" title="关联子级">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z" fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                                <span class="action-btn delete-btn" title="删除卡片">
+                                    <div class="xcustomSvg">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z" fill="#606266"></path>
+                                        </svg>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="w_block_btns">
+                            <div class="w_lookbtn">关联知识点 <span>0</span></div>
+                            <div class="w_teachbtn">教师参考</div>
+                        </div>
+                        <div class="w_contp_inum">0</div>
+                    </div>
+                    <div class="w_addbtn">
+                        <i class="fas fa-plus"></i>
+                        <span>添加</span>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+    <!-- 公共弹窗容器 -->
+    <div id="common_windows">
+        <!-- 遮罩层和弹窗（用于新增卡片） -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">新增</h3>
+                    <span class="modal-close" id="modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="add-form">
+                        <div class="form-group">
+                            <label for="block-name">名称 <span class="required">*</span></label>
+                            <input type="text" id="block-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="block-desc">描述</label>
+                            <!-- Quill 富文本编辑器容器 -->
+                            <div id="block-desc" class="form-editor"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="block-teacher">教师参考</label>
+                            <!-- Quill 富文本编辑器容器 -->
+                            <div id="block-teacher" class="form-editor"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 编辑卡片弹窗 -->
+        <div id="edit-block-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">编辑</h3>
+                    <span class="modal-close" id="edit-block-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-block-form">
+                        <div class="form-group">
+                            <label for="edit-block-name">名称 <span class="required">*</span></label>
+                            <input type="text" id="edit-block-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-desc">描述</label>
+                            <div id="edit-block-desc"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-teacher">教师参考</label>
+                            <div id="edit-block-teacher"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="edit-block-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="edit-block-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 编辑层级弹窗 -->
+        <div id="level-edit-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">编辑</h3>
+                    <span class="modal-close" id="level-edit-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="level-edit-form">
+                        <div class="form-group">
+                            <label for="level-name">名称 <span class="required">*</span></label>
+                            <input type="text" id="level-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="level-desc">描述</label>
+                            <textarea id="level-desc" class="form-textarea" rows="5"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="level-edit-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="level-edit-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 层级管理弹窗 -->
+        <div id="settings-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">设置</h3>
+                    <span class="modal-close" id="settings-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="level-manage-header">
+                        <h4 class="level-manage-title">层级管理</h4>
+                        <div class="info-icon-container">
+                            <i class="fas fa-info-circle info-icon"></i>
+                            <div class="info-tooltip">
+                                <div class="tooltip-item tooltip-white">1、灵活调整层级：您可以自由增加或删除层级，最多可达 5
+                                    层。为了保持结构的完整性，至少需要保留一个层级
+                                </div>
+                                <div class="tooltip-item tooltip-white">
+                                    2、层级显隐控制：通过点击并拖动圆点，您可以轻松设置哪些层级是可见的。位于线段内对应的层级将被显示，而线段外对应的层级将被隐藏。</div>
+                                <div class="tooltip-item tooltip-yellow">3、特别注意：如果您更改了起始层级，学生的探索模式进度将被重置为
+                                    0。请谨慎操作以避免不必要的进度丢失
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="level-list" class="level-list">
+                        <!-- 层级列表将动态生成 -->
+                    </div>
+                    <button id="add-level-btn" class="btn btn-primary">+ 添加层级</button>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="settings-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="settings-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 添加/编辑层级弹窗-->
+        <div id="level-form-modal-overlay" class="modal-overlay darker-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="level-form-title">添加层级</h3>
+                    <span class="modal-close" id="level-form-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="level-form">
+                        <div class="form-group">
+                            <label for="level-form-name">层级名称 <span class="required">*</span></label>
+                            <input type="text" id="level-form-name" class="form-input" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="level-form-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="level-form-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 删除层级弹窗 -->
+        <div id="delete-level-confirm-modal-overlay" class="modal-overlay darker-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">提示</h5>
+                    <span class="modal-close" id="delete-confirm-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>确认删除?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="delete-level-cancel-btn">取消</button>
+                    <button class="btn btn-confirm" id="delete-level-confirm-btn">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 批量导入弹窗 -->
+        <div id="import-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">导入</h3>
+                    <span class="modal-close" id="import-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 20px;">
+                        <p style="color: #606266; line-height: 1.8;">
+                            1. 文件中数据不能超过300行。
+                            <br>
+                            2. 为保证数据导入顺利请
+                            <a href="source/问题图谱导入模板.xlsx" download
+                                style="color: #409eff; text-decoration: underline; cursor: pointer;">下载excel模板</a>，并仔细阅读其中的导入说明。
+                        </p>
+                    </div>
+                    <div class="form-group">
+                        <label for="import-file">选择文件</label>
+                        <input type="file" id="import-file" class="form-input" accept=".xlsx,.xls"
+                            style="padding: 10px; border: 1px dashed #dcdfe6; border-radius: 4px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="import-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="import-btn-confirm">模板导入</button>
+                </div>
+            </div>
+        </div>
+        <!-- 关联子级弹窗 -->
+        <div id="connect-children-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">关联子级</h3>
+                    <span class="modal-close" id="connect-children-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="level-info">
+                        <div class="level-icon"><i class="fas fa-question"></i></div>
+                        <div class="level-details">
+                            <div class="level-name">第一层级</div>
+                            <div class="level-count">3个卡片</div>
+                        </div>
+                    </div>
+                    <div class="children-list">
+                        <!-- 子级列表将动态生成 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="connect-children-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="connect-children-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 删除确认弹窗 -->
+        <div id="delete-confirm-modal-overlay" class="modal-overlay darker-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">提示</h5>
+                    <span class="modal-close" id="delete-confirm-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>确认删除?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="delete-confirm-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="delete-confirm-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+        <!-- 详情弹窗 -->
+        <div id="detail-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">详情</h3>
+                    <span class="modal-close" id="detail-modal-close">&times;</span>
+                </div>
+                <div class="modal-body" id="detail-modal-content">
+                    <!-- 内容将动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能力图谱</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/targetMapTeacher.css">
+    <link rel="stylesheet" href="css/exploreList.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="js/common.js"></script>
+</head>
+
+<body>
+        <!-- 公共导航 -->
+    <div class="tab-nav">
+        <div class="tab-item" data-tab="question">
+            <i class="fas fa-question-circle"></i> 问题图谱
+        </div>
+        <div class="tab-item active" data-tab="ability">
+            <i class="fas fa-brain"></i> 能力图谱
+        </div>
+    </div>
+
+    <div class="ability-page">
+        <div class="ability_header">
+            <div class="class-selector" id="class-selector">
+                <div class="selector-display" id="selector-display">
+                    <span class="selector-text">全部班级</span>
+                    <i class="fas fa-chevron-down selector-arrow"></i>
+                </div>
+                <div class="selector-dropdown" id="selector-dropdown">
+                    <div class="selector-option selected" data-value="all">全部班级</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ability_three">
+            <div class="ability_coll">
+                <div class="ability_title">
+                    <span>关联知识点总数</span>
+                    <span class="ability_total_count" id="ability-total-count">0</span>
+                </div>
+                <div class="ability_bar" id="chart-bar"></div>
+            </div>
+        </div>
+
+        <div class="ability_four">
+            <div class="ability_coll">
+                <div class="ability_title">课程能力与知识点关联关系</div>
+                <div class="between">
+                    <div class="between_target">
+                        <div class="target_head">
+                            <span class="target_head_span">共 <em class="target_head_num" id="target-count">0</em> 个</span>
+                            <a class="target_head_add" id="target-add-btn" href="javascript:">
+                                <i class="fas fa-plus"></i>
+                                <span>内容</span>
+                            </a>
+                        </div>
+                        <div class="target_body" id="target-body">
+                            <div class="target_group" id="target-group"></div>
+                        </div>
+                    </div>
+                    <div class="between_knowledge">
+                        <a class="knowledge_associ" id="knowledge-associ-btn" href="javascript:">关联知识点</a>
+                        <div class="knowledge_canvas" id="knowledge-canvas">
+                            <svg id="knowledge-svg" class="knowledge-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+                            <div class="knowledge-empty" id="knowledge-empty">
+                                <i class="fas fa-project-diagram"></i>
+                                <p>请选择左侧能力卡片查看关联关系</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="visibility-modal-overlay">
+        <div class="modal-content visibility-modal">
+            <div class="modal-header">
+                <h3 id="visibility-modal-title">显隐设置</h3>
+                <button class="modal-close" id="visibility-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="visibility-setting">
+                    <div class="visibility-title" id="visibility-ability-name"></div>
+                    <div class="visibility-card">
+                        <p class="visibility-subtitle">开放班级</p>
+                        <div class="visibility-checkboxes" id="visibility-checkboxes">
+                            <label class="checkbox-item checkbox-all">
+                                <input type="checkbox" id="visibility-all-classes">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">全部班级</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="visibility-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="visibility-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="knowledge-modal-overlay">
+        <div class="modal-content knowledge-modal">
+            <div class="modal-header">
+                <h3>关联知识点</h3>
+                <button class="modal-close" id="knowledge-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="popLedge">
+                    <div class="popLedge_left">
+                        <div class="popLedge_header">
+                            <span class="popLedge_count">共 <em id="knowledge-tree-count">0</em> 个知识点</span>
+                        </div>
+                        <div class="popLedge_left_scroll" id="knowledge-tree-container">
+                            <ul class="popTags_ul" id="knowledge-tree"></ul>
+                        </div>
+                    </div>
+                    <div class="popLedge_right">
+                        <div class="popLedge_numbar">
+                            已选中 <span class="spanNum" id="knowledge-selected-count">0</span> 个
+                        </div>
+                        <div class="popLedge_right_scroll">
+                            <ul class="popLedge_list" id="knowledge-selected-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="knowledge-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="knowledge-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal-overlay">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h3>提示</h3>
+                <button class="modal-close" id="confirm-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-text" id="confirm-text"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="confirm-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="confirm-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/targetMapTeacher.js"></script>
+</body>
+
+</html>

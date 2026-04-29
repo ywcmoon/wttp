@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探索模式</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/exploreList.css">
+    <script src="js/common.js"></script>
+</head>
+
+<body>
+    <!-- 公共导航 -->
+    <div class="tab-nav">
+        <div class="tab-item active" data-tab="question">
+            <i class="fas fa-question-circle"></i> 问题图谱
+        </div>
+        <div class="tab-item" data-tab="ability">
+            <i class="fas fa-brain"></i> 能力图谱
+        </div>
+    </div>
+
+
+    <div class="explore-container">
+        <!-- 选项卡内容 -->
+        <div class="tab-content active" id="question-tab">
+            <div class="tab-header">
+                <div class="tab-info">
+                    <h2>欢迎进入问题图谱，请勾选探索卡片</h2>
+                    <p>提示：建议选择两个及以上卡片组勾选后进入选中状态再次点击即可取消。</p>
+                </div>
+                <button class="start-explore-btn" id="start-explore-question">
+                    <i class="fas fa-rocket"></i> 开始探索
+                </button>
+            </div>
+            <div class="explore-cards" id="question-cards">
+                <!-- 卡片将通过 JavaScript 动态生成 -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="ability-tab">
+            <div class="tab-header">
+                <div class="tab-info">
+                    <h2>能力图谱</h2>
+                    <p>探索知识图谱中的能力关联，选择您感兴趣的能力开始探索</p>
+                </div>
+                <button class="start-explore-btn" id="start-explore-ability">
+                    <i class="fas fa-rocket"></i> 开始探索
+                </button>
+            </div>
+            <div class="explore-cards" id="ability-cards">
+                <!-- 卡片将通过 JavaScript 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 开始探索弹窗 -->
+    <div class="explore-modal" id="explore-modal">
+        <div class="modal-content">
+            <h3>欢迎您进入探索模式</h3>
+            <p>以下是须知请您仔细阅读:</p>
+            <div>
+                1 探索模式旨在激发您的思考为师生提供沟通和交流的机会如果某项让您感到复杂您可以
+                选择跳过继续探索其他项。
+                2 建议选择两个及以上
+                3这次探索模式不牵涉具体的答案评分或对错情况关键在于您的思考过程祝愿您在这次探索中获得新的见解和启发!
+                4 中途退出不会存档。
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="cancel-explore">稍后再来</button>
+                <button class="confirm-btn" id="confirm-explore">开始探索</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/exploreList.js"></script>
+</body>
+
+</html>

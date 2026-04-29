@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问题图谱详情</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/questionMapDetail.css">
+</head>
+
+<body>
+    <div class="map-detail-container">
+        <!-- 左上角返回按钮 -->
+        <div class="back-btn-container">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                返回
+            </button>
+        </div>
+
+        <!-- 主工作区 -->
+        <div class="map-container" id="golink-workspace">
+
+            <!-- 内容容器 - 这部分会被缩放 -->
+            <div class="content-container" id="content-container">
+
+                <!-- 卡片容器 - 按层级分组 -->
+                <div class="w_cont" id="w_cont">
+                    <!-- 第一层级 -->
+                    <div class="w_cont_problem ABox" id="golink-level-1" style="display:none;">
+                        <div class="w_contp_head">
+                            <div class="w_contp_icon" style="background: #409eff;">
+                                <i class="fas fa-question"></i>
+                            </div>
+                            <div class="w_contp_title_container">
+                                <p class="w_contp_txt">第一层级</p>
+                            </div>
+                        </div>
+                        <div class="w_contp_main" id="golink-level-1-cards">
+                        </div>
+                    </div>
+
+                    <!-- 第二层级 -->
+                    <div class="w_cont_problem BBox" id="golink-level-2" style="display:none;">
+                        <div class="w_contp_head">
+                            <div class="w_contp_icon" style="background: #67c23a;">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="w_contp_title_container">
+                                <p class="w_contp_txt">第二层级</p>
+                            </div>
+                        </div>
+                        <div class="w_contp_main" id="golink-level-2-cards">
+                        </div>
+                    </div>
+
+                    <!-- 第三层级 -->
+                    <div class="w_cont_problem CBox" id="golink-level-3" style="display:none;">
+                        <div class="w_contp_head">
+                            <div class="w_contp_icon" style="background: #e6a23c;">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="w_contp_title_container">
+                                <p class="w_contp_txt">第三层级</p>
+                            </div>
+                        </div>
+                        <div class="w_contp_main" id="golink-level-3-cards">
+                        </div>
+                    </div>
+
+                    <!-- 第四层级 -->
+                    <div class="w_cont_problem DBox" id="golink-level-4" style="display:none;">
+                        <div class="w_contp_head">
+                            <div class="w_contp_icon" style="background: #f56c6c;">
+                                <i class="fas fa-puzzle-piece"></i>
+                            </div>
+                            <div class="w_contp_title_container">
+                                <p class="w_contp_txt">第四层级</p>
+                            </div>
+                        </div>
+                        <div class="w_contp_main" id="golink-level-4-cards">
+                        </div>
+                    </div>
+
+                    <!-- 第五层级 -->
+                    <div class="w_cont_problem EBox" id="golink-level-5" style="display:none;">
+                        <div class="w_contp_head">
+                            <div class="w_contp_icon" style="background: #E372DB;">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="w_contp_title_container">
+                                <p class="w_contp_txt">第五层级</p>
+                            </div>
+                        </div>
+                        <div class="w_contp_main" id="golink-level-5-cards">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SVG 画布 - 保持固定，在内容容器之上 -->
+            <svg id="golink-connections-svg" class="connections-svg">
+                <defs>
+                    <linearGradient id="gradient-level-1-to-level-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#409eff" />
+                        <stop offset="100%" stop-color="#67c23a" />
+                    </linearGradient>
+                    <linearGradient id="gradient-level-2-to-level-3" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#67c23a" />
+                        <stop offset="100%" stop-color="#e6a23c" />
+                    </linearGradient>
+                    <linearGradient id="gradient-level-3-to-level-4" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#e6a23c" />
+                        <stop offset="100%" stop-color="#f56c6c" />
+                    </linearGradient>
+                    <linearGradient id="gradient-level-4-to-level-5" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#f56c6c" />
+                        <stop offset="100%" stop-color="#E372DB" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- 左下角缩放控制 -->
+        <div class="zoom-control-container">
+            <div class="zoom-control">
+                <button class="zoom-btn" id="zoom-minus">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <div class="zoom-level" id="zoom-level">100%</div>
+                <button class="zoom-btn" id="zoom-plus">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公共弹窗容器 -->
+    <div id="common_windows">
+        <!-- 详情弹窗 -->
+        <div class="modal-overlay" id="detail-modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="detail-modal-title">详情</h3>
+                    <button class="modal-close" id="detail-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="detail-modal-content">
+                    <!-- 内容将动态填充 -->
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 编辑卡片弹窗 -->
+        <div id="edit-block-modal-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="edit-modal-title">编辑卡片</h3>
+                    <button class="modal-close" id="edit-block-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-block-form">
+                        <div class="form-group">
+                            <label for="edit-block-name">名称 <span class="required">*</span></label>
+                            <input type="text" id="edit-block-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-desc">描述</label>
+                            <div id="edit-block-desc" class="modal-content-value"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-teacher">教师参考</label>
+                            <div id="edit-block-teacher" class="modal-content-value"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="edit-block-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="edit-block-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑卡片弹窗 -->
+        <div id="edit-block-modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title">编辑</h3>
+                    <span class="modal-close" id="edit-block-modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-block-form">
+                        <div class="form-group">
+                            <label for="edit-block-name">名称 <span class="required">*</span></label>
+                            <input type="text" id="edit-block-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-desc">描述</label>
+                            <div id="edit-block-desc"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-block-teacher">教师参考</label>
+                            <div id="edit-block-teacher"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="edit-block-btn-cancel">取消</button>
+                    <button class="btn btn-confirm" id="edit-block-btn-confirm">确定</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script src="js/questionMapDetail.js"></script>
+</body>
+
+</html>

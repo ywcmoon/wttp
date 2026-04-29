@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/targetManagement.css">
+</head>
+
+<body>
+    <div class="management-page">
+        <div class="management-nav">
+            <div class="nav-left">
+                <button class="nav-btn back-btn" id="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    返回
+                </button>
+                <h2 class="nav-title">内容管理</h2>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn outline-btn" id="template-import-btn">
+                    <i class="fas fa-file-import"></i>
+                    模板导入
+                </button>
+                <button class="nav-btn outline-btn" id="export-btn">
+                    <i class="fas fa-file-export"></i>
+                    一键导出
+                </button>
+            </div>
+        </div>
+
+        <div class="management-toolbar">
+            <div class="toolbar-filters">
+                <div class="filter-group">
+                    <label class="filter-label">标签</label>
+                    <div class="filter-selector" id="tag-filter">
+                        <span class="filter-text">全部</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <div class="filter-dropdown" id="tag-filter-dropdown"></div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">名称</label>
+                    <input type="text" class="filter-input" id="name-filter" placeholder="搜索名称">
+                </div>
+            </div>
+            <button class="btn btn-primary" id="create-btn">
+                <i class="fas fa-plus"></i>
+                新建
+            </button>
+        </div>
+
+        <div class="management-table-wrap">
+            <table class="management-table" id="content-table">
+                <thead>
+                    <tr>
+                        <th class="th-check">
+                            <input type="checkbox" id="check-all">
+                        </th>
+                        <th class="th-index">序号</th>
+                        <th class="th-name">名称</th>
+                        <th class="th-tags">标签</th>
+                        <th class="th-desc">描述</th>
+                        <th class="th-action">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
+
+        <div class="batch-bar" id="batch-bar">
+            <button class="btn btn-danger" id="batch-delete-btn">
+                <i class="fas fa-trash"></i>
+                批量删除
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="create-modal-overlay">
+        <div class="modal-content create-modal">
+            <div class="modal-header">
+                <h3 id="create-modal-title">新建</h3>
+                <button class="modal-close" id="create-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="create-form">
+                    <div class="form-group">
+                        <label>名称 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="form-name" required placeholder="请输入名称">
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea class="form-textarea" id="form-desc" rows="3" placeholder="请输入描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>标签（<span id="form-tag-count">0</span>）</label>
+                        <div class="form-tags" id="form-tags"></div>
+                        <button type="button" class="btn-add" id="add-tag-btn">
+                            <i class="fas fa-plus"></i> 添加
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>关联知识点（<span id="form-knowledge-count">0</span>）</label>
+                        <div class="form-tags" id="form-knowledge-tags"></div>
+                        <button type="button" class="btn-add" id="add-knowledge-btn">
+                            <i class="fas fa-plus"></i> 添加
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="create-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="create-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="tag-modal-overlay">
+        <div class="modal-content tag-modal">
+            <div class="modal-header">
+                <h3>添加标签</h3>
+                <button class="modal-close" id="tag-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tag-modal-content">
+                    <div class="tag-modal-left">
+                        <div class="tag-modal-left-header">
+                            <button class="btn-text" id="new-tag-btn">
+                                <i class="fas fa-plus"></i> 新建标签
+                            </button>
+                            <div class="tag-search">
+                                <input type="text" class="tag-search-input" id="tag-search-input" placeholder="搜索标签">
+                            </div>
+                        </div>
+                        <div class="tag-new-form" id="tag-new-form" style="display:none;">
+                            <input type="text" class="form-input" id="new-tag-name" placeholder="输入标签名称">
+                            <div class="tag-new-actions">
+                                <button class="btn-sm btn-confirm" id="new-tag-confirm">确认</button>
+                                <button class="btn-sm btn-cancel" id="new-tag-cancel">取消</button>
+                            </div>
+                        </div>
+                        <ul class="tag-list" id="tag-list"></ul>
+                    </div>
+                    <div class="tag-modal-right">
+                        <div class="tag-selected-header">
+                            已选中 <span id="tag-selected-count">0</span> 个
+                        </div>
+                        <div class="tag-selected-list" id="tag-selected-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="tag-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="tag-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="knowledge-modal-overlay">
+        <div class="modal-content knowledge-modal">
+            <div class="modal-header">
+                <h3>关联知识点</h3>
+                <button class="modal-close" id="knowledge-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="knowledge-modal-content">
+                    <div class="knowledge-modal-left">
+                        <div class="knowledge-modal-left-header">
+                            <span class="knowledge-count">共 <em id="knowledge-tree-count">0</em> 个知识点</span>
+                        </div>
+                        <ul class="knowledge-tree" id="knowledge-tree"></ul>
+                    </div>
+                    <div class="knowledge-modal-right">
+                        <div class="knowledge-selected-header">
+                            已选中 <span id="knowledge-selected-count">0</span> 个
+                        </div>
+                        <div class="knowledge-selected-list" id="knowledge-selected-list"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="knowledge-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="knowledge-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal-overlay">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h3>提示</h3>
+                <button class="modal-close" id="confirm-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-text" id="confirm-text"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" id="confirm-btn-cancel">取消</button>
+                <button class="btn btn-confirm" id="confirm-btn-confirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="template-file-input" accept=".xlsx,.xls" style="display:none;">
+
+    <script src="js/targetManagement.js"></script>
+</body>
+
+</html>
