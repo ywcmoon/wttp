@@ -357,27 +357,67 @@
         graphLinks = [];
 
         const centerX = knowledgeCanvas.clientWidth / 2;
+        const checkedIds = new Set(ability.knowledgeIds);
 
-        const knowledgeNodes = findKnowledgeNodes(tree, ability.knowledgeIds);
-        const spacing = Math.min(180, (knowledgeCanvas.clientWidth - 100) / Math.max(knowledgeNodes.length, 1));
-        const startX = centerX - (knowledgeNodes.length - 1) * spacing / 2;
+        // 收集所有匹配的知识点（父级+子级）
+        const matchedParents = [];
+        const standaloneChildren = [];
+        const childParentMap = new Map();
 
-        knowledgeNodes.forEach((kn, i) => {
+        function collectMatches(nodes) {
+            if (!nodes) return;
+            nodes.forEach(node => {
+                if (checkedIds.has(node.id)) {
+                    const hasChildren = node.children && node.children.length > 0;
+                    if (hasChildren) {
+                        matchedParents.push(node);
+                    } else {
+                        standaloneChildren.push(node);
+                    }
+                }
+                if (node.children) {
+                    node.children.forEach(child => {
+                        childParentMap.set(child.id, node.id);
+                    });
+                    collectMatches(node.children);
+                }
+            });
+        }
+        collectMatches(tree);
+
+        // 过滤：如果子级的父级已被勾选，则子级归入父级管理，不当作独立子级
+        const finalStandaloneChildren = standaloneChildren.filter(child => {
+            return !matchedParents.some(p => {
+                return p.children && p.children.some(c => c.id === child.id);
+            });
+        });
+
+        // 计算每列的可用宽度
+        const totalItems = matchedParents.length + finalStandaloneChildren.length;
+        const spacing = Math.min(500, (knowledgeCanvas.clientWidth - 100) / Math.max(totalItems, 1));
+
+        // 渲染父级节点（第一行 y=60）
+        let parentX = centerX - (matchedParents.length - 1) * spacing / 2;
+        if (matchedParents.length === 0) parentX = centerX;
+
+        matchedParents.forEach((kn, i) => {
             const nodeId = 'kn-' + kn.id;
-            const hasChildren = kn.children && kn.children.length > 0;
+            const checkedChildren = kn.children ? kn.children.filter(c => checkedIds.has(c.id)) : [];
+            const hasCheckedChildren = checkedChildren.length > 0;
+
             graphNodes.push({
                 id: nodeId,
                 name: kn.name,
-                x: startX + i * spacing,
+                x: parentX + i * spacing,
                 y: 60,
                 type: 'knowledge',
-                hasChildren: hasChildren
+                hasChildren: hasCheckedChildren
             });
 
-            if (hasChildren) {
-                const childSpacing = Math.min(130, spacing / Math.max(kn.children.length, 1));
-                const childStartX = startX + i * spacing - (kn.children.length - 1) * childSpacing / 2;
-                kn.children.forEach((child, j) => {
+            if (checkedChildren.length > 0) {
+                const childSpacing = Math.min(130, spacing / Math.max(checkedChildren.length, 1));
+                const childStartX = parentX + i * spacing - (checkedChildren.length - 1) * childSpacing / 2;
+                checkedChildren.forEach((child, j) => {
                     const childId = 'kn-' + child.id;
                     graphNodes.push({
                         id: childId,
@@ -392,6 +432,23 @@
                 });
             }
         });
+
+        // 渲染独立子级节点（第二行 y=200，没有父级关联）
+        if (finalStandaloneChildren.length > 0) {
+            const childStartX = centerX - (finalStandaloneChildren.length - 1) * spacing / 2;
+            finalStandaloneChildren.forEach((child, i) => {
+                const childId = 'kn-' + child.id;
+                graphNodes.push({
+                    id: childId,
+                    name: child.name,
+                    x: childStartX + i * spacing,
+                    y: 200,
+                    type: 'child',
+                    hasChildren: false,
+                    parentId: null
+                });
+            });
+        }
 
         drawSvgGraph();
     }
@@ -441,6 +498,39 @@
         const svgNS = 'http://www.w3.org/2000/svg';
 
         const defs = document.createElementNS(svgNS, 'defs');
+
+        // 父级节点渐变色：由内向外淡化
+        const parentGrad = document.createElementNS(svgNS, 'radialGradient');
+        parentGrad.setAttribute('id', 'parent-node-grad');
+        parentGrad.setAttribute('cx', '35%');
+        parentGrad.setAttribute('cy', '35%');
+        parentGrad.setAttribute('r', '65%');
+        const parentStop1 = document.createElementNS(svgNS, 'stop');
+        parentStop1.setAttribute('offset', '0%');
+        parentStop1.setAttribute('stop-color', '#17e6f5ff');
+        parentGrad.appendChild(parentStop1);
+        const parentStop2 = document.createElementNS(svgNS, 'stop');
+        parentStop2.setAttribute('offset', '100%');
+        parentStop2.setAttribute('stop-color', '#bed8b8ff');
+        parentGrad.appendChild(parentStop2);
+        defs.appendChild(parentGrad);
+
+        // 子级节点渐变色：由内向外淡化
+        const childGrad = document.createElementNS(svgNS, 'radialGradient');
+        childGrad.setAttribute('id', 'child-node-grad');
+        childGrad.setAttribute('cx', '35%');
+        childGrad.setAttribute('cy', '35%');
+        childGrad.setAttribute('r', '65%');
+        const childStop1 = document.createElementNS(svgNS, 'stop');
+        childStop1.setAttribute('offset', '0%');
+        childStop1.setAttribute('stop-color', '#f0d09aff');
+        childGrad.appendChild(childStop1);
+        const childStop2 = document.createElementNS(svgNS, 'stop');
+        childStop2.setAttribute('offset', '100%');
+        childStop2.setAttribute('stop-color', '#abf05cff');
+        childGrad.appendChild(childStop2);
+        defs.appendChild(childGrad);
+
         const marker = document.createElementNS(svgNS, 'marker');
         marker.setAttribute('id', 'arrowhead');
         marker.setAttribute('markerWidth', '8');
@@ -451,7 +541,7 @@
         marker.setAttribute('markerUnits', 'userSpaceOnUse');
         const path = document.createElementNS(svgNS, 'path');
         path.setAttribute('d', 'M0,0 L8,3 L0,6 L2,3 Z');
-        path.setAttribute('fill', '#909399');
+        path.setAttribute('fill', '#b8babeff');
         marker.appendChild(path);
         defs.appendChild(marker);
         knowledgeSvg.appendChild(defs);
@@ -504,56 +594,31 @@
             g.style.cursor = 'grab';
 
             const r = node.type === 'knowledge' ? 22 : 18;
-            const fillColor = node.type === 'knowledge' ? '#67c23a' : '#e6a23c';
-
-            const shadow = document.createElementNS(svgNS, 'circle');
-            shadow.setAttribute('cx', '2');
-            shadow.setAttribute('cy', '3');
-            shadow.setAttribute('r', r);
-            shadow.setAttribute('fill', 'rgba(0,0,0,0.08)');
-            g.appendChild(shadow);
+            const gradId = node.type === 'knowledge' ? 'url(#parent-node-grad)' : 'url(#child-node-grad)';
+            const strokeColor = node.type === 'knowledge' ? '#52b83b' : '#d9942e';
 
             const circle = document.createElementNS(svgNS, 'circle');
             circle.setAttribute('cx', '0');
             circle.setAttribute('cy', '0');
             circle.setAttribute('r', r);
-            circle.setAttribute('fill', fillColor);
-            circle.setAttribute('stroke', '#fff');
-            circle.setAttribute('stroke-width', '2');
+            circle.setAttribute('fill', gradId);
+            // circle.setAttribute('stroke', '#000');
+            // circle.setAttribute('stroke-width', '2');
             g.appendChild(circle);
+
+            var fontSize = r === 22 ? '12' : '11';
 
             const nameText = document.createElementNS(svgNS, 'text');
             nameText.setAttribute('x', '0');
             nameText.setAttribute('y', '1');
             nameText.setAttribute('text-anchor', 'middle');
             nameText.setAttribute('dominant-baseline', 'middle');
-            nameText.setAttribute('font-size', node.type === 'knowledge' ? '12' : '11');
-            nameText.setAttribute('fill', '#fff');
+            nameText.setAttribute('font-size', fontSize);
+            nameText.setAttribute('fill', '#000');
             nameText.setAttribute('font-weight', '600');
             nameText.setAttribute('style', 'pointer-events: none;');
-
-            var nameLen = node.name.length;
-            var maxInnerLen = node.type === 'knowledge' ? 3 : 2;
-            if (nameLen <= maxInnerLen) {
-                nameText.textContent = node.name;
-            } else {
-                var truncLen = node.type === 'knowledge' ? 2 : 2;
-                nameText.textContent = node.name.substring(0, truncLen) + '…';
-            }
+            nameText.textContent = node.name;
             g.appendChild(nameText);
-
-            if (nameLen > maxInnerLen) {
-                var outerText = document.createElementNS(svgNS, 'text');
-                outerText.setAttribute('x', '0');
-                outerText.setAttribute('y', String(r + 16));
-                outerText.setAttribute('text-anchor', 'middle');
-                outerText.setAttribute('font-size', '11');
-                outerText.setAttribute('fill', '#181e33');
-                outerText.setAttribute('font-weight', '500');
-                outerText.setAttribute('style', 'pointer-events: none;');
-                outerText.textContent = nameLen > 8 ? node.name.substring(0, 7) + '…' : node.name;
-                g.appendChild(outerText);
-            }
 
             if (node.hasChildren) {
                 const isCollapsed = collapsedNodes.has(node.id);
@@ -564,7 +629,7 @@
                 toggleBg.setAttribute('cy', String(toggleY));
                 toggleBg.setAttribute('r', '10');
                 toggleBg.setAttribute('fill', '#fff');
-                toggleBg.setAttribute('stroke', fillColor);
+                toggleBg.setAttribute('stroke', strokeColor);
                 toggleBg.setAttribute('stroke-width', '1.5');
                 toggleBg.setAttribute('class', 'toggle-btn');
                 toggleBg.setAttribute('data-node-id', node.id);
@@ -579,7 +644,7 @@
                 toggleText.setAttribute('dominant-baseline', 'middle');
                 toggleText.setAttribute('font-size', '14');
                 toggleText.setAttribute('font-weight', '700');
-                toggleText.setAttribute('fill', fillColor);
+                toggleText.setAttribute('fill', strokeColor);
                 toggleText.setAttribute('class', 'toggle-btn');
                 toggleText.setAttribute('data-node-id', node.id);
                 toggleText.style.cursor = 'pointer';
@@ -844,6 +909,7 @@
 
     function createTreeNode(node, level) {
         const li = document.createElement('li');
+        li.setAttribute('data-id', node.id);
         const hasChildren = node.children && node.children.length > 0;
 
         const main = document.createElement('div');
@@ -892,6 +958,19 @@
             check.classList.toggle('checked');
         });
         main.appendChild(check);
+
+        // 点击整个主区域（除勾选框外）展开/折叠子级
+        main.addEventListener('click', function (e) {
+            if (e.target.closest('.tree-check')) return;
+            if (hasChildren) {
+                const arrow = main.querySelector('.tree-arrow');
+                if (arrow) {
+                    arrow.classList.toggle('expanded');
+                    const children = li.querySelector('.tree-children');
+                    if (children) children.classList.toggle('expanded');
+                }
+            }
+        });
 
         li.appendChild(main);
 

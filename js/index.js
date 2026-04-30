@@ -183,12 +183,36 @@
 
         svgConnectorPoints.forEach((info) => {
             const { element, block, type } = info;
-            if (!block || !block.offsetParent) {
+            if (!block) {
                 element.style.display = 'none';
                 return;
             }
 
             if (block.classList.contains('original-hidden')) {
+
+                // 堆叠卡组的连接点
+                // const nonStackedFold = document.querySelector(`.folded-block[data-source-id="${block.id}"]:not(.stacked)`);
+                // const foldedBlock = nonStackedFold || document.querySelector(`.folded-block[data-source-id="${block.id}"]`);
+                // if (foldedBlock && !foldedBlock.classList.contains('stacked')) {
+                //     const foldGroup = foldedBlock.closest('.fold-group');
+                //     const rect = foldGroup ? foldGroup.getBoundingClientRect() : foldedBlock.getBoundingClientRect();
+                //     let cx, cy;
+                //     if (type === 'start') {
+                //         cx = rect.right - svgRect.left;
+                //         cy = rect.top + rect.height / 2 - svgRect.top;
+                //     } else {
+                //         cx = rect.left - svgRect.left;
+                //         cy = rect.top + rect.height / 2 - svgRect.top;
+                //     }
+                //     element.style.display = '';
+                //     element.setAttribute('transform', `translate(${cx}, ${cy})`);
+                //     return;
+                // }
+                element.style.display = 'none';
+                return;
+            }
+
+            if (!block.offsetParent) {
                 element.style.display = 'none';
                 return;
             }
@@ -411,8 +435,32 @@
         return `M ${x1} ${y1} C ${cx} ${y1 + bend}, ${cx} ${y2 - bend}, ${x2} ${y2}`;
     }
 
-    function getFoldedBlockCoord(blockId, pointType) {
+    function getFoldedBlockCoord(blockId, pointType, groupABlockId) {
         const svgRect = svg.getBoundingClientRect();
+
+        // 如果指定了A卡片，优先查找该A卡片对应的折叠副本
+        if (groupABlockId) {
+            const selector = `.folded-block[data-source-id="${blockId}"][id$="-folded-${groupABlockId}"]`;
+            const foldedBlock = document.querySelector(selector);
+            if (foldedBlock) {
+                const foldGroup = foldedBlock.closest('.fold-group');
+                if (foldGroup) {
+                    const groupRect = foldGroup.getBoundingClientRect();
+                    if (pointType === 'start') {
+                        return { x: groupRect.right - svgRect.left, y: groupRect.top + groupRect.height / 2 - svgRect.top };
+                    } else {
+                        return { x: groupRect.left - svgRect.left, y: groupRect.top + groupRect.height / 2 - svgRect.top };
+                    }
+                }
+                const blockRect = foldedBlock.getBoundingClientRect();
+                if (pointType === 'start') {
+                    return { x: blockRect.right - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+                } else {
+                    return { x: blockRect.left - svgRect.left, y: blockRect.top + blockRect.height / 2 - svgRect.top };
+                }
+            }
+        }
+
         const originalBlock = document.getElementById(blockId);
         if (originalBlock && !originalBlock.classList.contains('original-hidden') && originalBlock.offsetParent) {
             const blockRect = originalBlock.getBoundingClientRect();
@@ -423,7 +471,10 @@
             }
         }
 
-        const foldedBlock = document.querySelector(`.folded-block[data-source-id="${blockId}"]`);
+        const selector = groupABlockId
+            ? `.folded-block[data-source-id="${blockId}"][id$="-folded-${groupABlockId}"]`
+            : `.folded-block[data-source-id="${blockId}"]`;
+        const foldedBlock = document.querySelector(selector);
         if (foldedBlock) {
             const foldGroup = foldedBlock.closest('.fold-group');
             if (foldGroup) {
@@ -598,7 +649,8 @@
                 }
             });
 
-            // 只绘制A层到B层第一层，以及相邻层级第一层之间的连线
+            // 只绘制A层到各层级第一层的连线，以及相邻层级第一层之间的连线
+            const foldGroupLinesCreated = new Set();
             connections.forEach(conn => {
                 const startBlock = getBlockFromPoint(conn.startElement);
                 const endBlock = getBlockFromPoint(conn.endElement);
@@ -611,20 +663,28 @@
                 let shouldDraw = false;
 
                 if (startBlock === aBlock && endInvolved) {
-                    shouldDraw = true;
+                    const endLevel = endBlock ? endBlock.id[0] : '';
+                    const firstOfLevel = levelFirstBlocks.get(endLevel);
+                    if (endBlock === firstOfLevel) {
+                        shouldDraw = true;
+                    }
                 } else if (startInvolved && endInvolved) {
                     const startLevel = startBlock ? startBlock.id[0] : '1';
                     const endLevel = endBlock ? endBlock.id[0] : '2';
                     const isAdjacentLevel = (endLevel.charCodeAt(0) - startLevel.charCodeAt(0)) === 1;
                     if (isAdjacentLevel) {
-                        shouldDraw = true;
+                        const firstStart = levelFirstBlocks.get(startLevel);
+                        const firstEnd = levelFirstBlocks.get(endLevel);
+                        if (startBlock === firstStart && endBlock === firstEnd) {
+                            shouldDraw = true;
+                        }
                     }
                 }
 
                 if (!shouldDraw) return;
 
-                const s = getFoldedBlockCoord(startBlock.id, 'start');
-                const e = getFoldedBlockCoord(endBlock.id, 'end');
+                const s = getFoldedBlockCoord(startBlock.id, 'start', aBlock.id);
+                const e = getFoldedBlockCoord(endBlock.id, 'end', aBlock.id);
 
                 if (s.x === 0 && s.y === 0 && e.x === 0 && e.y === 0) return;
 
@@ -650,10 +710,12 @@
                 line.setAttribute('style', 'visibility: visible;');
                 line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
                 svg.insertBefore(line, connectorGroup);
-                foldGroupLines.set(`${conn.id}-folded-${aBlock.id}`, line);
+                const lineKey = `${conn.id}-folded-${aBlock.id}`;
+                foldGroupLines.set(lineKey, line);
+                foldGroupLinesCreated.add(`${aBlock.id}-${startBlock.id}-${endBlock.id}`);
             });
 
-            // 智能堆叠连接：如果相邻层级第一层之间没有直接连接，则创建一条
+            // 智能堆叠连接：确保相邻层级第一层之间总是有折叠组连线
             const sortedLevels = [...levelGroups.keys()].sort();
 
             for (let i = 0; i < sortedLevels.length - 1; i++) {
@@ -667,47 +729,38 @@
                     const firstCurrentBlock = currentBlocks[0];
                     const firstNextBlock = nextBlocks[0];
 
-                    const firstCurrentHidden = firstCurrentBlock.classList.contains('original-hidden');
-                    const firstNextHidden = firstNextBlock.classList.contains('original-hidden');
+                    // 检查是否已经创建了连线
+                    const pairKey = `${aBlock.id}-${firstCurrentBlock.id}-${firstNextBlock.id}`;
+                    if (foldGroupLinesCreated.has(pairKey)) continue;
 
-                    if (!firstCurrentHidden && !firstNextHidden) continue;
+                    const s = getFoldedBlockCoord(firstCurrentBlock.id, 'start', aBlock.id);
+                    const e = getFoldedBlockCoord(firstNextBlock.id, 'end', aBlock.id);
 
-                    const hasDirectConnection = connections.some(conn => {
-                        const sb = getBlockFromPoint(conn.startElement);
-                        const eb = getBlockFromPoint(conn.endElement);
-                        return sb === firstCurrentBlock && eb === firstNextBlock;
-                    });
+                    if (s.x === 0 && s.y === 0 && e.x === 0 && e.y === 0) continue;
 
-                    if (!hasDirectConnection) {
-                        const s = getFoldedBlockCoord(firstCurrentBlock.id, 'start');
-                        const e = getFoldedBlockCoord(firstNextBlock.id, 'end');
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
-                        if (s.x === 0 && s.y === 0 && e.x === 0 && e.y === 0) continue;
+                    const startLevel = firstCurrentBlock ? firstCurrentBlock.classList[1].replace('level-', '') : '1';
+                    const endLevel = firstNextBlock ? firstNextBlock.classList[1].replace('level-', '') : '1';
 
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-                        const startLevel = firstCurrentBlock ? firstCurrentBlock.classList[1].replace('level-', '') : '1';
-                        const endLevel = firstNextBlock ? firstNextBlock.classList[1].replace('level-', '') : '1';
-
-                        let lineClass = 'fold-group-line';
-                        if (startLevel === '1' && endLevel === '2') {
-                            lineClass += ' level-1-to-level-2';
-                        } else if (startLevel === '2' && endLevel === '3') {
-                            lineClass += ' level-2-to-level-3';
-                        } else if (startLevel === '3' && endLevel === '4') {
-                            lineClass += ' level-3-to-level-4';
-                        } else if (startLevel === '4' && endLevel === '5') {
-                            lineClass += ' level-4-to-level-5';
-                        } else {
-                            lineClass += ` level-${startLevel}-to-level-${endLevel}`;
-                        }
-
-                        line.setAttribute('class', lineClass);
-                        line.setAttribute('style', 'visibility: visible;');
-                        line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
-                        svg.insertBefore(line, connectorGroup);
-                        foldGroupLines.set(`${firstCurrentBlock.id}-${firstNextBlock.id}-smart-${aBlock.id}`, line);
+                    let lineClass = 'fold-group-line';
+                    if (startLevel === '1' && endLevel === '2') {
+                        lineClass += ' level-1-to-level-2';
+                    } else if (startLevel === '2' && endLevel === '3') {
+                        lineClass += ' level-2-to-level-3';
+                    } else if (startLevel === '3' && endLevel === '4') {
+                        lineClass += ' level-3-to-level-4';
+                    } else if (startLevel === '4' && endLevel === '5') {
+                        lineClass += ' level-4-to-level-5';
+                    } else {
+                        lineClass += ` level-${startLevel}-to-level-${endLevel}`;
                     }
+
+                    line.setAttribute('class', lineClass);
+                    line.setAttribute('style', 'visibility: visible;');
+                    line.setAttribute('d', bezier(s.x, s.y, e.x, e.y));
+                    svg.insertBefore(line, connectorGroup);
+                    foldGroupLines.set(`${firstCurrentBlock.id}-${firstNextBlock.id}-smart-${aBlock.id}`, line);
                 }
             }
         });
@@ -752,6 +805,7 @@
         updateAllFolds();
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
+                updateSvgConnectorPositions();
                 updateAllLines();
                 updateBadges();
             });
@@ -995,6 +1049,7 @@
         });
 
         updateAllFolds();
+        updateSvgConnectorPositions();
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 updateAllLines();
@@ -1531,10 +1586,41 @@
         return null;
     }
 
+    function syncConnectorPoints() {
+        const maxLevel = levels.length;
+        if (maxLevel === 0) return;
+        blocks.forEach(block => {
+            const blockId = block.id;
+            const levelKey = blockId[0].toLowerCase();
+            const m = block.className.match(/level-(\d+)/);
+            const level = m ? parseInt(m[1], 10) : 1;
+            const isLastLevel = level === maxLevel;
+            const dataId = blockId + '-start';
+            if (levelKey !== 'e' && !isLastLevel) {
+                // 非末层且无起始连接点 → 创建
+                if (!svgConnectorPoints.has(dataId)) {
+                    createSvgConnectorPoint(block, 'start');
+                }
+            } else if (svgConnectorPoints.has(dataId)) {
+                // 末层且已有起始连接点 → 移除
+                const info = svgConnectorPoints.get(dataId);
+                if (info.element && info.element.parentNode) {
+                    info.element.remove();
+                }
+                svgConnectorPoints.delete(dataId);
+            }
+        });
+        updateSvgConnectorPositions();
+    }
+
+    /**
+     * 更新最新最低层级的右侧连接点，关联子级操作按钮
+     * @returns {void}
+     */
     function updateLastLevelCardUi() {
         const cards = Array.from(document.querySelectorAll('.w_contp_item.draggable-block'));
         if (!cards.length) return;
-        const maxLevel = Math.max(...cards.map(card => {
+        const maxLevel = levels.length > 0 ? levels.length : Math.max(...cards.map(card => {
             const m = card.className.match(/level-(\d+)/);
             return m ? parseInt(m[1], 10) : 1;
         }));
@@ -2202,7 +2288,7 @@
     }
 
     /**
-     * 统一操作按钮图标结构（旧的 <i> 样式替换为 SVG）
+     * 统一操作按钮图标结构
      * 主要用于第二层旧卡片与其他层按钮样式对齐
      */
     function normalizeActionButtonIcons() {
@@ -2241,9 +2327,24 @@
 
         const toggleBtn = colId === 'a' ? `<span class="toggle-collapse" data-state="expanded"><i class="fas fa-chevron-up"></i></span>` : '';
 
+        // debug
         let badge = '';
-        if (colId !== 'a' && colId !== 'e') {
+        let connectBtn = '';
+        // 获取所有层级，动态判断最低层级
+        const allColumns = document.querySelectorAll('.w_cont_problem');
+        const levelIds = Array.from(allColumns).map(col => getColumnIdentifier(col));
+        const minLevel = levelIds.length > 0 ? levelIds.sort()[0] : 'a';
+        const maxLevel = levelIds.length > 0 ? levelIds.sort()[levelIds.length - 1] : 'e';
+        
+        if (colId !== minLevel && colId !== maxLevel) {
             badge = `<div class="w_contp_inum">0</div>`;
+            connectBtn = `<span class="action-btn connect-btn" title="关联子级">
+                        <div class="xcustomSvg">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z" fill="#606266"></path>
+                            </svg>
+                        </div>
+                    </span>`;
         }
 
         block.innerHTML = `
@@ -2270,13 +2371,7 @@
                                     </svg>
                                 </div>
                             </span>
-                            <span class="action-btn connect-btn" title="关联子级">
-                                <div class="xcustomSvg">
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z" fill="#606266"></path>
-                                    </svg>
-                                </div>
-                            </span>
+                            ${connectBtn}
                             <span class="action-btn delete-btn" title="删除卡片">
                                 <div class="xcustomSvg">
                                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2547,8 +2642,7 @@
         hideModal();
         clearForm();
         // 更新层级标题
-        updateLevelTitles();
-        updateLastLevelCardUi();
+        updateLevelTitles(); 
     }
 
     /**
@@ -2940,6 +3034,8 @@
         });
         initLevelEditEvents();
         initAddButtons();
+        updateAllFolds();
+        syncConnectorPoints();
         updateBadges();
         updateAllLines();
         updateLastLevelCardUi();
@@ -2969,8 +3065,8 @@
         document.getElementById('settings-btn-confirm').addEventListener('click', (e) => {
             e.preventDefault();
             hideSettingsModal();
-            // 重新渲染页面
-            // location.reload();
+            expandAll();
+            updateLastLevelCardUi();
         });
 
         // 添加层级按钮
@@ -3735,7 +3831,7 @@
         });
     }
 
-    // debug
+   
     /**
      * 收起状态下的节点悬停
      * - 收起的A卡片及其下游堆叠卡组变灰
@@ -3767,19 +3863,6 @@
             if (relatedBlocks.has(b) && !isInStackedGroup(b) && !collapsedABlocks.includes(b)) return;
             b.classList.add('dimmed');
         });
-
-        // // 堆叠卡组折叠副本：不相关的变灰
-        // document.querySelectorAll('.folded-block').forEach(folded => {
-        //     console.log(folded,'folded')
-        //     const sourceId = folded.dataset.sourceId;
-        //     const sourceBlock = sourceId ? document.getElementById(sourceId) : null;
-        //     if (!sourceBlock || !relatedBlocks.has(sourceBlock)) {
-        //         // 将当前折叠组添加dimmed
-        //         folded.closest('.fold-group').classList.add('dimmed');
-
-        //         // folded.classList.add('dimmed');
-        //     }
-        // });
 
         // 堆叠卡组变灰
         document.querySelectorAll('.fold-group').forEach(folded => {
@@ -4455,20 +4538,8 @@
             updateBadges(connections);
             updateAllLines();
 
-            // // 重新初始化blocks数组，确保包含所有卡片
-            // const newBlocks = [...document.querySelectorAll('.draggable-block')];
-            // blocks.splice(0, blocks.length, ...newBlocks);
-
-            // // 等待DOM布局完成后，更新所有连线的可见性和位置
-            // requestAnimationFrame(() => {
-            //     requestAnimationFrame(() => {
-            //         // updateAllLines();
-            //     });
-            // });
-
             // 初始化默认折叠状态：有连线的卡片默认全部收起 
-            // foldsAllCard();
-            ;
+            foldsAllCard(); 
         } catch (e) {
             console.error('从localStorage恢复连接失败:', e);
         }

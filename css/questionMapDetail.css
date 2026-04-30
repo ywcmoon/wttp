@@ -191,21 +191,30 @@ body {
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 12px;
-    background: #f5f7fa;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #dcdfe6;
     color: #606266;
-    border: 1px solid #e4e7ed;
-    border-radius: 4px;
-    font-size: 13px;
     cursor: pointer;
     transition: all 0.3s;
 }
 
 .action-btn:hover {
     background: #409eff;
-    color: #fff;
     border-color: #409eff;
+    color: #fff;
+}
+
+.action-btn.delete-btn:hover {
+    background: #f56c6c;
+    border-color: #f56c6c;
+}
+
+.action-btn:hover svg path {
+    fill: #fff !important;
 }
 
 .zoom-control-container {
@@ -344,8 +353,8 @@ body {
     }
 
     .action-btn {
-        padding: 4px 8px;
-        font-size: 12px;
+        width: 24px;
+        height: 24px;
     }
 
     .modal-content {

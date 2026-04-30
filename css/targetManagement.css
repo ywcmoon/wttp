@@ -352,7 +352,7 @@ body {
     white-space: nowrap;
 }
 
-.action-btn {
+.action-btn-td {
     background: none;
     border: none;
     color: #3a8bff;
@@ -361,11 +361,11 @@ body {
     padding: 4px 8px;
 }
 
-.action-btn:hover {
+.action-btn-td:hover {
     opacity: 0.8;
 }
 
-.action-btn.delete-btn {
+.action-btn-td.delete-btn {
     color: #f56c6c;
 }
 
@@ -767,131 +767,6 @@ body {
 .knowledge-count em {
     font-style: normal;
     color: #3a8bff;
-}
-
-.knowledge-tree {
-    flex: 1;
-    overflow-y: auto;
-    list-style: none;
-    padding: 0 14px;
-}
-
-.knowledge-tree li {
-    position: relative;
-}
-
-.knowledge-tree li:hover {
-    background: #f0f6ff;
-}
-
-.knowledge-tree .tree-main {
-    display: flex;
-    align-items: center;
-    padding: 12px 52px 12px 14px;
-    cursor: pointer;
-    min-height: 20px;
-}
-
-.knowledge-tree .tree-arrow {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: transform 0.3s;
-    color: #c0c4cc;
-    font-size: 12px;
-}
-
-.knowledge-tree .tree-arrow.expanded {
-    transform: rotate(90deg);
-}
-
-.knowledge-tree .tree-text {
-    flex: 1;
-    font-size: 14px;
-    color: #181e33;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.knowledge-tree .tree-check {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    border: 1px solid #c5cfdb;
-    border-radius: 2px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-}
-
-.knowledge-tree .tree-check.checked {
-    background: #3a8bff;
-    border-color: #3a8bff;
-}
-
-.knowledge-tree .tree-check.checked::after {
-    content: '\2713';
-    color: #fff;
-    font-size: 12px;
-}
-
-.knowledge-tree .tree-children {
-    display: none;
-    padding-left: 20px;
-    list-style: none;
-}
-
-.knowledge-tree .tree-children.expanded {
-    display: block;
-}
-
-.knowledge-modal-right {
-    width: 259px;
-    display: flex;
-    flex-direction: column;
-}
-
-.knowledge-selected-header {
-    padding: 0 24px;
-    height: 50px;
-    line-height: 50px;
-    font-size: 12px;
-    color: #a8a8b3;
-    border-bottom: 1px solid #f2f2f2;
-}
-
-.knowledge-selected-list {
-    flex: 1;
-    padding: 10px 24px;
-    overflow-y: auto;
-}
-
-.knowledge-selected-item {
-    position: relative;
-    display: inline-block;
-    margin: 0 12px 12px 0;
-    padding: 4px 9px;
-    line-height: 20px;
-    font-size: 14px;
-    color: #131b26;
-    border: dashed #d5e2f1 1px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.knowledge-selected-item:hover {
-    opacity: 0.7;
 }
 
 .knowledge-selected-item .remove-btn {

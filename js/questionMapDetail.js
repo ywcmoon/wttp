@@ -277,16 +277,17 @@
                 </span>
             </div>
             <div class="block-actions">
-                <button class="action-btn edit-btn" data-card-id="${block.id}" data-title="${block.title}" >
+                <span class="action-btn edit-btn" title="编辑" data-card-id="${block.id}" data-title="${block.title}">
                     <div class="xcustomSvg">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.207 1.293a1 1 0 0 1 1.414 0l2.086 2.086a1 1 0 0 1 0 1.414l-8.379 8.379a1 1 0 0 1-.414.243l-2.828.943a.5.5 0 0 1-.632-.632l.943-2.828a1 1 0 0 1 .243-.414l8.379-8.379z" fill="#606266"/>
-                            <path d="M9.5 2.5l4 4" stroke="#606266" stroke-width="0"/>
-                            <path d="M2 14h12" stroke="#606266" stroke-width="1.5" stroke-linecap="round"/>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>
+                            <path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>
+                            <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>
+                            <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>
+                            <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>
                         </svg>
                     </div>
-                    编辑
-                </button>
+                </span>
             </div>
             ${badge}
         `;
@@ -315,6 +316,12 @@
         }
 
         container.appendChild(cardElement);
+
+        // 双击卡片回到画布中心
+        cardElement.addEventListener('dblclick', function (e) {
+            e.stopPropagation();
+            centerOnCard(this);
+        });
     }
 
     // 计算连接数
@@ -613,12 +620,32 @@
 
     function handleWheelZoom(e) {
         e.preventDefault();
+        e.stopPropagation();
+
+        // 缩放中心 = 鼠标在 mapContainer 内的位置
+        const containerRect = mapContainer.getBoundingClientRect();
+        const mouseX = e.clientX - containerRect.left;
+        const mouseY = e.clientY - containerRect.top;
+
+        // 计算缩放前鼠标位置对应的内容坐标
+        const oldScale = currentZoom / 100;
+        const contentX = (mouseX - groupOffsetX) / oldScale;
+        const contentY = (mouseY - groupOffsetY) / oldScale;
 
         // 计算缩放增量
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.max(20, Math.min(300, currentZoom * delta));
+        const newScale = newZoom / 100;
 
-        setZoom(newZoom);
+        // 调整偏移使鼠标位置对应的内容点保持不变
+        groupOffsetX = mouseX - contentX * newScale;
+        groupOffsetY = mouseY - contentY * newScale;
+
+        currentZoom = newZoom;
+        applyGroupTransform();
+        zoomLevel.textContent = `${Math.round(currentZoom)}%`;
+
+        drawConnections();
     }
 
     function setZoom(percent) {
@@ -626,16 +653,31 @@
         applyGroupTransform();
         zoomLevel.textContent = `${Math.round(currentZoom)}%`;
 
-        // 延迟更新连接，确保布局已更新
-        setTimeout(() => {
-            updateConnections();
-        }, 50);
+        drawConnections();
     }
 
     function applyGroupTransform() {
         const scale = currentZoom / 100;
         contentContainer.style.transform = `translate(${groupOffsetX}px, ${groupOffsetY}px) scale(${scale})`;
         contentContainer.style.transformOrigin = 'top left';
+    }
+
+    // 双击卡片回到画布中心
+    function centerOnCard(cardElement) {
+        const mapRect = mapContainer.getBoundingClientRect();
+        const cardRect = cardElement.getBoundingClientRect();
+
+        const cardCenterX = cardRect.left - mapRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top - mapRect.top + cardRect.height / 2;
+
+        const mapCenterX = mapRect.width / 2;
+        const mapCenterY = mapRect.height / 2;
+
+        groupOffsetX += mapCenterX - cardCenterX;
+        groupOffsetY += mapCenterY - cardCenterY;
+
+        applyGroupTransform();
+        drawConnections();
     }
 
     // ==================== 拖拽功能 ====================

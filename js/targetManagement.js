@@ -169,7 +169,7 @@
             tdAction.className = 'th-action';
 
             const editBtn = document.createElement('button');
-            editBtn.className = 'action-btn';
+            editBtn.className = 'action-btn-td';
             editBtn.textContent = '编辑';
             editBtn.addEventListener('click', function () {
                 openCreateModal(ability.id);
@@ -177,7 +177,7 @@
             tdAction.appendChild(editBtn);
 
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'action-btn delete-btn';
+            deleteBtn.className = 'action-btn-td delete-btn';
             deleteBtn.textContent = '删除';
             deleteBtn.addEventListener('click', function () {
                 showConfirm('确定是否删除？', function () {
@@ -503,6 +503,7 @@
 
     function createKnowledgeNode(node, level) {
         const li = document.createElement('li');
+        li.setAttribute('data-id', node.id);
         const hasChildren = node.children && node.children.length > 0;
 
         const main = document.createElement('div');
@@ -558,6 +559,19 @@
             renderKnowledgeSelectedList();
         });
         main.appendChild(check);
+
+        // 点击整个主区域（除勾选框外）展开/折叠子级
+        main.addEventListener('click', function (e) {
+            if (e.target.closest('.tree-check')) return;
+            if (hasChildren) {
+                const arrow = main.querySelector('.tree-arrow');
+                if (arrow) {
+                    arrow.classList.toggle('expanded');
+                    const children = li.querySelector('.tree-children');
+                    if (children) children.classList.toggle('expanded');
+                }
+            }
+        });
 
         li.appendChild(main);
 

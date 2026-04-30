@@ -979,3 +979,189 @@ targetMapTeacher页面
 鼠标移到父级或子级都有hover背景色；
 
 svg画布里的图形，去掉能力这个等级；只保留知识点里的父子级关系图形
+
+卡片的关联关系示例：
+0: {startId: 'a1', endId: 'b1'}
+1: {startId: 'a1', endId: 'b2'}
+2: {startId: 'b1', endId: 'c1'}
+3: {startId: 'b1', endId: 'c2'}
+4: {startId: 'b1', endId: 'c3'}
+5: {startId: 'a2', endId: 'b2'}
+6: {startId: 'a2', endId: 'b3'}
+7: {startId: 'a1', endId: 'b3'}
+8: {startId: 'a2', endId: 'b4'}
+9: {startId: 'c1', endId: 'd1'}
+10: {startId: 'c1', endId: 'd2'}
+11: {startId: 'b4', endId: 'c3'}
+12: {startId: 'b4', endId: 'c4'}
+13: {startId: 'c4', endId: 'd3'}
+
+index页面
+第一层级的卡片收起时，只有第一层级的卡片与堆叠卡组的第一个卡片连线，卡片与卡片的第一个连线，其他连线不展示；
+
+questionMapDetail页面
+卡片里的block-actions编辑按钮完全与index的编辑按钮相同：使用svg绘制，圆形图标
+
+goLink页面
+完全参考idnex页面的卡片：
+卡片里的连接数展示正确；
+卡片与卡片之间的连线颜色由卡片主题色渐变到另一个卡片的主题色；
+
+
+targetMapTeacher页面与targetManagement页面的关联知识点弹窗是共用的，通过data-id关联，
+打开的弹窗关联知识点内容样式等完全相同。
+修复targetManagement弹窗：knowledge-tree元素下的列表：点击父级展开子级列表，父级勾选框不移除或隐藏；
+鼠标hover子级或父级有行背景样式；
+targetMapTeacher页面SVG土浦安展示的图形关系修复：
+子级或父级的图形只展示一个；
+子级的图形与父级的图形独立区别；
+图形正下的文字展示去掉，图形里的文字多余的展示出来，以圆心一行展示，覆盖图形；
+图形背景使用渐变色，美观好看的色系，由里向淡化，去除阴影
+
+
+index页面
+卡片收起时：
+第一层级的卡片与下级堆叠卡组的第一个卡片连线；
+堆叠卡组的第一个卡片与堆叠卡组第一个卡片连线；
+隐藏堆叠卡片与非堆叠卡片之间有的连线，
+
+targetMapTeacher页面svg图形：
+示例：
+父级勾选了 身体协调（父级）->上肢协调（下级），下肢协调（下级），运动技能（只勾选父级），运动生理（只勾选子级）
+展示的也只能是勾选的父级和子级，及其关系；
+禁止子级使用父级图形；
+只勾选父级，就不展示子级
+图形circle里的文字，需要展示全部内容，长度大于图形就，以圆心为中心展示一行覆盖图形；
+
+goLink页面
+进入页面，默认连线和连接数量根据保存ls3数据展示；
+卡片与卡片之间的连线颜色由卡片主题色渐变到另一个卡片的主题色；
+
+
+questionMapDetail页面
+缩放时，连接点与卡片的位置有延迟脱离现象；
+缩放的中心以当前鼠标指针位置为准；
+双击卡片，实现该卡片回到画布中心功能；
+
+
+验证不对，没有达到效果
+1.index 收起连线规则
+
+示例关系：
+{startId: 'a1', endId: 'b1'}
+{startId: 'a1', endId: 'b2'}
+{startId: 'b1', endId: 'c1'}
+{startId: 'b1', endId: 'c2'}
+{startId: 'b1', endId: 'c3'}
+{startId: 'a1', endId: 'b3'}
+{startId: 'c1', endId: 'd1'}
+{startId: 'c1', endId: 'd2'}
+{startId: 'a3', endId: 'b3'}
+{startId: 'a3', endId: 'b4'}
+{startId: 'b4', endId: 'c4'}
+
+全部收起时：
+A3连接以B3为首张卡片的堆叠卡组，B3连接以C4 为首张卡片的堆叠卡组；
+此外，堆叠卡组的连接点需要展示；
+
+2.goLink 连线渐变色
+拖拽的线条正确，卡片与卡片的连线渐变色没有实现
+
+
+index页面
+默认全部收起，还是上个会话的示例，
+当只展开A1时，A3与首张为B3的堆叠卡组连线，而不是非堆叠卡片里的B3
+
+questionMapDetail页面
+缩放时，连接点与卡片的位置有延迟脱离现象；
+缩放的中心以当前鼠标指针位置为准；
+双击卡片，实现该卡片回到画布中心功能；
+
+
+index页面
+层级管理，新增层级后：
+1. 默认为最底层级，之前最底层级的非堆叠卡片显示关联子级，右侧显示连接点
+2.新增后，点击设置弹窗的确认，展开全部卡片。
+
+层级管理，添加层级弹窗，确认后，
+当index页面有收起的卡组，中间层级的连接点显示样式错乱
+
+
+index页面
+1.右上角设置弹窗，添加层级后，会在卡片层级的最后面新增一个层级，此时，应该把之前为最底层级的非堆叠卡片，右侧显示连接圆点，且hover时显示操作按钮关联子级；
+
+2.以下是示例的卡片关联关系
+startId为上级id，endId为下级id：
+[
+    {
+        "startId": "a1",
+        "endId": "b1"
+    },
+    {
+        "startId": "a1",
+        "endId": "b2"
+    },
+    {
+        "startId": "b1",
+        "endId": "c1"
+    },
+    {
+        "startId": "b1",
+        "endId": "c2"
+    },
+    {
+        "startId": "b1",
+        "endId": "c3"
+    },
+    {
+        "startId": "a1",
+        "endId": "b3"
+    },
+    {
+        "startId": "c1",
+        "endId": "d1"
+    },
+    {
+        "startId": "c1",
+        "endId": "d2"
+    },
+    {
+        "startId": "b4",
+        "endId": "c4"
+    },
+    {
+        "startId": "c4",
+        "endId": "d3"
+    },
+    {
+        "startId": "a2",
+        "endId": "b3"
+    },
+    {
+        "startId": "a2",
+        "endId": "b4"
+    },
+    {
+        "startId": "a3",
+        "endId": "b3"
+    },
+    {
+        "startId": "a3",
+        "endId": "b4"
+    },
+    {
+        "startId": "a3",
+        "endId": "b5"
+    }
+]
+
+index页面
+堆叠卡组不显示连接点
+
+goLink页面
+最底层卡片不显示右上角的连接数量
+
+
+当A1,A2,A3都时收起状态，此时只展开A3，还是收起状态的A2下游B3->C4堆叠卡组的连线不要隐藏
+
+

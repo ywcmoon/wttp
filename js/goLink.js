@@ -538,7 +538,6 @@
            
             setTimeout(() => {
                 initConnectionPoints();
-                drawFullHierarchyConnections();
                 loadLs3Connections();
                 updateBadges();
             }, 100);
@@ -603,7 +602,7 @@
         var defs = svg.querySelector('defs');
         if (defs) defs.appendChild(lg);
 
-        path.setAttribute('stroke', 'url(#' + gradientId + ')');
+        path.style.stroke = 'url(#' + gradientId + ')';
         path.setAttribute('d', bezier(sx, sy, ex, ey));
 
         svg.insertBefore(path, connectorGroup);
@@ -750,6 +749,36 @@
                 <div class="block-content-text">${card.desc}</div>
                 <span class="w_contp_btn golink-more-btn" data-card-id="${card.id}" data-title="${card.title}">详情<i class="fas fa-chevron-right"></i></span>
             </div>
+            <div class="block-action-row">
+                <div class="w_contp_ibtn"></div>
+                <div class="block-actions">
+                    <span class="action-btn edit-btn" title="编辑">
+                        <div class="xcustomSvg">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>
+                                <path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>
+                                <path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>
+                                <path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>
+                                <path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>
+                            </svg>
+                        </div>
+                    </span>
+                    <span class="action-btn connect-btn" title="关联子级">
+                        <div class="xcustomSvg">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.125 5.8913C5.20931 5.56859 6 4.56413 6 3.375C6 1.92525 4.82475 0.75 3.375 0.75C1.92525 0.75 0.75 1.92525 0.75 3.375C0.75 4.56413 1.54069 5.56859 2.625 5.8913V8.52692C2.625 9.14824 3.12868 9.65192 3.75 9.65192H6.58347C6.98319 10.5913 7.91467 11.25 9 11.25C10.0853 11.25 11.0168 10.5913 11.4165 9.65192H13.875V12.1087C12.7907 12.4314 12 13.4359 12 14.625C12 16.0747 13.1753 17.25 14.625 17.25C16.0747 17.25 17.25 16.0747 17.25 14.625C17.25 13.4359 16.4593 12.4314 15.375 12.1087V9.27692C15.375 8.6556 14.8713 8.15192 14.25 8.15192H11.5825C11.3597 6.92797 10.2882 6 9 6C7.71177 6 6.64027 6.92797 6.41752 8.15192H4.125V5.8913Z" fill="#606266"></path>
+                            </svg>
+                        </div>
+                    </span>
+                    <span class="action-btn delete-btn" title="删除卡片">
+                        <div class="xcustomSvg">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4.875 3.00049C4.875 1.75785 5.88236 0.750488 7.125 0.750488H10.875C12.1176 0.750488 13.125 1.75785 13.125 3.00049V3.93799H16.125C16.5392 3.93799 16.875 4.27377 16.875 4.68799C16.875 5.1022 16.5392 5.43799 16.125 5.43799H1.875C1.46079 5.43799 1.125 5.1022 1.125 4.68799C1.125 4.27377 1.46079 3.93799 1.875 3.93799H4.875V3.00049ZM11.625 3.75049V3.00049C11.625 2.58627 11.2892 2.25049 10.875 2.25049H7.125C6.71079 2.25049 6.375 2.58627 6.375 3.00049V3.75049H11.625ZM4.125 6.00049C4.53921 6.00049 4.875 6.33627 4.875 6.75049V14.6255C4.875 15.0397 5.21079 15.3755 5.625 15.3755H12.375C12.7892 15.3755 13.125 15.0397 13.125 14.6255V6.75049C13.125 6.33627 13.4608 6.00049 13.875 6.00049C14.2892 6.00049 14.625 6.33627 14.625 6.75049V14.6255C14.625 15.8681 13.6176 16.8755 12.375 16.8755H5.625C4.38236 16.8755 3.375 15.8681 3.375 14.6255V6.75049C3.375 6.33627 3.71079 6.00049 4.125 6.00049ZM7.5 6.75049C7.91421 6.75049 8.25 7.08627 8.25 7.50049V12.7505C8.25 13.1647 7.91421 13.5005 7.5 13.5005C7.08579 13.5005 6.75 13.1647 6.75 12.7505V7.50049C6.75 7.08627 7.08579 6.75049 7.5 6.75049ZM10.5 6.75049C10.9142 6.75049 11.25 7.08627 11.25 7.50049V12.7505C11.25 13.1647 10.9142 13.5005 10.5 13.5005C10.0858 13.5005 9.75 13.1647 9.75 12.7505V7.50049C9.75 7.08627 10.0858 6.75049 10.5 6.75049Z" fill="#606266"></path>
+                            </svg>
+                        </div>
+                    </span>
+                </div>
+            </div>
             ${badge}
         `;
 
@@ -853,7 +882,7 @@
         var defs = svg.querySelector('defs');
         if (defs) defs.appendChild(lg);
 
-        path.setAttribute('stroke', 'url(#' + gradientId + ')');
+        path.style.stroke = 'url(#' + gradientId + ')';
         path.setAttribute('d', bezier(sx, sy, ex, ey));
 
         svg.insertBefore(path, connectorGroup);
@@ -1182,7 +1211,7 @@
         var defs = svg.querySelector('defs');
         if (defs) defs.appendChild(lg);
 
-        path.setAttribute('stroke', 'url(#' + gradientId + ')');
+        path.style.stroke = 'url(#' + gradientId + ')';
         path.setAttribute('d', bezier(startX, startY, endX, endY));
 
         var connection = {
