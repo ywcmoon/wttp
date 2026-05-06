@@ -7,7 +7,7 @@
 
     // ==================== DOM 元素获取 ====================
     const svg = document.getElementById('golink-connections-svg'); // SVG 画布，用于绘制连线
-    const container = document.getElementById('golink-workspace'); // 主工作区容器
+    const mapContainer = document.getElementById('golink-workspace'); // 主工作区容器 
     const stopBtn = document.getElementById('golink-stop-btn'); // 终止探索按钮
     const submitBtn = document.getElementById('golink-submit-btn'); // 提交/下一步按钮
 
@@ -54,7 +54,7 @@
         });
 
         // 提交/下一步/继续探索按钮
-        submitBtn.addEventListener('click', function () { 
+        submitBtn.addEventListener('click', function () {
             saveLs3Connections()
             handleSubmitBtn();
         });
@@ -92,7 +92,7 @@
     }
 
     // ==================== 渲染不同视图 ====================
- 
+
 
     function renderCompareView() {
         clearAllConnections();
@@ -244,28 +244,65 @@
         container.addEventListener('wheel', handleWheelZoom, { passive: false });
     }
 
+    // function handleWheelZoom(e) {
+    //     if (currentMode !== 'drag') return;
+
+    //     e.preventDefault();
+
+    //     // 计算缩放增量
+    //     const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    //     const newZoom = Math.max(20, Math.min(300, currentZoom * delta));
+
+    //     // 应用缩放
+    //     currentZoom = newZoom;
+    //     applyGroupTransform();
+    //     updateAllConnections();
+
+    //     // 更新缩放指示器
+    //     const indicator = document.getElementById('zoom-indicator');
+    //     if (indicator) {
+    //         indicator.textContent = `${Math.round(currentZoom)}%`;
+    //     }
+    // }
+
+    // // 处理拖拽结束事件
     function handleWheelZoom(e) {
         if (currentMode !== 'drag') return;
-
         e.preventDefault();
+        e.stopPropagation();
+
+        // 缩放中心 = 鼠标在 mapContainer 内的位置
+        const containerRect = mapContainer.getBoundingClientRect();
+        const mouseX = e.clientX - containerRect.left;
+        const mouseY = e.clientY - containerRect.top;
+
+        // 计算缩放前鼠标位置对应的内容坐标
+        const oldScale = currentZoom / 100;
+        const contentX = (mouseX - groupOffsetX) / oldScale;
+        const contentY = (mouseY - groupOffsetY) / oldScale;
 
         // 计算缩放增量
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.max(20, Math.min(300, currentZoom * delta));
+        const newScale = newZoom / 100;
 
-        // 应用缩放
+        // 调整偏移使鼠标位置对应的内容点保持不变
+        groupOffsetX = mouseX - contentX * newScale;
+        groupOffsetY = mouseY - contentY * newScale;
+
         currentZoom = newZoom;
         applyGroupTransform();
-        updateAllConnections();
-
         // 更新缩放指示器
         const indicator = document.getElementById('zoom-indicator');
         if (indicator) {
             indicator.textContent = `${Math.round(currentZoom)}%`;
         }
+        // zoomLevel.textContent = `${Math.round(currentZoom)}%`;
+
+        // drawConnections();
+        updateAllConnections();
     }
 
-    // 处理拖拽结束事件
     function handleDragEnd() {
         // 恢复鼠标样式并重置拖拽状态
         if (dragActive) {
@@ -482,20 +519,6 @@
         }
     }
 
-    function handleZoomWheel(e) {
-        if (currentMode !== 'drag') return;
-
-        e.preventDefault();
-
-        const delta = e.deltaY > 0 ? -5 : 5;
-        let newZoom = currentZoom + delta;
-
-        // 限制范围 20%-300%
-        if (newZoom < 20) newZoom = 20;
-        if (newZoom > 300) newZoom = 300;
-
-        setZoom(newZoom);
-    }
 
     function setZoom(percent) {
         currentZoom = percent;
@@ -520,207 +543,137 @@
             header.style.display = 'flex';
         }
     }
-
-    function hideExploreHeader() {
-        const header = document.getElementById('explore-header');
-        if (header) {
-            header.style.display = 'none';
-        }
-    }
+ 
 
     // ==================== 加载和渲染卡片 ====================
-        /**
-         * 加载并渲染卡片，初始化连接点及层级连线，最后恢复用户保存的连线状态。
-         * 使用 setTimeout 确保 DOM 渲染完成后执行后续初始化逻辑。
-         */
-        function loadAndRenderCards() {
-            renderCards();
-           
-            setTimeout(() => {
-                initConnectionPoints();
-                loadLs3Connections();
-                updateBadges();
-            }, 100);
-        }
+    /**
+     * 加载并渲染卡片，初始化连接点及层级连线，最后恢复用户保存的连线状态。
+     * 使用 setTimeout 确保 DOM 渲染完成后执行后续初始化逻辑。
+     */
+    function loadAndRenderCards() {
+        renderCards();
 
-        function drawFullHierarchyConnections() {
-            const ls1 = JSON.parse(localStorage.getItem('ls1') || '{"connections":[]}');
-            const connections = ls1.connections || [];
-
-            connections.forEach(conn => {
-                const startInfo = svgConnectorPoints.get(conn.startId + '-start');
-                const endInfo = svgConnectorPoints.get(conn.endId + '-end');
-
-                if (startInfo && endInfo) {
-                    drawDefaultConnection(startInfo.element, endInfo.element, conn.startId);
-                }
-            });
-        }
-
-    function drawDefaultConnection(startPt, endPt, startBlockId) {
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('class', 'path-line');
-        path.setAttribute('stroke-width', '2.5');
-        path.setAttribute('fill', 'none');
-
-        var startTransform = startPt.getAttribute('transform');
-        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        if (!startMatch) return;
-        var sx = parseFloat(startMatch[1]);
-        var sy = parseFloat(startMatch[2]);
-
-        var endTransform = endPt.getAttribute('transform');
-        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        if (!endMatch) return;
-        var ex = parseFloat(endMatch[1]);
-        var ey = parseFloat(endMatch[2]);
-
-        var startLevelKey = startBlockId[0].toLowerCase();
-        var endBlockId = endPt.getAttribute('data-block-id') || '';
-        var endLevelKey = endBlockId ? endBlockId[0].toLowerCase() : String.fromCharCode(startLevelKey.charCodeAt(0) + 1);
-        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
-        var c1 = levelColors[startLevelKey] || '#409eff';
-        var c2 = levelColors[endLevelKey] || '#67c23a';
-
-        var gradientId = 'grad-' + startBlockId + '-' + (endBlockId || 'end') + '-' + Date.now();
-        var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-        lg.setAttribute('id', gradientId);
-        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
-        lg.setAttribute('x1', String(sx));
-        lg.setAttribute('y1', String(sy));
-        lg.setAttribute('x2', String(ex));
-        lg.setAttribute('y2', String(ey));
-        var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        s1.setAttribute('offset', '0%');
-        s1.setAttribute('stop-color', c1);
-        var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        s2.setAttribute('offset', '100%');
-        s2.setAttribute('stop-color', c2);
-        lg.appendChild(s1);
-        lg.appendChild(s2);
-
-        var defs = svg.querySelector('defs');
-        if (defs) defs.appendChild(lg);
-
-        path.style.stroke = 'url(#' + gradientId + ')';
-        path.setAttribute('d', bezier(sx, sy, ex, ey));
-
-        svg.insertBefore(path, connectorGroup);
+        setTimeout(() => {
+            initConnectionPoints();
+            loadLs3Connections();
+            updateBadges();
+        }, 100);
     }
-
-        /**
-         * 根据本地存储中的选中卡片和关系链数据，渲染多层级的卡片视图。
-         * 
-         *该函数执行以下主要步骤：
-         * 1. 清空所有层级容器的现有内容。
-         * 2. 从 localStorage 获取选中的卡片 ID (ls2) 和完整层级数据 (fullHierarchyData)。
-         * 3. 基于选中卡片和 connections 数据，筛选出所有下级关系链卡片。
-         * 4. 隐藏所有层级容器，仅显示包含有效卡片的层级。
-         * 5. 遍历需要渲染的层级，调用 renderCard 函数生成具体的卡片元素。
-         * 
-         * @returns {void} 无返回值
-         */
-        function renderCards() {
-            // 清空所有层级容器
-            for (let i = 1; i <= 5; i++) {
-                const container = document.getElementById(`golink-level-${i}-cards`);
-                if (container) {
-                    container.innerHTML = '';
-                }
-            }
-    
-            // 从ls2中获取选中的卡片id（通常是第一层级的一个或多个卡片id）
-            let selectedCardIds = JSON.parse(localStorage.getItem('ls2') || '[]');
-            console.log(selectedCardIds, '选中的卡片id')
-            
-            // 确保selectedCardIds是一个数组
-            if (!Array.isArray(selectedCardIds)) {
-                selectedCardIds = ['a1'];
-                localStorage.setItem('ls2', JSON.stringify(selectedCardIds));
-            }
-    
-            // 如果没有选中的卡片，不展示数据
-            if (selectedCardIds.length === 0) {
-                return;
-            }
-    
-            // 从ls1中获取connections数据
-            const ls1 = JSON.parse(localStorage.getItem('ls1') || '{}');
-            const connections = ls1.connections || [];
-            console.log(ls1, 'ls1的连接关系')
-    
-            // 获取完整层级数据
-            let fullData = JSON.parse(localStorage.getItem('fullHierarchyData') || '{}');
-    
-            // 如果没有完整层级数据，不展示数据
-            if (!fullData.level1) {
-                return;
-            }
-    
-            // 找出所有需要展示的卡片id
-            const cardIdsToShow = new Set(selectedCardIds);
-            
-            // 递归查找所有下级卡片
-            function findAllSubCards(startIds) {
-                let foundNew = true;
-                while (foundNew) {
-                    foundNew = false;
-                    // 查找所有以当前卡片为起点的连接
-                    const newCards = connections
-                        .filter(conn => startIds.includes(conn.startId))
-                        .map(conn => conn.endId);
-                    
-                    // 添加未找到过的卡片
-                    newCards.forEach(cardId => {
-                        if (!cardIdsToShow.has(cardId)) {
-                            cardIdsToShow.add(cardId);
-                            startIds.push(cardId);
-                            foundNew = true;
-                        }
-                    });
-                }
-            }
-            
-            findAllSubCards([...selectedCardIds]);
-            console.log(Array.from(cardIdsToShow), '需要展示的卡片id');
-            
-            // 首先隐藏所有层级
-            for (let i = 1; i <= 5; i++) {
-                const levelContainer = document.getElementById(`golink-level-${i}`);
-                if (levelContainer) {
-                    levelContainer.style.display = 'none';
-                }
-            }
-    
-            // 确定最大层级
-            let maxLevel = 1;
-            cardIdsToShow.forEach(cardId => {
-                const level = parseInt(cardId[1]);
-                if (level > maxLevel) {
-                    maxLevel = level;
-                }
-            });
-    
-            // 渲染每个层级
-            for (let level = 1; level <= maxLevel; level++) {
-                const levelKey = `level${level}`;
-                const cardsInLevel = fullData[levelKey] || [];
-                
-                // 筛选当前层级需要展示的卡片
-                const cardsToRender = cardsInLevel.filter(card => cardIdsToShow.has(card.id));
-                
-                if (cardsToRender.length > 0) {
-                    const levelContainer = document.getElementById(`golink-level-${level}`);
-                    if (levelContainer) {
-                        levelContainer.style.display = '';
-                    }
-    
-                    cardsToRender.forEach(card => {
-                        renderCard(card, level, maxLevel);
-                    });
-                }
+ 
+ 
+    /**
+     * 根据本地存储中的选中卡片和关系链数据，渲染多层级的卡片视图。
+     * 
+     *该函数执行以下主要步骤：
+     * 1. 清空所有层级容器的现有内容。
+     * 2. 从 localStorage 获取选中的卡片 ID (ls2) 和完整层级数据 (fullHierarchyData)。
+     * 3. 基于选中卡片和 connections 数据，筛选出所有下级关系链卡片。
+     * 4. 隐藏所有层级容器，仅显示包含有效卡片的层级。
+     * 5. 遍历需要渲染的层级，调用 renderCard 函数生成具体的卡片元素。
+     * 
+     * @returns {void} 无返回值
+     */
+    function renderCards() {
+        // 清空所有层级容器
+        for (let i = 1; i <= 5; i++) {
+            const container = document.getElementById(`golink-level-${i}-cards`);
+            if (container) {
+                container.innerHTML = '';
             }
         }
+
+        // 从ls2中获取选中的卡片id（通常是第一层级的一个或多个卡片id）
+        let selectedCardIds = JSON.parse(localStorage.getItem('ls2') || '[]');
+        console.log(selectedCardIds, '选中的卡片id')
+
+        // 确保selectedCardIds是一个数组
+        if (!Array.isArray(selectedCardIds)) {
+            selectedCardIds = ['a1'];
+            localStorage.setItem('ls2', JSON.stringify(selectedCardIds));
+        }
+
+        // 如果没有选中的卡片，不展示数据
+        if (selectedCardIds.length === 0) {
+            return;
+        }
+
+        // 从ls1中获取connections数据
+        const ls1 = JSON.parse(localStorage.getItem('ls1') || '{}');
+        const connections = ls1.connections || [];
+        console.log(ls1, 'ls1的连接关系')
+
+        // 获取完整层级数据
+        let fullData = JSON.parse(localStorage.getItem('fullHierarchyData') || '{}');
+
+        // 如果没有完整层级数据，不展示数据
+        if (!fullData.level1) {
+            return;
+        }
+
+        // 找出所有需要展示的卡片id
+        const cardIdsToShow = new Set(selectedCardIds);
+
+        // 递归查找所有下级卡片
+        function findAllSubCards(startIds) {
+            let foundNew = true;
+            while (foundNew) {
+                foundNew = false;
+                // 查找所有以当前卡片为起点的连接
+                const newCards = connections
+                    .filter(conn => startIds.includes(conn.startId))
+                    .map(conn => conn.endId);
+
+                // 添加未找到过的卡片
+                newCards.forEach(cardId => {
+                    if (!cardIdsToShow.has(cardId)) {
+                        cardIdsToShow.add(cardId);
+                        startIds.push(cardId);
+                        foundNew = true;
+                    }
+                });
+            }
+        }
+
+        findAllSubCards([...selectedCardIds]);
+        console.log(Array.from(cardIdsToShow), '需要展示的卡片id');
+
+        // 首先隐藏所有层级
+        for (let i = 1; i <= 5; i++) {
+            const levelContainer = document.getElementById(`golink-level-${i}`);
+            if (levelContainer) {
+                levelContainer.style.display = 'none';
+            }
+        }
+
+        // 确定最大层级
+        let maxLevel = 1;
+        cardIdsToShow.forEach(cardId => {
+            const level = parseInt(cardId[1]);
+            if (level > maxLevel) {
+                maxLevel = level;
+            }
+        });
+
+        // 渲染每个层级
+        for (let level = 1; level <= maxLevel; level++) {
+            const levelKey = `level${level}`;
+            const cardsInLevel = fullData[levelKey] || [];
+
+            // 筛选当前层级需要展示的卡片
+            const cardsToRender = cardsInLevel.filter(card => cardIdsToShow.has(card.id));
+
+            if (cardsToRender.length > 0) {
+                const levelContainer = document.getElementById(`golink-level-${level}`);
+                if (levelContainer) {
+                    levelContainer.style.display = '';
+                }
+
+                cardsToRender.forEach(card => {
+                    renderCard(card, level, maxLevel);
+                });
+            }
+        }
+    }
 
     function renderCard(card, level, maxChainLength) {
         const container = document.getElementById(`golink-level-${level}-cards`);
@@ -1228,7 +1181,7 @@
         updateBadges();
     }
 
- 
+
 
     function saveLs3Connections() {
         try {
@@ -1271,7 +1224,7 @@
             // 计算完成的进度
             let correctCount = 0;
             studentConnections.forEach(sc => {
-                const isCorrect = relevantTeacherConnections.some(tc => 
+                const isCorrect = relevantTeacherConnections.some(tc =>
                     tc.startId === sc.startId && tc.endId === sc.endId
                 );
                 if (isCorrect) correctCount++;
@@ -1283,7 +1236,7 @@
 
             // 保存进度
             const exploreProgress = JSON.parse(localStorage.getItem('exploreProgress') || '{}');
-            
+
             // 为每个选中的卡片保存进度（可以是多个）
             selectedCardIds.forEach(cardId => {
                 exploreProgress[cardId] = {
@@ -1349,9 +1302,9 @@
         return `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
     }
 
-        function updateConnectionCounts() {
-            updateBadges();
-        }
+    function updateConnectionCounts() {
+        updateBadges();
+    }
 
     // ==================== 弹窗功能 ====================
     // 初始化详情弹窗事件

@@ -656,7 +656,7 @@ body {
 .tag-list li .tag-actions {
     display: none;
     gap: 8px;
-    margin-left: 8px;
+    margin: 0 8px;
 }
 
 .tag-list li:hover .tag-actions {

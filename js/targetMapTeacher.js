@@ -939,6 +939,7 @@
         text.className = 'tree-text';
         text.textContent = node.name;
         text.addEventListener('click', function () {
+            console.log(1)
             if (hasChildren) {
                 const arrow = main.querySelector('.tree-arrow');
                 if (arrow) {
@@ -961,6 +962,7 @@
 
         // 点击整个主区域（除勾选框外）展开/折叠子级
         main.addEventListener('click', function (e) {
+             console.log(2)
             if (e.target.closest('.tree-check')) return;
             if (hasChildren) {
                 const arrow = main.querySelector('.tree-arrow');

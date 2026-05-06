@@ -355,11 +355,11 @@
             const li = document.createElement('li');
             li.innerHTML =
                 '<span class="tag-name">' + tag + '</span>' +
-                '<span class="tag-check' + (tempTagSelected.includes(tag) ? ' checked' : '') + '"></span>' +
                 '<div class="tag-actions">' +
                 '<a class="edit-tag-link" data-tag="' + tag + '">编辑</a>' +
                 '<a class="delete delete-tag-link" data-tag="' + tag + '">删除</a>' +
-                '</div>';
+                '</div>'+
+                '<span class="tag-check' + (tempTagSelected.includes(tag) ? ' checked' : '') + '"></span>' ;
 
             li.querySelector('.tag-check').addEventListener('click', function () {
                 const idx = tempTagSelected.indexOf(tag);

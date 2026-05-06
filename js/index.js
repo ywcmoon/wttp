@@ -2326,8 +2326,7 @@
         block.id = newId;
 
         const toggleBtn = colId === 'a' ? `<span class="toggle-collapse" data-state="expanded"><i class="fas fa-chevron-up"></i></span>` : '';
-
-        // debug
+ 
         let badge = '';
         let connectBtn = '';
         // 获取所有层级，动态判断最低层级
@@ -3839,8 +3838,7 @@
      * - 其他卡片变灰
      */
     function handleCollapsedStateHover(block) {
-        const relatedBlocks = findAllRelatedBlocks(block);
-        console.log(block, 'block')
+        const relatedBlocks = findAllRelatedBlocks(block); 
 
 
         // 收起的A卡片及其下游
@@ -3865,8 +3863,7 @@
         });
 
         // 堆叠卡组变灰
-        document.querySelectorAll('.fold-group').forEach(folded => {
-            console.log(folded, 'folded')
+        document.querySelectorAll('.fold-group').forEach(folded => { 
             folded.classList.add('dimmed');
         });
 

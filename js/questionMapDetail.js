@@ -44,7 +44,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         // 检查是否有关系链数据
         const relationChain = localStorage.getItem('relationChain');
-        console.log('relationChain:', relationChain);
+        console.log(relationChain,'关系链数据');
         if (relationChain) {
             // 展示关系链卡片
             showRelationChain(JSON.parse(relationChain));
@@ -117,11 +117,10 @@
         }
 
         const data = JSON.parse(fullHierarchyData);
-        console.log(data, 'data');
+        console.log(data, '卡片数据');
 
         const ls1Data = JSON.parse(localStorage.getItem('ls1') || '{}');
-        connections = ls1Data.connections || [];
-        console.log(connections, 'connections');
+        connections = ls1Data.connections || []; 
 
         // 计算连接数
         calculateConnectionCounts();
@@ -183,7 +182,7 @@
                 renderCard(block, level, sortedLevels.length);
             });
         });
-        console.log(levelGroups, 'levelGroups');
+        
         // 绘制连接线
         setTimeout(() => {
             drawConnections();
@@ -556,10 +555,7 @@
 
 
 
-    // 更新连接线位置
-    function updateConnections() {
-        drawConnections();
-    }
+ 
 
     // 查找指定ID的卡片
     function findBlockById(data, blockId) {
