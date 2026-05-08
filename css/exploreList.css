@@ -1,34 +1,17 @@
- 
+/* ==================== 基础样式 ==================== */
+/* 探索列表页面基础样式 */
 
+/* ==================== 布局样式 ==================== */
+/* 页面整体布局 */
+
+/* 探索列表主容器：最大宽度1200px、水平居中、上下内边距 */
 .explore-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
 }
 
-
-/* 选项卡内容 */
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* 选项卡头部 */
+/* 选项卡头部：弹性布局两端对齐、白色背景、圆角阴影 */
 .tab-header {
     display: flex;
     justify-content: space-between;
@@ -40,6 +23,7 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* 选项卡信息区域 */
 .tab-info h2 {
     font-size: 24px;
     color: #303133;
@@ -51,6 +35,39 @@
     color: #909399;
 }
 
+/* 选项卡内容：默认隐藏，激活时显示并带淡入动画 */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+/* 选项卡切换淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 探索卡片网格布局：自适应列数、最小列宽320px */
+.explore-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+}
+
+/* ==================== 组件样式 ==================== */
+/* 开始探索按钮组件 */
+
+/* 开始探索按钮：渐变蓝色背景、白色文字、圆角、悬停上浮 */
 .start-explore-btn {
     padding: 12px 32px;
     background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
@@ -69,17 +86,14 @@
     box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
 }
 
-/* 探索卡片 */
-.explore-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 32px;
-}
+/* 探索卡片组件 */
 
+/* 卡片外层包装器：相对定位（为堆叠伪元素提供定位参考） */
 .explore-card-wrapper {
     position: relative;
 }
 
+/* 卡片主体：白色背景、圆角、左侧蓝色边框、悬停上浮 */
 .explore-card {
     background: #fff;
     border-radius: 8px;
@@ -96,7 +110,13 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* 堆叠卡片效果 */
+/* 卡片选中状态：蓝色边框、浅蓝背景 */
+.explore-card.selected {
+    border: 2px solid #409eff;
+    background: #ecf5ff;
+}
+
+/* 堆叠卡片效果：使用伪元素创建后方层叠视觉 */
 .explore-card-wrapper::before,
 .explore-card-wrapper::after {
     content: '';
@@ -106,6 +126,7 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* 第一层堆叠：偏移10px、绿色左边框 */
 .explore-card-wrapper::before {
     top: 20px;
     left: 10px;
@@ -115,6 +136,7 @@
     z-index: -1;
 }
 
+/* 第二层堆叠：偏移20px、橙色左边框 */
 .explore-card-wrapper::after {
     top: 40px;
     left: 20px;
@@ -124,7 +146,9 @@
     z-index: -2;
 }
 
-/* 勾选按钮 */
+/* 卡片勾选按钮组件 */
+
+/* 勾选框：绝对定位左上角、24px正方形、白色背景、灰色边框 */
 .card-checkbox {
     position: absolute;
     top: 16px;
@@ -142,6 +166,7 @@
     z-index: 10;
 }
 
+/* 勾选框内图标：默认透明 */
 .card-checkbox i {
     color: #fff;
     font-size: 14px;
@@ -149,6 +174,7 @@
     transition: opacity 0.3s;
 }
 
+/* 勾选状态：蓝色填充、图标显示 */
 .card-checkbox.checked {
     background: #409eff;
     border-color: #409eff;
@@ -158,11 +184,14 @@
     opacity: 1;
 }
 
-/* 卡片内容 */
+/* 卡片内容组件 */
+
+/* 卡片内容区：顶部留出勾选框空间 */
 .card-content {
     padding-top: 24px;
 }
 
+/* 卡片标题：18px、加粗 */
 .card-title {
     font-size: 18px;
     font-weight: 600;
@@ -171,6 +200,7 @@
     line-height: 1.4;
 }
 
+/* 卡片描述：最多显示2行、超出省略号 */
 .card-desc {
     min-height: 50px;
     font-size: 14px;
@@ -183,7 +213,9 @@
     text-overflow: ellipsis;
 }
 
-/* 探索进度 */
+/* 探索进度标签组件 */
+
+/* 进度标签：绝对定位右下角、小字号、圆角 */
 .card-progress {
     position: absolute;
     bottom: 12px;
@@ -194,17 +226,22 @@
     border-radius: 4px;
 }
 
+/* 进行中状态：浅蓝背景 */
 .card-progress.progress {
     background: #e6f7ff;
     color: #409eff;
 }
 
+/* 已完成状态：浅绿背景 */
 .card-progress.completed {
     background: #f0f9ff;
     color: #67c23a;
 }
 
-/* 开始探索弹窗样式 */
+/* ==================== 页面特定样式 ==================== */
+/* 弹窗组件 - 开始探索确认弹窗 */
+
+/* 弹窗遮罩层：固定定位覆盖全屏、半透明黑色背景、默认隐藏 */
 .explore-modal {
     display: none;
     position: fixed;
@@ -218,10 +255,12 @@
     justify-content: center;
 }
 
+/* 弹窗显示状态 */
 .explore-modal.show {
     display: flex;
 }
 
+/* 弹窗内容：白色背景、圆角、阴影、下滑动画 */
 .modal-content {
     background: #fff;
     border-radius: 12px;
@@ -232,6 +271,7 @@
     animation: modalSlideIn 0.3s;
 }
 
+/* 弹窗下滑动画 */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -243,6 +283,7 @@
     }
 }
 
+/* 弹窗标题 */
 .modal-content h3 {
     font-size: 24px;
     color: #303133;
@@ -250,6 +291,7 @@
     text-align: center;
 }
 
+/* 弹窗描述文字 */
 .modal-content p {
     font-size: 16px;
     color: #606266;
@@ -257,6 +299,7 @@
     text-align: center;
 }
 
+/* 弹窗提示信息区：浅灰背景、左侧蓝色边框 */
 .modal-content div {
     font-size: 14px;
     color: #606266;
@@ -268,12 +311,14 @@
     border-left: 4px solid #409eff;
 }
 
+/* 弹窗按钮组：居中排列 */
 .modal-buttons {
     display: flex;
     gap: 16px;
     justify-content: center;
 }
 
+/* 弹窗按钮基础样式 */
 .modal-buttons button {
     padding: 12px 32px;
     border: none;
@@ -284,6 +329,7 @@
     transition: all 0.3s;
 }
 
+/* 取消按钮：浅灰背景 */
 .cancel-btn {
     background: #f5f7fa;
     color: #606266;
@@ -293,6 +339,7 @@
     background: #e4e7ed;
 }
 
+/* 确认按钮：渐变蓝色背景、白色文字、阴影 */
 .confirm-btn {
     background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
     color: #fff;
@@ -304,14 +351,9 @@
     box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
 }
 
-/* 选中状态 */
-.explore-card.selected {
-    border: 2px solid #409eff;
-    background: #ecf5ff;
-}
+/* ==================== 浏览器兼容性样式 ==================== */
+/* IE11兼容处理：使用flexbox替代grid布局 */
 
-/* 浏览器兼容性优化 */
-/* IE11 兼容 */
 @supports (-ms-ime-align: auto) {
     .explore-cards {
         display: flex;
@@ -342,7 +384,7 @@
     }
 }
 
-/* Firefox 特定优化 */
+/* Firefox特定优化：调整阴影和渐变兼容 */
 @-moz-document url-prefix() {
     .explore-card {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -353,110 +395,34 @@
     }
 }
 
-/* Chrome 特定优化 */
+/* Chrome/Safari特定优化：增强悬停缩放效果 */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
     .explore-card:hover {
         transform: translateY(-4px) scale(1.02);
     }
 }
 
-/* 弹窗 */
-.explore-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
+/* ==================== 响应式样式 ==================== */
+/* 移动端适配（≤768px） */
 
-.explore-modal.show {
-    display: flex;
-    animation: fadeIn 0.3s;
-}
-
-.modal-content {
-    background: #fff;
-    border-radius: 8px;
-    padding: 32px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-}
-
-.modal-content h3 {
-    font-size: 20px;
-    color: #303133;
-    margin-bottom: 16px;
-}
-
-.modal-content p {
-    font-size: 14px;
-    color: #606266;
-    margin-bottom: 24px;
-}
-
-.modal-content p span {
-    color: #409eff;
-    font-weight: 600;
-    font-size: 18px;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-}
-
-.cancel-btn,
-.confirm-btn {
-    padding: 10px 32px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.cancel-btn {
-    background: #f5f7fa;
-    color: #606266;
-}
-
-.cancel-btn:hover {
-    background: #e4e7ed;
-}
-
-.confirm-btn {
-    background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
-    color: #fff;
-}
-
-.confirm-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-}
-
-/* 响应式布局 */
 @media (max-width: 768px) {
+    /* 容器内边距缩小 */
     .explore-container {
         padding: 20px 16px;
     }
 
+    /* 选项卡导航换行 */
     .tab-nav {
         flex-wrap: wrap;
     }
 
+    /* 选项卡项缩小 */
     .tab-item {
         padding: 12px 20px;
         font-size: 16px;
     }
 
+    /* 选项卡头部改为纵向布局 */
     .tab-header {
         flex-direction: column;
         align-items: flex-start;
@@ -464,14 +430,17 @@
         padding: 20px;
     }
 
+    /* 标题字号缩小 */
     .tab-info h2 {
         font-size: 20px;
     }
 
+    /* 按钮全宽 */
     .start-explore-btn {
         width: 100%;
     }
 
+    /* 卡片单列布局 */
     .explore-cards {
         grid-template-columns: 1fr;
         gap: 16px;

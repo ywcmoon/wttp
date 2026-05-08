@@ -1,19 +1,28 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：能力图谱（教师端）
+  功能：展示能力图谱的统计数据和关联关系，支持班级筛选、能力卡片管理、知识点关联、显隐设置
+  依赖：ECharts 图表库、Font Awesome 图标库、common.css、targetMapTeacher.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>能力图谱</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/targetMapTeacher.css"> 
+    <!-- ==================== 脚本库 ==================== -->
     <script src="js/echarts.min.js"></script>
     <script src="js/common.js"></script>
 </head>
 
 <body>
-    <!-- 公共导航 -->
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <!-- 公共导航：问题图谱 / 能力图谱 标签切换 -->
     <div class="tab-nav">
         <div class="tab-item" data-tab="question">
             <i class="fas fa-question-circle"></i> 问题图谱
@@ -24,6 +33,8 @@
     </div>
 
     <div class="ability-page">
+        <!-- ==================== 顶部筛选栏 ==================== -->
+        <!-- 班级选择器，用于按班级筛选数据 -->
         <div class="ability_header">
             <div class="class-selector" id="class-selector">
                 <div class="selector-display" id="selector-display">
@@ -36,6 +47,8 @@
             </div>
         </div>
 
+        <!-- ==================== 统计图表区 ==================== -->
+        <!-- 使用 ECharts 展示关联知识点总数统计 -->
         <div class="ability_three">
             <div class="ability_coll">
                 <div class="ability_title">
@@ -46,6 +59,8 @@
             </div>
         </div>
 
+        <!-- ==================== 关联关系展示区 ==================== -->
+        <!-- 左侧：能力卡片列表；右侧：知识点关联关系图 -->
         <div class="ability_four">
             <div class="ability_coll">
                 <div class="ability_title">课程能力与知识点关联关系</div>
@@ -78,6 +93,9 @@
         </div>
     </div>
 
+    <!-- ==================== 弹窗容器 ==================== -->
+
+    <!-- 显隐设置弹窗：控制能力卡片对哪些班级可见 -->
     <div class="modal-overlay" id="visibility-modal-overlay">
         <div class="modal-content visibility-modal">
             <div class="modal-header">
@@ -108,6 +126,7 @@
         </div>
     </div>
 
+    <!-- 知识点关联弹窗：树形结构选择关联的知识点 -->
     <div class="modal-overlay" id="knowledge-modal-overlay">
         <div class="modal-content knowledge-modal">
             <div class="modal-header">
@@ -139,6 +158,7 @@
         </div>
     </div>
 
+    <!-- 通用确认弹窗：用于删除等操作的二次确认 -->
     <div class="modal-overlay" id="confirm-modal-overlay">
         <div class="modal-content confirm-modal">
             <div class="modal-header">

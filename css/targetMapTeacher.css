@@ -1,9 +1,14 @@
+/* ==================== 基础样式 ==================== */
+/* 教师端目标地图页面基础样式 */
+
+/* 全局盒模型重置 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* 页面主体：系统字体栈、浅灰背景 */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     background: #f5f7fa;
@@ -11,21 +16,28 @@ body {
     min-height: 100vh;
 }
 
+/* ==================== 布局样式 ==================== */
+/* 页面整体布局 */
+
+/* 能力页面容器：内边距、最小高度全屏 */
 .ability-page {
     padding: 20px 28px;
     min-height: 100vh;
 }
 
+/* 页面头部 */
 .ability_header {
     margin-bottom: 20px;
 }
 
+/* 班级选择器容器 */
 .class-selector {
     position: relative;
     display: inline-block;
     width: 240px;
 }
 
+/* 选择器显示区 */
 .selector-display {
     height: 34px;
     line-height: 34px;
@@ -44,6 +56,7 @@ body {
     border-color: #3a8bff;
 }
 
+/* 选择器箭头 */
 .selector-arrow {
     position: absolute;
     right: 12px;
@@ -54,10 +67,12 @@ body {
     transition: transform 0.3s;
 }
 
+/* 选择器展开时箭头旋转180度 */
 .class-selector.open .selector-arrow {
     transform: translateY(-50%) rotate(180deg);
 }
 
+/* 选择器下拉菜单 */
 .selector-dropdown {
     position: absolute;
     top: 100%;
@@ -78,6 +93,7 @@ body {
     display: block;
 }
 
+/* 选择器选项 */
 .selector-option {
     padding: 0 12px;
     height: 34px;
@@ -92,11 +108,15 @@ body {
     background: #f0f6ff;
 }
 
+/* 选择器选项选中状态 */
 .selector-option.selected {
     color: #3a8bff;
     font-weight: 600;
 }
 
+/* 能力面板区域布局 */
+
+/* 第三层和第四层能力面板：白色边框、渐变背景、圆角、隐藏溢出 */
 .ability_three,
 .ability_four {
     position: relative;
@@ -107,6 +127,7 @@ body {
     overflow: hidden;
 }
 
+/* 第三层面板装饰元素：右上角紫色渐变圆形 */
 .ability_three::before {
     position: absolute;
     top: 38px;
@@ -120,6 +141,7 @@ body {
     display: block;
 }
 
+/* 第三层面板装饰元素：左下角蓝色渐变大圆形 */
 .ability_three::after {
     position: absolute;
     bottom: -214px;
@@ -133,10 +155,12 @@ body {
     display: block;
 }
 
+/* 第四层面板上边距 */
 .ability_four {
     margin-top: 20px;
 }
 
+/* 第四层面板装饰元素：左下角蓝紫渐变大圆形 */
 .ability_four::before {
     position: absolute;
     left: -158px;
@@ -150,6 +174,7 @@ body {
     display: block;
 }
 
+/* 第四层面板装饰元素：右上角青绿渐变圆形 */
 .ability_four::after {
     position: absolute;
     top: 4px;
@@ -162,11 +187,13 @@ body {
     display: block;
 }
 
+/* 能力面板内容列：相对定位、z-index确保在装饰元素上方 */
 .ability_coll {
     position: relative;
     z-index: 2;
 }
 
+/* 能力面板标题 */
 .ability_title {
     padding: 28px 28px 0;
     height: 22px;
@@ -179,6 +206,7 @@ body {
     gap: 8px;
 }
 
+/* 能力面板总数：大字号、蓝色、特殊字体 */
 .ability_total_count {
     font-size: 24px;
     color: #3a8bff;
@@ -186,21 +214,25 @@ body {
     font-family: 'D-DIN', 'YouSheBiaoTiHei', sans-serif;
 }
 
+/* 能力图表容器 */
 .ability_bar {
     width: 100%;
     height: 320px;
 }
 
+/* 双栏布局：目标列表与知识图谱并排 */
 .between {
     display: flex;
     padding: 20px 28px 28px;
 }
 
+/* 目标列表区域：固定宽度400px */
 .between_target {
     width: 400px;
     flex-shrink: 0;
 }
 
+/* 知识图谱区域：弹性填充、最小高度500px */
 .between_knowledge {
     position: relative;
     margin-left: 20px;
@@ -208,6 +240,10 @@ body {
     min-height: 500px;
 }
 
+/* ==================== 组件样式 ==================== */
+/* 目标列表头部组件 */
+
+/* 目标列表头部：弹性布局两端对齐 */
 .target_head {
     display: flex;
     justify-content: space-between;
@@ -217,16 +253,19 @@ body {
     margin-bottom: 20px;
 }
 
+/* 目标列表头部文字 */
 .target_head_span {
     font-size: 12px;
     color: #8a8b99;
 }
 
+/* 目标数量 */
 .target_head_num {
     font-style: normal;
     font-weight: 400;
 }
 
+/* 添加目标按钮 */
 .target_head_add {
     font-size: 14px;
     color: #3a8bff;
@@ -240,6 +279,7 @@ body {
     opacity: 0.8;
 }
 
+/* 目标列表主体：固定宽度380px、最大高度780px、可滚动 */
 .target_body {
     width: 380px;
     max-height: 780px;
@@ -247,6 +287,7 @@ body {
     padding-right: 20px;
 }
 
+/* 滚动条样式 */
 .target_body::-webkit-scrollbar {
     width: 6px;
 }
@@ -256,10 +297,14 @@ body {
     background: #ccc;
 }
 
+/* 目标分组 */
 .target_group {
     padding: 10px 0;
 }
 
+/* 目标卡片组件 */
+
+/* 目标卡片项：相对定位、内边距、圆角、过渡动画 */
 .target_item {
     position: relative;
     padding: 2px;
@@ -268,10 +313,12 @@ body {
     transition: all 0.3s;
 }
 
+/* 卡片间距 */
 .target_item + .target_item {
     margin-top: 24px;
 }
 
+/* 删除按钮：默认隐藏、悬停显示 */
 .target_item .target_dele {
     opacity: 0;
     visibility: hidden;
@@ -283,10 +330,12 @@ body {
     visibility: visible;
 }
 
+/* 拖拽手柄：悬停显示 */
 .target_item:hover .target_drag {
     display: block;
 }
 
+/* 删除按钮：绝对定位右上角、蓝色圆形 */
 .target_dele {
     position: absolute;
     right: -9px;
@@ -302,6 +351,7 @@ body {
     justify-content: center;
 }
 
+/* 删除按钮叉号图标 */
 .target_dele::after {
     content: '\d7';
     color: #fff;
@@ -309,6 +359,7 @@ body {
     line-height: 1;
 }
 
+/* 拖拽手柄：左侧竖条纹、默认隐藏 */
 .target_drag {
     z-index: 9;
     position: absolute;
@@ -322,6 +373,7 @@ body {
     background: repeating-linear-gradient(90deg, #c0c4cc, #c0c4cc 2px, transparent 2px, transparent 4px);
 }
 
+/* 目标卡片内容区：白色背景、圆角、右下角装饰圆形 */
 .target_cont {
     position: relative;
     padding: 20px 16px;
@@ -330,6 +382,7 @@ body {
     background: #fff;
 }
 
+/* 卡片右下角装饰渐变圆形 */
 .target_cont::before {
     position: absolute;
     right: -14px;
@@ -344,6 +397,7 @@ body {
     box-shadow: inset 0 -1px 1px rgba(219, 225, 235, 0.7);
 }
 
+/* 目标分数：右浮动 */
 .target_points {
     float: right;
     line-height: 20px;
@@ -351,6 +405,7 @@ body {
     color: #8a8b99;
 }
 
+/* 目标标题：单行省略 */
 .target_title {
     min-height: 20px;
     line-height: 20px;
@@ -362,6 +417,7 @@ body {
     text-overflow: ellipsis;
 }
 
+/* 目标标签列表 */
 .target_label {
     margin-top: 6px;
     display: flex;
@@ -369,6 +425,7 @@ body {
     gap: 6px;
 }
 
+/* 目标标签项：橙色边框、小字号、圆角 */
 .target_label li {
     padding: 0 6px;
     line-height: 16px;
@@ -379,6 +436,7 @@ body {
     list-style: none;
 }
 
+/* 目标描述文字：最多2行省略 */
 .target_text {
     margin-top: 2px;
     height: 40px;
@@ -392,6 +450,7 @@ body {
     -webkit-box-orient: vertical;
 }
 
+/* 目标查看详情按钮 */
 .target_display {
     position: relative;
     margin-top: 12px;
@@ -411,11 +470,13 @@ body {
     border-radius: 4px;
 }
 
+/* 目标卡片激活状态：渐变蓝色背景、阴影 */
 .target_active {
     background: linear-gradient(45deg, #1273ff, #7ad0ff) !important;
     box-shadow: 0 3px 12px rgba(112, 154, 217, 0.2);
 }
 
+/* 激活状态右侧箭头指示器 */
 .target_active::before {
     position: absolute;
     right: -1.5px;
@@ -431,29 +492,37 @@ body {
     transform: rotate(45deg) translate(0, -50%);
 }
 
+/* 激活状态内容区：渐变蓝色背景 */
 .target_active .target_cont {
     background: linear-gradient(270deg, #f0f6ff 50%, #e3f1ff 73.25%, #ecf5ff 100.25%);
     border-radius: 6px;
 }
 
+/* 激活状态装饰元素增强 */
 .target_active .target_cont::before,
 .target_active .target_cont::after {
     opacity: 0.5;
     background: linear-gradient(134.42deg, #d5ebff 20.52%, rgba(165, 202, 255, 0) 88.69%);
 }
 
+/* 激活状态标题变蓝 */
 .target_active .target_title {
     color: #3a8bff;
 }
 
+/* 拖拽状态：半透明 */
 .target_item.dragging {
     opacity: 0.5;
 }
 
+/* 拖拽悬停目标：顶部蓝色边框指示 */
 .target_item.drag-over {
     border-top: 2px solid #3a8bff;
 }
 
+/* 知识图谱组件 */
+
+/* 关联知识点按钮：绝对定位右上角 */
 .knowledge_associ {
     position: absolute;
     top: 0;
@@ -472,6 +541,7 @@ body {
     border-radius: 4px;
 }
 
+/* 知识图谱画布：全宽全高、最小高度500px、边框、浅灰背景 */
 .knowledge_canvas {
     width: 100%;
     height: 100%;
@@ -483,12 +553,14 @@ body {
     overflow: hidden;
 }
 
+/* 知识图谱SVG */
 .knowledge-svg {
     width: 100%;
     height: 100%;
     user-select: none;
 }
 
+/* SVG节点悬停效果 */
 .knowledge-svg .svg-node {
     transition: filter 0.2s;
 }
@@ -497,6 +569,7 @@ body {
     filter: brightness(1.1);
 }
 
+/* SVG切换按钮 */
 .knowledge-svg .toggle-btn {
     transition: all 0.2s;
 }
@@ -505,6 +578,7 @@ body {
     filter: brightness(0.9);
 }
 
+/* 缩放比例显示 */
 .knowledge-svg .zoom-display {
     position: fixed;
     font-size: 12px;
@@ -513,6 +587,7 @@ body {
     z-index: 10;
 }
 
+/* 知识图谱空状态 */
 .knowledge-empty {
     position: absolute;
     top: 50%;
@@ -531,6 +606,7 @@ body {
     font-size: 14px;
 }
 
+/* 缩放指示器：右下角、半透明白色背景 */
 .zoom-indicator {
     position: absolute;
     bottom: 12px;
@@ -545,6 +621,10 @@ body {
     pointer-events: none;
 }
 
+/* ==================== 页面特定样式 ==================== */
+/* 弹窗组件 */
+
+/* 弹窗遮罩层 */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -562,6 +642,7 @@ body {
     display: flex;
 }
 
+/* 弹窗内容 */
 .modal-content {
     background: #fff;
     border-radius: 8px;
@@ -569,6 +650,7 @@ body {
     animation: modalSlideIn 0.3s;
 }
 
+/* 弹窗下滑动画 */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -580,6 +662,7 @@ body {
     }
 }
 
+/* 弹窗头部 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -594,6 +677,7 @@ body {
     font-weight: 600;
 }
 
+/* 弹窗关闭按钮 */
 .modal-close {
     background: none;
     border: none;
@@ -608,10 +692,12 @@ body {
     color: #3a8bff;
 }
 
+/* 弹窗内容区 */
 .modal-body {
     padding: 0;
 }
 
+/* 弹窗底部 */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -620,6 +706,7 @@ body {
     border-top: 1px solid #f2f2f2;
 }
 
+/* 弹窗按钮 */
 .btn {
     padding: 8px 24px;
     border-radius: 4px;
@@ -649,15 +736,18 @@ body {
     opacity: 0.9;
 }
 
+/* 可见性设置弹窗 */
 .visibility-modal {
     width: 440px;
     min-width: 440px;
 }
 
+/* 可见性设置区域 */
 .visibility-setting {
     padding: 20px 24px;
 }
 
+/* 可见性标题 */
 .visibility-title {
     padding-bottom: 15px;
     color: #474c59;
@@ -667,12 +757,14 @@ body {
     text-align: left;
 }
 
+/* 可见性卡片 */
 .visibility-card {
     padding: 16px 0 0;
     border-radius: 4px;
     background: #f7f8fa;
 }
 
+/* 可见性子标题 */
 .visibility-subtitle {
     width: 100%;
     padding-bottom: 15px;
@@ -684,11 +776,13 @@ body {
     text-align: left;
 }
 
+/* 可见性复选框容器 */
 .visibility-checkboxes {
     display: flex;
     flex-wrap: wrap;
 }
 
+/* 复选框项：三列布局 */
 .checkbox-item {
     display: flex;
     align-items: center;
@@ -701,14 +795,17 @@ body {
     color: #131b26;
 }
 
+/* 全选复选框占满宽度 */
 .checkbox-item.checkbox-all {
     width: 100%;
 }
 
+/* 隐藏原生复选框 */
 .checkbox-item input[type="checkbox"] {
     display: none;
 }
 
+/* 自定义复选框样式 */
 .checkbox-custom {
     width: 16px;
     height: 16px;
@@ -721,6 +818,7 @@ body {
     transition: all 0.3s;
 }
 
+/* 复选框选中状态：蓝色填充、对勾图标 */
 .checkbox-item input[type="checkbox"]:checked + .checkbox-custom {
     background: #3a8bff;
     border-color: #3a8bff;
@@ -733,33 +831,39 @@ body {
     line-height: 1;
 }
 
+/* 复选框文字 */
 .checkbox-text {
     font-size: 14px;
     color: #131b26;
 }
 
+/* 知识点选择弹窗 */
 .knowledge-modal {
     width: 840px;
     min-width: 840px;
 }
 
+/* 知识点弹窗内容：左右分栏 */
 .knowledge-modal-content {
     display: flex;
     height: 470px;
 }
 
+/* 知识点弹窗左侧 */
 .knowledge-modal-left {
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
+/* 知识点弹窗左侧头部 */
 .knowledge-modal-left-header {
     padding: 14px 18px;
     border-bottom: 1px solid #f2f2f2;
     text-align: left;
 }
 
+/* 知识点计数 */
 .knowledge-count {
     font-size: 14px;
     color: #8a8b99;
@@ -770,11 +874,13 @@ body {
     color: #3a8bff;
 }
 
+/* 确认弹窗 */
 .confirm-modal {
     width: 440px;
     min-width: 440px;
 }
 
+/* 确认弹窗文字 */
 .confirm-text {
     padding: 24px;
     font-size: 14px;
@@ -782,20 +888,27 @@ body {
     line-height: 1.8;
 }
 
+/* ==================== 响应式样式 ==================== */
+/* 中等屏幕适配（≤1200px）：双栏改为纵向 */
+
 @media (max-width: 1200px) {
+    /* 双栏纵向排列 */
     .between {
         flex-direction: column;
     }
 
+    /* 目标列表全宽 */
     .between_target {
         width: 100%;
     }
 
+    /* 目标列表主体全宽、限制高度 */
     .target_body {
         width: 100%;
         max-height: 400px;
     }
 
+    /* 知识图谱区域去除左边距、添加上边距 */
     .between_knowledge {
         margin-left: 0;
         margin-top: 20px;
@@ -803,33 +916,42 @@ body {
     }
 }
 
+/* 移动端适配（≤768px） */
+
 @media (max-width: 768px) {
+    /* 页面内边距缩小 */
     .ability-page {
         padding: 12px;
     }
 
+    /* 标题内边距和字号缩小 */
     .ability_title {
         padding: 16px 16px 0;
         font-size: 14px;
     }
 
+    /* 图表高度缩小 */
     .ability_bar {
         height: 240px;
     }
 
+    /* 双栏内边距缩小 */
     .between {
         padding: 16px;
     }
 
+    /* 弹窗宽度自适应 */
     .knowledge-modal {
         width: 95vw;
         min-width: auto;
     }
 
+    /* 弹窗内容高度缩小 */
     .knowledge-modal-content {
         height: 400px;
     }
 
+    /* 可见性弹窗宽度自适应 */
     .visibility-modal {
         width: 95vw;
         min-width: auto;

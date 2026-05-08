@@ -1,9 +1,27 @@
-/* ========== 全局样式与布局 ========== */
+/* ============================================================
+ * 文件名: index.css
+ * 描述: 首页（知识图谱主页面）样式表
+ * 包含: 全局样式、卡片布局、连接点与连线、折叠/展开、拖拽、
+ *        弹窗表单、探索模式、批量删除、响应式布局、浏览器兼容
+ * 适用范围: index.html 页面
+ * ============================================================ */
+
+/* ============================================================
+ * 一、基础样式
+ * 包含: 全局body样式
+ * ============================================================ */
+
 body {
     background: #f5f7fa;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
+/* ============================================================
+ * 二、布局样式
+ * 包含: 页面头部、卡片列布局容器
+ * ============================================================ */
+
+/* --- 页面头部：白色背景、底部边框、两端对齐 --- */
 .w_head {
     background: #fff;
     border-bottom: 1px solid #e4e7ed;
@@ -13,27 +31,19 @@ body {
     align-items: center;
 }
 
+/* 头部按钮容器 */
 .w_head_btnwrap {
     display: flex;
     align-items: center;
 }
 
-.w_head_btn.setbtn {
-    background: #409eff;
-    color: #fff;
-    border-color: #409eff;
-}
-
-.w_head_btn.setbtn:hover {
-    background: #66b1ff;
-    border-color: #66b1ff;
-}
-
+/* 头部文字 */
 .w_head_txt {
     font-size: 14px;
     color: #606266;
 }
 
+/* 头部通用按钮 */
 .w_head_btn {
     padding: 8px 16px;
     border: 1px solid #dcdfe6;
@@ -50,29 +60,37 @@ body {
     border-color: #c0c4cc;
 }
 
- 
+/* 设置按钮：蓝色主题 */
+.w_head_btn.setbtn {
+    background: #409eff;
+    color: #fff;
+    border-color: #409eff;
+}
 
-/* 四列布局容器 */
+.w_head_btn.setbtn:hover {
+    background: #66b1ff;
+    border-color: #66b1ff;
+}
+
+/* --- 卡片列布局容器：弹性布局、间距、允许换行 --- */
 .w_cont {
     display: flex;
     justify-content: space-between;
     gap: 20px;
     flex-wrap: wrap;
-    /* 允许换行 */
 }
 
-/* 每一列卡片样式 */
+/* 单列卡片面板：白色背景、圆角、阴影、弹性填充 */
 .w_cont_problem {
     flex: 1;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     min-width: 0;
-    /* 允许flex项缩小 */
     overflow: hidden;
-    /* 防止内容溢出 */
 }
 
+/* 列头部：标题与图标区域 */
 .w_contp_head {
     display: flex;
     align-items: center;
@@ -84,6 +102,7 @@ body {
     align-items: center;
 }
 
+/* 列编辑图标 */
 .w_contp_edit {
     transition: color 0.3s;
 }
@@ -92,6 +111,7 @@ body {
     color: #409eff;
 }
 
+/* 列图标：圆形、居中、彩色背景 */
 .w_contp_icon {
     width: 32px;
     height: 32px;
@@ -104,19 +124,29 @@ body {
     color: #fff;
 }
 
+/* 列标题文字 */
 .w_contp_txt {
     font-size: 16px;
     font-weight: 600;
     color: #303133;
 }
 
+/* 列提示文字 */
 .w_contp_tips {
     font-size: 12px;
     color: #909399;
     margin-bottom: 20px;
 }
 
-/* 可拖拽卡片卡片 */
+/* ============================================================
+ * 三、组件样式
+ * 包含: 卡片组件、层级颜色、卡片内容、操作按钮、徽章数字、
+ *        连接点、SVG连线、折叠/展开、拖拽、弹窗、表单
+ * ============================================================ */
+
+/* --- 3.1 卡片组件 --- */
+
+/* 卡片项：白色背景、边框、圆角、阴影、悬停上浮 */
 .w_contp_item {
     background: #fff;
     border: 1px solid #e4e7ed;
@@ -131,9 +161,11 @@ body {
 .w_contp_item:hover {
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
-
 }
 
+/* --- 3.2 层级颜色标识 --- */
+
+/* 按列（Box）区分的悬停边框颜色 */
 .ABox .w_contp_item:hover {
     border-color: #409eff;
 }
@@ -154,6 +186,30 @@ body {
     border-color: #E372DB;
 }
 
+/* 按层级（level）区分的左侧边框颜色 */
+.level-1 {
+    border-left: 4px solid #409eff;
+}
+
+.level-2 {
+    border-left: 4px solid #67c23a;
+}
+
+.level-3 {
+    border-left: 4px solid #e6a23c;
+}
+
+.level-4 {
+    border-left: 4px solid #f56c6c;
+}
+
+.level-5 {
+    border-left: 4px solid #E372DB;
+}
+
+/* --- 3.3 卡片内容区域 --- */
+
+/* 卡片标题 */
 .w_contp_itit {
     font-size: 16px;
     font-weight: 600;
@@ -161,17 +217,58 @@ body {
     margin-bottom: 8px;
 }
 
+/* 卡片正文 */
 .w_contp_itxt {
     font-size: 14px;
     color: #606266;
     margin-bottom: 12px;
 }
 
+/* 卡片内容文字：最多3行省略 */
+.block-content-text {
+    position: relative;
+    color: #8A8B99;
+    margin-top: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+/* 卡片内容区域 */
+.block-content {
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-bottom: 10px;
+    position: relative;
+    padding-right: 0;
+}
+
+/* 卡片头部：标题与折叠按钮 */
+.block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* 卡片标题：加粗 */
+.block-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+}
+
+/* --- 3.4 操作按钮 --- */
+
+/* 查看详情按钮：绝对定位右下角、半透明白色背景 */
 .w_contp_btn {
-    /* color: #409eff;
-            cursor: pointer;
-            font-size: 14px;
-            margin-left: 8px; */
     position: absolute;
     bottom: 0;
     right: 0;
@@ -182,32 +279,84 @@ body {
     cursor: pointer;
     font-size: 0.875rem;
     white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
 .w_contp_btn:hover {
-    text-decoration: underline;
+    text-decoration: none;
 }
 
-.w_contp_ibtn {
+/* 操作按钮行 */
+.block-action-row {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    position: relative;
+    min-height: 28px;
+}
+
+/* 操作按钮组：默认隐藏、选中卡片后显示 */
+.block-actions {
+    display: none;
     gap: 8px;
-    margin-bottom: 12px;
-
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 4px 8px;
+    z-index: 10;
 }
 
-.bluebtn {
-    color: #AB6400;
-    background: #FFEE9C;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 12px;
+.w_contp_item.selected .block-actions {
+    display: flex;
+}
+
+.block-actions .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     cursor: pointer;
+    font-size: 14px;
 }
 
-.bluebtn:hover {
-    background: #66b1ff;
+/* 连接模式下隐藏操作按钮 */
+body.is-connecting .block-actions {
+    display: none !important;
 }
 
+/* 单个操作按钮：圆形、白色背景、悬停变蓝 */
+.action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #606266;
+    font-size: 12px;
+}
+
+.action-btn:hover {
+    background: #409eff;
+    border-color: #409eff;
+    color: #fff;
+}
+
+/* 删除按钮悬停变红 */
+.action-btn.delete-btn:hover {
+    background: #f56c6c;
+    border-color: #f56c6c;
+}
+
+/* 操作图标组：编辑、连接、删除 */
 .w_op_icon {
     display: flex;
     gap: 16px;
@@ -235,7 +384,9 @@ body {
     transform: scale(1.1);
 }
 
-/* 卡片右上角数字徽章（用于显示连接数） */
+/* --- 3.5 徽章数字 --- */
+
+/* 卡片右上角数字徽章：圆形、彩色背景、白色文字 */
 .w_contp_inum {
     position: absolute;
     top: 8px;
@@ -268,38 +419,52 @@ body {
     background: #E372DB;
 }
 
-.w_lookbtn {
-    color: #409eff;
-    cursor: pointer;
-    font-size: 14px;
-    display: none;
-}
-
-.w_lookbtn:hover {
-    text-decoration: none;
-}
-
-/* 卡片按钮容器 */
-.w_block_btns {
+/* 连接数徽章：红色、绝对定位右上角 */
+.connection-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 10px;
     display: flex;
-    justify-content: space-between;
-    align-items: center; 
-    
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 30;
 }
 
-/* 教师参考按钮 */
-.w_teachbtn {
-    color: #409eff;
+/* --- 3.6 按钮组件 --- */
+
+/* 标签按钮：黄色背景 */
+.bluebtn {
+    color: #AB6400;
+    background: #FFEE9C;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
     cursor: pointer;
-    font-size: 14px;
-    display: none;
 }
 
-.w_teachbtn:hover {
-    text-decoration: none;
+.bluebtn:hover {
+    background: #66b1ff;
 }
 
-/* 添加按钮样式 */
+/* 按钮容器 */
+.w_contp_ibtn {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* 添加按钮：虚线边框、居中、悬停变蓝 */
 .w_addbtn {
     display: flex;
     align-items: center;
@@ -322,28 +487,57 @@ body {
     color: #409eff;
 }
 
-/* 不同层级左侧边框颜色标识 */
-.level-1 {
-    border-left: 4px solid #409eff;
+/* 查看按钮：默认隐藏 */
+.w_lookbtn {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
 }
 
-.level-2 {
-    border-left: 4px solid #67c23a;
+.w_lookbtn:hover {
+    text-decoration: none;
 }
 
-.level-3 {
-    border-left: 4px solid #e6a23c;
+/* 教师参考按钮：默认隐藏 */
+.w_teachbtn {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
 }
 
-.level-4 {
-    border-left: 4px solid #f56c6c;
+.w_teachbtn:hover {
+    text-decoration: none;
 }
 
-.level-5 {
-    border-left: 4px solid #E372DB;
+/* 卡片按钮容器：两端对齐 */
+.w_block_btns {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* SVG 连线层：绝对定位覆盖在卡片上方，指针事件穿透 */
+/* --- 3.7 SVG图标容器 --- */
+
+.xcustomSvg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.xcustomSvg svg {
+    width: 14px;
+    height: 14px;
+}
+
+.action-btn:hover svg path {
+    fill: #fff !important;
+}
+
+/* --- 3.8 SVG连线组件 --- */
+
+/* SVG连线层：绝对定位覆盖、禁止鼠标事件穿透 */
 #connections-svg {
     position: absolute;
     top: 0;
@@ -354,39 +548,120 @@ body {
     z-index: 999;
 }
 
-/* 普通连接线 */
+/* 连线路径：无填充、实线 */
 .path-line {
-    stroke: #10b981;
-    stroke-width: 2;
     fill: none;
-    pointer-events: stroke;
-    /* 允许鼠标悬停在线条上触发删除按钮 */
+    stroke-width: 2.5;
+    stroke-dasharray: none;
 }
 
-/* 折叠组连线（A组折叠后绘制的指向折叠副本的线） */
+/* 跨层级连线使用渐变色，增强视觉层次感 */
+.path-line.level-1-to-level-2,
+.fold-group-line.level-1-to-level-2 {
+    stroke: url(#gradient-level-1-to-level-2);
+}
+
+.path-line.level-2-to-level-3,
+.fold-group-line.level-2-to-level-3 {
+    stroke: url(#gradient-level-2-to-level-3);
+}
+
+.path-line.level-3-to-level-4,
+.fold-group-line.level-3-to-level-4 {
+    stroke: url(#gradient-level-3-to-level-4);
+}
+
+.path-line.level-4-to-level-5,
+.fold-group-line.level-4-to-level-5 {
+    stroke: url(#gradient-level-4-to-level-5);
+}
+
+/* 同层级连线使用纯色 */
+.path-line.level-1-to-level-1,
+.fold-group-line.level-1-to-level-1 {
+    stroke: #409eff;
+}
+
+.path-line.level-2-to-level-2,
+.fold-group-line.level-2-to-level-2 {
+    stroke: #67c23a;
+}
+
+.path-line.level-3-to-level-3,
+.fold-group-line.level-3-to-level-3 {
+    stroke: #e6a23c;
+}
+
+.path-line.level-4-to-level-4,
+.fold-group-line.level-4-to-level-4 {
+    stroke: #f56c6c;
+}
+
+.path-line.level-5-to-level-5,
+.fold-group-line.level-5-to-level-5 {
+    stroke: #E372DB;
+}
+
+/* 高亮连线：加粗、发光投影 */
+.path-line.highlight {
+    stroke-width: 4;
+    filter: drop-shadow(0 0 3px rgba(64, 158, 255, 0.8));
+}
+
+/* 隐藏连线 */
+.path-line.hidden {
+    opacity: 0;
+}
+
+/* 加粗连线 */
+.path-line.thick {
+    stroke-width: 4;
+}
+
+/* 折叠组连线：绿色、加粗 */
 .fold-group-line {
-    stroke: #10b981;
-    stroke-width: 2;
     fill: none;
+    stroke: #10b981;
+    stroke-width: 3;
 }
 
-/* 折叠状态下卡片透明度效果 - 已移除 */
-/*.collapsed {
-    opacity: 0.6;
-}*/
+/* --- 3.9 SVG连接点组件 --- */
 
-.fold-stacked {
-    position: relative;
-    z-index: 100;
-    margin-bottom: 0;
+/* 连接点容器组：禁止鼠标事件穿透 */
+#connector-points-group {
+    pointer-events: none;
 }
+
+/* 单个连接点：允许鼠标事件、投影增强立体感 */
+.svg-connector-point {
+    pointer-events: all;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+/* 连接点外圈：颜色过渡 */
+.svg-connector-outer {
+    transition: fill 0.15s, stroke 0.15s;
+}
+
+/* 连接点徽章文字：禁止选中 */
+.svg-connector-badge-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 连接模式下禁用连接点过渡动画，确保拖拽流畅 */
+body.is-connecting .svg-connector-point {
+    transition: none !important;
+}
+
+/* --- 3.10 折叠/展开组件 --- */
 
 /* 折叠区容器 */
 .fold-container {
     margin-bottom: 20px;
 }
 
-/* 折叠组容器（一个A卡片对应的所有下游副本） */
+/* 折叠组容器：一个A卡片对应的所有下游副本 */
 .fold-group {
     position: relative;
     margin-bottom: 20px;
@@ -398,7 +673,7 @@ body {
     z-index: 100;
 }
 
-/* 堆叠副本样式：第二个及以后的卡片绝对定位制造露头效果 */
+/* 堆叠副本：绝对定位制造露头效果 */
 .folded-block.stacked {
     position: absolute;
     top: 0;
@@ -407,35 +682,30 @@ body {
     z-index: 99;
 }
 
+/* 第二层副本偏移5px */
 .folded-block.stacked:nth-child(2) {
     top: 5px;
     left: 5px;
     z-index: 98;
 }
 
+/* 第三层副本偏移10px */
 .folded-block.stacked:nth-child(3) {
     top: 10px;
     left: 10px;
     z-index: 97;
 }
 
-/* 原始隐藏的卡片（被折叠后隐藏） */
+/* 原始隐藏的卡片：被折叠后隐藏 */
 .original-hidden {
     display: none !important;
 }
 
-/* 卡片头部：标题与折叠按钮容器 */
-.block-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.block-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #303133;
+/* 折叠堆叠容器 */
+.fold-stacked {
+    position: relative;
+    z-index: 100;
+    margin-bottom: 0;
 }
 
 /* 折叠/展开切换按钮 */
@@ -450,7 +720,12 @@ body {
     color: #409eff;
 }
 
-/* 折叠按钮提示文字 */
+/* 非A列不显示折叠按钮 */
+.draggable-block:not([id^="a"]) .toggle-collapse {
+    display: none;
+}
+
+/* 折叠按钮提示文字：悬停显示"收起"/"展开" */
 .toggle-collapse::after {
     content: '';
     position: absolute;
@@ -481,30 +756,9 @@ body {
     content: '展开';
 }
 
-/* SVG 连接点样式 */
-#connector-points-group {
-    pointer-events: none;
-}
+/* --- 3.11 拖拽组件 --- */
 
-.svg-connector-point {
-    pointer-events: all;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-}
-
-.svg-connector-outer {
-    transition: fill 0.15s, stroke 0.15s;
-}
-
-.svg-connector-badge-text {
-    pointer-events: none;
-    user-select: none;
-}
-
-body.is-connecting .svg-connector-point {
-    transition: none !important;
-}
-
-/* 卡片拖拽手柄 */
+/* 卡片拖拽手柄：左侧、默认隐藏、悬停显示 */
 .card-drag-handle {
     position: absolute;
     left: -12px;
@@ -522,7 +776,7 @@ body.is-connecting .svg-connector-point {
     opacity: 0;
     transition: opacity 0.2s;
     z-index: 10;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .w_contp_item.level-1:hover .card-drag-handle {
@@ -542,252 +796,39 @@ body.is-connecting .svg-connector-point {
     cursor: grabbing;
 }
 
-/* 拖拽中的原始卡片 */
+/* 拖拽中的原始卡片：半透明 */
 .card-dragging {
     opacity: 0.3;
 }
 
-/* 拖拽幽灵 */
+/* 拖拽幽灵：固定定位、蓝色边框、轻微旋转 */
 .card-drag-ghost {
     position: fixed;
     z-index: 100000;
     pointer-events: none;
     opacity: 0.85;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     background: #fff;
     border: 2px solid #409eff;
     transform: rotate(2deg);
 }
 
-/* 拖拽目标高亮 */
+/* 拖拽目标高亮：蓝色虚线边框 */
 .card-drop-target {
     border: 2px dashed #409eff !important;
     background: rgba(64, 158, 255, 0.05) !important;
 }
 
-body.is-connecting .block-actions {
-    display: none !important;
-}
+/* --- 3.12 堆叠卡片组件 --- */
 
-/* 卡片操作按钮组（默认隐藏，悬停显示） */
-
-.action-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #fff;
-    border: 1px solid #dcdfe6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: #606266;
-    font-size: 12px;
-}
-
-.action-btn:hover {
-    background: #409eff;
-    border-color: #409eff;
-    color: #fff;
-}
-
-.action-btn.delete-btn:hover {
-    background: #f56c6c;
-    border-color: #f56c6c;
-}
-
-/* 连接数徽章 */
-.connection-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ef4444;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    min-width: 18px;
-    height: 18px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    pointer-events: none;
-    z-index: 30;
-}
-
-/* 非A列不显示折叠按钮 */
-.draggable-block:not([id^="a"]) .toggle-collapse {
-    display: none;
-}
-
-.path-line {
-    fill: none;
-    stroke-width: 2.5;
-    stroke-dasharray: none;
-}
-
-/* 线条渐变色效果 */
-.path-line.level-1-to-level-2,
-.fold-group-line.level-1-to-level-2 {
-    stroke: url(#gradient-level-1-to-level-2);
-}
-
-.path-line.level-2-to-level-3,
-.fold-group-line.level-2-to-level-3 {
-    stroke: url(#gradient-level-2-to-level-3);
-}
-
-.path-line.level-3-to-level-4,
-.fold-group-line.level-3-to-level-4 {
-    stroke: url(#gradient-level-3-to-level-4);
-}
-
-.path-line.level-4-to-level-5,
-.fold-group-line.level-4-to-level-5 {
-    stroke: url(#gradient-level-4-to-level-5);
-}
-
-/* 同层级线条保持纯色 */
-.path-line.level-1-to-level-1,
-.fold-group-line.level-1-to-level-1 {
-    stroke: #409eff;
-}
-
-.path-line.level-2-to-level-2,
-.fold-group-line.level-2-to-level-2 {
-    stroke: #67c23a;
-}
-
-.path-line.level-3-to-level-3,
-.fold-group-line.level-3-to-level-3 {
-    stroke: #e6a23c;
-}
-
-.path-line.level-4-to-level-4,
-.fold-group-line.level-4-to-level-4 {
-    stroke: #f56c6c;
-}
-
-.path-line.level-5-to-level-5,
-.fold-group-line.level-5-to-level-5 {
-    stroke: #E372DB;
-}
-
-.fold-group-line {
-    fill: none;
-    stroke: #10b981;
-    stroke-width: 3;
-}
-
-.block-content {
-    font-size: 0.875rem;
-    color: #4b5563;
-    margin-bottom: 10px;
-    position: relative;
-    padding-right: 0;
-}
-
-.block-content-text {
-    position: relative;
-    color: #8A8B99;
-    margin-top: 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.5;
-}
-
-.w_contp_btn {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #409eff;
-    cursor: pointer;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.w_contp_btn:hover {
-    text-decoration: none;
-}
-
-/* 卡片操作按钮行 */
-.block-action-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    position: relative;
-    min-height: 28px;
-}
-
-/* 动态图标大小 */
-.block-actions {
-    display: none;
-    gap: 8px;
-    position: absolute;
-    right: 0;
-    top: 0;
-    /* background: rgba(255, 255, 255, 0.98); */
-    padding: 4px 8px;
-    /* border-radius: 6px; */
-    /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
-    z-index: 10;
-}
-
-/* 只通过 selected 类来控制，避免 CSS 悬停和 JS 冲突 */
-.w_contp_item.selected .block-actions {
-    display: flex;
-}
-
-/* 移除之前只针对toggle-collapse的hover效果，现在用统一的卡片hover */
-
-.block-actions .action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-/* SVG 图标容器 */
-.xcustomSvg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.xcustomSvg svg {
-    width: 14px;
-    height: 14px;
-}
-
-.action-btn:hover svg path {
-    fill: #fff !important;
-}
-
-/* ========== 堆叠样式参考 ========== */
+/* 堆叠参考容器 */
 .superposition_wrap {
     margin-bottom: 36px;
     position: relative;
 }
 
+/* 堆叠项：绝对定位、阴影、左侧彩色边框 */
 .superposition_item {
     position: absolute;
     box-shadow: 0 1px 7px rgba(198, 204, 217, 0.58);
@@ -805,6 +846,7 @@ body.is-connecting .block-actions {
     box-sizing: border-box;
 }
 
+/* 第三层堆叠 */
 .superposition_item.superposition_item_three {
     left: 20px;
     top: 20px;
@@ -823,13 +865,13 @@ body.is-connecting .block-actions {
     margin-bottom: 12px;
 }
 
-/* 堆叠卡片 - 第一层（真实内容） */
+/* 堆叠卡片第一层（真实内容） */
 .stack-block-top {
     position: relative;
     z-index: 10;
 }
 
-/* 堆叠卡片 - 第二层 */
+/* 堆叠卡片第二层：偏移8px */
 .stack-block-layer-2 {
     position: absolute;
     top: 8px;
@@ -843,7 +885,7 @@ body.is-connecting .block-actions {
     box-shadow: 0 1px 7px rgba(198, 204, 217, 0.58);
 }
 
-/* 堆叠卡片 - 第三层 */
+/* 堆叠卡片第三层：偏移16px */
 .stack-block-layer-3 {
     position: absolute;
     top: 16px;
@@ -857,30 +899,73 @@ body.is-connecting .block-actions {
     box-shadow: 0 1px 7px rgba(198, 204, 217, 0.58);
 }
 
+/* 堆叠容器 */
+.stack-container {
+    position: relative;
+    margin-bottom: 12px;
+}
 
+.stack-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
 
+.stack-container li {
+    list-style: none;
+}
+
+/* 堆叠项 */
+.stack-item {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+.stack-item.stacked {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 99;
+}
+
+.stack-item.stacked:nth-child(3) {
+    top: 16px;
+    left: 16px;
+    z-index: 98;
+}
+
+.stack-item .w_contp_item {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- 3.13 变灰/淡化状态 --- */
+
+/* 卡片变灰：降低不透明度 */
 .w_contp_item.dimmed {
     opacity: 0.4;
 }
 
-/* .folded-block.dimmed {
-    opacity: .3;
-} */
-
+/* 折叠组变灰 */
 .fold-group.dimmed {
     opacity: 0.4;
 }
 
+/* 变灰卡片的连线也变灰 */
 .w_contp_item.dimmed .path-line,
 .w_contp_item.dimmed~* .path-line {
     opacity: 0.4;
 }
 
-.path-line.thick {
-    stroke-width: 4;
-}
+/* --- 3.14 弹窗组件 --- */
 
-/* ========== 遮罩层与弹窗样式 ========== */
+/* 遮罩层：固定定位、半透明黑色背景、居中 */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -894,6 +979,7 @@ body.is-connecting .block-actions {
     align-items: center;
 }
 
+/* 深色遮罩：用于层级较高的弹窗 */
 .modal-overlay.darker-overlay {
     background: rgba(0, 0, 0, 0.75);
     z-index: 10000;
@@ -903,6 +989,7 @@ body.is-connecting .block-actions {
     display: none;
 }
 
+/* 弹窗主体：白色背景、圆角、最大高度限制 */
 .modal {
     background: #fff;
     border-radius: 8px;
@@ -913,6 +1000,7 @@ body.is-connecting .block-actions {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* 弹窗头部 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -928,6 +1016,7 @@ body.is-connecting .block-actions {
     margin: 0;
 }
 
+/* 关闭按钮 */
 .modal-close {
     font-size: 24px;
     color: #909399;
@@ -940,10 +1029,12 @@ body.is-connecting .block-actions {
     color: #409eff;
 }
 
+/* 弹窗内容区 */
 .modal-body {
     padding: 20px;
 }
 
+/* 弹窗底部 */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -952,24 +1043,10 @@ body.is-connecting .block-actions {
     border-top: 1px solid #e4e7ed;
 }
 
+/* --- 3.15 表单组件 --- */
+
 .form-group {
     margin-bottom: 20px;
-}
-
-.form-textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-.form-textarea:focus {
-    outline: none;
-    border-color: #409eff;
 }
 
 .form-group label {
@@ -984,6 +1061,7 @@ body.is-connecting .block-actions {
     color: #f56c6c;
 }
 
+/* 文本输入框 */
 .form-input {
     width: 100%;
     padding: 10px 12px;
@@ -1000,6 +1078,24 @@ body.is-connecting .block-actions {
     border-color: #409eff;
 }
 
+/* 文本域 */
+.form-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #409eff;
+}
+
+/* 富文本编辑器容器 */
 .form-editor {
     min-height: 150px;
     border: 1px solid #dcdfe6;
@@ -1007,6 +1103,16 @@ body.is-connecting .block-actions {
     overflow: hidden;
 }
 
+/* Quill编辑器样式 */
+.ql-container {
+    font-size: 14px;
+}
+
+.ql-editor {
+    min-height: 100px;
+}
+
+/* 通用按钮 */
 .btn {
     padding: 10px 24px;
     border-radius: 4px;
@@ -1046,10 +1152,14 @@ body.is-connecting .block-actions {
     background: #66b1ff;
 }
 
+/* --- 3.16 层级管理组件 --- */
+
+/* 层级列表 */
 .level-list {
     margin-bottom: 20px;
 }
 
+/* 层级项 */
 .level-item {
     display: flex;
     justify-content: space-between;
@@ -1103,6 +1213,9 @@ body.is-connecting .block-actions {
     font-weight: 500;
 }
 
+/* --- 3.17 信息提示组件 --- */
+
+/* 信息图标容器 */
 .info-icon-container {
     position: relative;
     margin-left: 8px;
@@ -1120,6 +1233,7 @@ body.is-connecting .block-actions {
     color: #409eff;
 }
 
+/* 提示气泡：深色背景、白色文字、悬停显示 */
 .info-tooltip {
     position: absolute;
     top: 100%;
@@ -1160,60 +1274,9 @@ body.is-connecting .block-actions {
     font-weight: 500;
 }
 
-.ql-container {
-    font-size: 14px;
-}
+/* --- 3.18 卡片操作弹窗组件 --- */
 
-.ql-editor {
-    min-height: 100px;
-}
-
-/* ========== 堆叠卡片辅助样式 ========== */
-.stack-container {
-    position: relative;
-    margin-bottom: 12px;
-}
-
-.stack-container ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    position: relative;
-}
-
-.stack-container li {
-    list-style: none;
-}
-
-.stack-item {
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-    z-index: 100;
-}
-
-.stack-item.stacked {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 0;
-    width: 100%;
-    box-sizing: border-box;
-    z-index: 99;
-}
-
-.stack-item.stacked:nth-child(3) {
-    top: 16px;
-    left: 16px;
-    z-index: 98;
-}
-
-.stack-item .w_contp_item {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* ========== 卡片操作弹窗样式 ========== */
+/* 层级信息展示 */
 .level-info {
     display: flex;
     align-items: center;
@@ -1252,11 +1315,13 @@ body.is-connecting .block-actions {
     color: #909399;
 }
 
+/* 子卡片列表 */
 .children-list {
     max-height: 300px;
     overflow-y: auto;
 }
 
+/* 子卡片项 */
 .child-item {
     display: flex;
     align-items: center;
@@ -1267,6 +1332,7 @@ body.is-connecting .block-actions {
     border: 1px solid #e4e7ed;
 }
 
+/* 已连接的子卡片：蓝色高亮 */
 .child-item.connected {
     background: #f0f9ff;
     border-color: #409eff;
@@ -1287,138 +1353,14 @@ body.is-connecting .block-actions {
     color: #909399;
 }
 
-/* ========== 响应式布局设计 ========== */
-/* 大屏幕 (≥1200px) - 5列完整布局 */
-@media screen and (min-width: 1200px) {
-    .w_cont {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-    }
+/* ============================================================
+ * 四、页面特定样式
+ * 包含: 探索模式、批量删除模式
+ * ============================================================ */
 
-    .w_cont_problem {
-        flex: 1;
-        padding: 20px 60px;
-    }
-}
+/* --- 4.1 探索模式 --- */
 
-/* 中屏幕 (900px-1199px) - 5列紧凑布局 */
-@media screen and (min-width: 900px) and (max-width: 1199px) {
-    .w_cont {
-        display: flex;
-        justify-content: space-between;
-        gap: 15px;
-    }
-
-    .w_cont_problem {
-        flex: 1;
-        padding: 15px 40px;
-        min-width: 0;
-        /* 允许flex项缩小 */
-    }
-
-    .w_contp_item {
-        padding: 12px;
-    }
-
-    /* 小屏幕上调整文本显示 */
-    .block-content-text {
-        -webkit-line-clamp: 2;
-        /* 减少显示行数 */
-        max-height: 3em;
-        /* 限制高度 */
-        overflow: hidden;
-    }
-
-    /* 调整按钮大小 */
-    .w_contp_btn {
-        font-size: 0.75rem;
-        padding: 2px 4px;
-    }
-}
-
-/* 小屏幕 (600px-899px) - 3列布局（AB列、CD列、E列） */
-@media screen and (min-width: 600px) and (max-width: 899px) {
-    .w_cont {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .w_cont_problem {
-        flex: 1 1 calc(50% - 15px);
-        /* 两列布局 */
-        min-width: 280px;
-        padding: 15px 30px;
-    }
-
-    /* 最后一列占满宽度 */
-    .w_cont_problem:nth-child(5) {
-        flex: 1 1 100%;
-        margin-top: 10px;
-    }
-
-    .w_contp_item {
-        padding: 12px;
-    }
-
-    /* 超小屏幕上进一步调整文本显示 */
-    .block-content-text {
-        -webkit-line-clamp: 1;
-        /* 只显示一行 */
-        max-height: 1.5em;
-        overflow: hidden;
-    }
-
-    /* 调整按钮大小 */
-    .w_contp_btn {
-        font-size: 0.7rem;
-        padding: 1px 3px;
-    }
-
-    /* 调整卡片标题 */
-    .w_contp_itit {
-        font-size: 14px;
-    }
-}
-
-/* 超小屏幕 (<600px) - 单列垂直布局 */
-@media screen and (max-width: 599px) {
-    .w_cont {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .w_cont_problem {
-        width: 100%;
-        padding: 15px 20px;
-    }
-
-    .w_contp_item {
-        padding: 12px;
-    }
-}
-
-/* 窗口大小变化时平滑过渡 */
-.w_cont,
-.w_cont_problem,
-.w_contp_item {
-    transition: all 0.3s ease;
-}
-
-/* 防止内容溢出 */
-.w_cont_problem {
-    overflow: hidden;
-}
-
-.block-content-text {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    max-width: 100%;
-}
-
-/* ========== 探索模式样式 ========== */
+/* 探索模式头部按钮容器 */
 .w_head_btn_wrap {
     display: inline-flex;
     align-items: center;
@@ -1430,11 +1372,13 @@ body.is-connecting .block-actions {
     margin-left: 0;
 }
 
+/* 探索图标容器 */
 .explora-icon-wrap {
     display: inline-flex;
     align-items: center;
 }
 
+/* 探索图标：蓝色、悬停变浅 */
 .explora-icon {
     display: inline-flex;
     align-items: center;
@@ -1456,7 +1400,7 @@ body.is-connecting .block-actions {
     z-index: 1000;
 }
 
-/* 探索模式设置弹窗 */
+/* 探索模式设置弹窗：绝对定位、白色背景、阴影、动画 */
 .explora-set-popup {
     position: absolute;
     top: 100%;
@@ -1494,6 +1438,7 @@ body.is-connecting .block-actions {
     display: flex;
 }
 
+/* 开关行 */
 .wexploratit-switch {
     justify-content: space-between;
     align-items: center;
@@ -1506,6 +1451,7 @@ body.is-connecting .block-actions {
     color: #606266;
 }
 
+/* 开关组件 */
 .wswitch {
     position: relative;
 }
@@ -1525,6 +1471,7 @@ body.is-connecting .block-actions {
     transition: background 0.3s;
 }
 
+/* 开关滑块 */
 .wswitch label span {
     position: absolute;
     top: 2px;
@@ -1536,6 +1483,7 @@ body.is-connecting .block-actions {
     transition: left 0.3s;
 }
 
+/* 开关开启状态 */
 .wswitch input:checked + label {
     background: #409eff;
 }
@@ -1544,6 +1492,7 @@ body.is-connecting .block-actions {
     left: 22px;
 }
 
+/* 探索流程选择区域：折叠动画 */
 .w_exploraflow {
     overflow: hidden;
     max-height: 0;
@@ -1580,6 +1529,7 @@ body.is-connecting .block-actions {
     align-items: center;
 }
 
+/* 自定义复选框 */
 .ddCheck {
     position: relative;
     margin-right: 8px;
@@ -1605,6 +1555,7 @@ body.is-connecting .block-actions {
     border-color: #409eff;
 }
 
+/* 选中对勾 */
 .ddCheck input:checked + i::after {
     content: "";
     position: absolute;
@@ -1627,6 +1578,7 @@ body.is-connecting .block-actions {
     flex: 1;
 }
 
+/* 探索按钮 */
 .w_explorabtn {
     text-align: right;
     margin: 0;
@@ -1647,7 +1599,7 @@ body.is-connecting .block-actions {
     background: #66b1ff;
 }
 
-/* 学生端探索模式图例演示弹窗 */
+/* 探索模式帮助弹窗 */
 .explora-help-popup {
     position: absolute;
     top: 100%;
@@ -1698,13 +1650,15 @@ body.is-connecting .block-actions {
     gap: 12px;
 }
 
+/* 清除浮动 */
 .clearAfter::after {
     content: "";
     display: table;
     clear: both;
 }
 
-.bntLinear, .bntWhite {
+/* 线性按钮：蓝色背景 */
+.bntLinear {
     display: inline-block;
     padding: 6px 24px;
     height: 32px;
@@ -1714,9 +1668,6 @@ body.is-connecting .block-actions {
     text-decoration: none;
     text-align: center;
     transition: all 0.3s;
-}
-
-.bntLinear {
     background: #409eff;
     color: #fff;
 }
@@ -1725,7 +1676,17 @@ body.is-connecting .block-actions {
     background: #66b1ff;
 }
 
+/* 白色按钮：蓝色边框 */
 .bntWhite {
+    display: inline-block;
+    padding: 6px 24px;
+    height: 32px;
+    line-height: 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s;
     background: #fff;
     color: #409eff;
     border: 1px solid #409eff;
@@ -1739,18 +1700,7 @@ body.is-connecting .block-actions {
     float: right;
 }
 
- 
-
-.path-line.highlight {
-    stroke-width: 4;
-    filter: drop-shadow(0 0 3px rgba(64, 158, 255, 0.8));
-}
-
-.path-line.hidden {
-    opacity: 0;
-}
-
-/* 探索模式图例 */
+/* 探索模式图例头部 */
 .w_explorehead {
     background: #fff;
     padding: 16px 24px;
@@ -1767,6 +1717,7 @@ body.is-connecting .block-actions {
     gap: 24px;
 }
 
+/* 探索名称标签 */
 .w_explorehead .vaname {
     font-size: 16px;
     font-weight: 600;
@@ -1778,6 +1729,7 @@ body.is-connecting .block-actions {
     border-left: 4px solid #409eff;
 }
 
+/* 探索选项卡 */
 .w_explorehead .vanhtab {
     display: flex;
     gap: 16px;
@@ -1810,6 +1762,7 @@ body.is-connecting .block-actions {
     transform: translateY(0);
 }
 
+/* 探索按钮：渐变蓝色 */
 .w_explorehead .explorebtn a {
     padding: 12px 32px;
     background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
@@ -1834,72 +1787,9 @@ body.is-connecting .block-actions {
     transform: translateY(0);
 }
 
-/* 浏览器兼容性优化 */
-@supports (-ms-ime-align: auto) {
-    /* IE11 及以下 */
-    .w_explorehead {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-    }
-    
-    .w_explorehead .dis-flex.align-items-c {
-        display: flex !important;
-        align-items: center !important;
-        gap: 24px !important;
-    }
-    
-    .w_explorehead .vanhtab {
-        display: flex !important;
-        gap: 16px !important;
-    }
-    
-    .detail-card {
-        min-width: 240px;
-    }
-    
-    .card-actions {
-        flex-direction: column;
-    }
-}
+/* --- 4.2 批量删除模式 --- */
 
-@-moz-document url-prefix() {
-    /* Firefox */
-    .w_explorehead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .w_explorehead .vanhtab {
-        gap: 16px;
-    }
-    
-    .detail-card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-}
-
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-    /* Chrome, Safari */
-    .w_explorehead {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .w_explorehead .vanhtab {
-        gap: 16px;
-    }
-    
-    .detail-card:hover {
-        transform: translateY(-4px) scale(1.02);
-    }
-}
-
-/* ========== 批量删除模式样式 ========== */
-
-/* 删除模式的导航栏 */
+/* 删除模式导航栏：红色背景 */
 .delete-mode-head {
     background: #fff3f3;
     border-bottom: 1px solid #fbc4c4;
@@ -1916,6 +1806,7 @@ body.is-connecting .block-actions {
     align-items: center;
 }
 
+/* 全选复选框 */
 .delete-select-all {
     display: flex;
     align-items: center;
@@ -1931,29 +1822,19 @@ body.is-connecting .block-actions {
     cursor: pointer;
 }
 
+/* 卡片计数 */
 .card-count {
     font-weight: 600;
     color: #409eff;
 }
 
+/* 已选计数 */
 .selected-count {
     font-weight: 600;
     color: #f56c6c;
 }
 
-/* .delete-btn {
-    background: #f56c6c;
-    color: #fff;
-    border-color: #f56c6c;
-}
-
-.delete-btn:hover {
-    background: #f78989;
-    border-color: #f78989;
-    color: #fff;
-} */
-
-/* 卡片勾选框 */
+/* 卡片勾选框：绝对定位右上角 */
 .delete-checkbox {
     position: absolute;
     top: 8px;
@@ -1979,18 +1860,206 @@ body.is-connecting .block-actions {
     color: #409eff;
 }
 
-/* 选中的卡片 */
+/* 选中的卡片：蓝色边框高亮 */
 .selected-card {
     box-shadow: 0 0 0 2px #409eff;
     background: #ecf5ff;
     border: 2px solid #409eff;
 }
 
-/* 删除模式下卡片位置调整 */
+/* 删除模式头部按钮间距 */
 .delete-mode-head .w_head_btn {
     margin-right: 12px;
 }
 
 .delete-mode-head .w_head_btn:last-child {
     margin-right: 0;
+}
+
+/* ============================================================
+ * 五、响应式样式
+ * 包含: 大屏(≥1200px)、中屏(900px-1199px)、小屏(600px-899px)、
+ *        超小屏(<600px)
+ * ============================================================ */
+
+/* --- 大屏幕 (≥1200px)：5列完整布局 --- */
+@media screen and (min-width: 1200px) {
+    .w_cont {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .w_cont_problem {
+        flex: 1;
+        padding: 20px 60px;
+    }
+}
+
+/* --- 中屏幕 (900px-1199px)：5列紧凑布局 --- */
+@media screen and (min-width: 900px) and (max-width: 1199px) {
+    .w_cont {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .w_cont_problem {
+        flex: 1;
+        padding: 15px 40px;
+        min-width: 0;
+    }
+
+    .w_contp_item {
+        padding: 12px;
+    }
+
+    /* 减少文本显示行数 */
+    .block-content-text {
+        -webkit-line-clamp: 2;
+        max-height: 3em;
+        overflow: hidden;
+    }
+
+    .w_contp_btn {
+        font-size: 0.75rem;
+        padding: 2px 4px;
+    }
+}
+
+/* --- 小屏幕 (600px-899px)：两列布局 --- */
+@media screen and (min-width: 600px) and (max-width: 899px) {
+    .w_cont {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .w_cont_problem {
+        flex: 1 1 calc(50% - 15px);
+        min-width: 280px;
+        padding: 15px 30px;
+    }
+
+    /* 最后一列占满宽度 */
+    .w_cont_problem:nth-child(5) {
+        flex: 1 1 100%;
+        margin-top: 10px;
+    }
+
+    .w_contp_item {
+        padding: 12px;
+    }
+
+    .block-content-text {
+        -webkit-line-clamp: 1;
+        max-height: 1.5em;
+        overflow: hidden;
+    }
+
+    .w_contp_btn {
+        font-size: 0.7rem;
+        padding: 1px 3px;
+    }
+
+    .w_contp_itit {
+        font-size: 14px;
+    }
+}
+
+/* --- 超小屏幕 (<600px)：单列垂直布局 --- */
+@media screen and (max-width: 599px) {
+    .w_cont {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .w_cont_problem {
+        width: 100%;
+        padding: 15px 20px;
+    }
+
+    .w_contp_item {
+        padding: 12px;
+    }
+}
+
+/* ============================================================
+ * 六、工具类样式
+ * 包含: 通用过渡动画、溢出保护、浏览器兼容性处理
+ * ============================================================ */
+
+/* --- 窗口大小变化时平滑过渡 --- */
+.w_cont,
+.w_cont_problem,
+.w_contp_item {
+    transition: all 0.3s ease;
+}
+
+/* --- 防止内容溢出 --- */
+.w_cont_problem {
+    overflow: hidden;
+}
+
+/* --- 浏览器兼容性：IE11 --- */
+@supports (-ms-ime-align: auto) {
+    .w_explorehead {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .w_explorehead .dis-flex.align-items-c {
+        display: flex !important;
+        align-items: center !important;
+        gap: 24px !important;
+    }
+
+    .w_explorehead .vanhtab {
+        display: flex !important;
+        gap: 16px !important;
+    }
+
+    .detail-card {
+        min-width: 240px;
+    }
+
+    .card-actions {
+        flex-direction: column;
+    }
+}
+
+/* --- 浏览器兼容性：Firefox --- */
+@-moz-document url-prefix() {
+    .w_explorehead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .w_explorehead .vanhtab {
+        gap: 16px;
+    }
+
+    .detail-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* --- 浏览器兼容性：Chrome/Safari --- */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .w_explorehead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .w_explorehead .vanhtab {
+        gap: 16px;
+    }
+
+    .detail-card:hover {
+        transform: translateY(-4px) scale(1.02);
+    }
 }

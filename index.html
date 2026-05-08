@@ -1,21 +1,30 @@
 ﻿<!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：问题图谱 / 能力图谱 - 拖拽连线主页面
+  功能：提供可视化的问题/能力图谱编辑器，支持卡片拖拽、连线关联、层级管理、探索模式等
+  依赖：Quill 富文本编辑器、Font Awesome 图标库、common.css、index.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>拖拽连线</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/quill.snow.css">
+    <!-- ==================== 脚本库 ==================== -->
     <!-- Quill 富文本编辑器核心库 -->
     <script src="js/quill.min.js" ></script> 
     <script src="js/common.js"></script>
 </head>
 
 <body>
-    <!-- 公共导航 -->
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <!-- 公共导航：问题图谱 / 能力图谱 标签切换 -->
     <div class="tab-nav">
         <div class="tab-item active" data-tab="question">
             <i class="fas fa-question-circle"></i> 问题图谱
@@ -24,7 +33,9 @@
             <i class="fas fa-brain"></i> 能力图谱
         </div>
     </div>
-    <!-- 头部工具栏 -->
+
+    <!-- ==================== 头部工具栏 ==================== -->
+    <!-- 包含提示文字、探索模式、批量导入/删除、导出、展开、设置等操作按钮 -->
     <div class="w_head" id="original-w_head">
         <div class="w_head_txt">提示请设置主线问题并将其与具体的知识点进行关联</div>
         <div class="w_head_btnwrap">
@@ -124,7 +135,9 @@
             </a>
         </div>
     </div>
-    <!-- 批量删除工具栏 -->
+
+    <!-- ==================== 批量删除工具栏 ==================== -->
+    <!-- 进入批量删除模式后显示，包含全选、计数、取消、确认删除按钮 -->
     <div class="w_head delete-mode-head" id="delete-mode-head" style="display: none;">
         <div class="delete-mode-left">
             <label class="delete-select-all">
@@ -139,12 +152,14 @@
             <a class="w_head_btn delete-btn" id="confirm-delete-btn">删除</a>
         </div>
     </div>
-    <!-- 主工作区，包含 SVG 画布和四列内容 -->
+
+    <!-- ==================== 主工作区 ==================== -->
+    <!-- 包含 SVG 画布（绘制连接线）和四列层级内容区域 -->
     <div class="main-container" id="main-container">
         <!-- SVG 画布，用于绘制所有连接线 -->
         <svg id="connections-svg">
             <defs>
-                <!-- 渐变色定义 -->
+                <!-- 渐变色定义：用于不同层级之间的连接线颜色过渡 -->
                 <linearGradient id="gradient-level-1-to-level-2" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#409eff" />
                     <stop offset="100%" stop-color="#67c23a" />
@@ -163,9 +178,10 @@
                 </linearGradient>
             </defs>
         </svg>
-        <!-- 内容区域 -->
+
+        <!-- ==================== 内容区域：四列层级布局 ==================== -->
         <div class="w_cont">
-            <!-- 第一层级（A组）：起点列 -->
+            <!-- 第一层级（A组）：起点列，蓝色主题 -->
             <div class="w_cont_problem ABox">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #409eff;">
@@ -367,7 +383,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 第二层级（B组）：中间节点列 -->
+            <!-- 第二层级（B组）：中间节点列，绿色主题 -->
             <div class="w_cont_problem BBox">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #67c23a;">
@@ -504,7 +520,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 第三层级（C组） -->
+            <!-- 第三层级（C组）：中间节点列，橙色主题 -->
             <div class="w_cont_problem CBox">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #e6a23c;">
@@ -759,7 +775,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 第四层级（D组） -->
+            <!-- 第四层级（D组）：中间节点列，红色主题 -->
             <div class="w_cont_problem DBox">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #f56c6c;">
@@ -1022,9 +1038,10 @@
             </div> -->
         </div>
     </div>
-    <!-- 公共弹窗容器 -->
-    <div id="common_windows">
-        <!-- 遮罩层和弹窗（用于新增卡片） -->
+    <!-- ==================== 公共弹窗容器 ==================== -->
+    <!-- 所有模态弹窗统一放在此处，通过 JS 控制显示/隐藏 -->
+    <div class="modal-container">
+        <!-- 新增卡片弹窗：用于在指定层级添加新卡片 -->
         <div id="modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1055,7 +1072,7 @@
                 </div>
             </div>
         </div>
-        <!-- 编辑卡片弹窗 -->
+        <!-- 编辑卡片弹窗：使用 Quill 富文本编辑器编辑卡片内容 -->
         <div id="edit-block-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1084,7 +1101,7 @@
                 </div>
             </div>
         </div>
-        <!-- 编辑层级弹窗 -->
+        <!-- 编辑层级弹窗：修改层级名称和描述 -->
         <div id="level-edit-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1109,7 +1126,7 @@
                 </div>
             </div>
         </div>
-        <!-- 层级管理弹窗 -->
+        <!-- 层级管理弹窗（设置弹窗）：管理所有层级的增删、显隐、排序 -->
         <div id="settings-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1144,7 +1161,7 @@
                 </div>
             </div>
         </div>
-        <!-- 添加/编辑层级弹窗-->
+        <!-- 添加/编辑层级弹窗：输入层级名称的表单弹窗 -->
         <div id="level-form-modal-overlay" class="modal-overlay darker-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1165,7 +1182,7 @@
                 </div>
             </div>
         </div>
-        <!-- 删除层级弹窗 -->
+        <!-- 删除层级确认弹窗：二次确认是否删除指定层级 -->
         <div id="delete-level-confirm-modal-overlay" class="modal-overlay darker-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1181,7 +1198,7 @@
                 </div>
             </div>
         </div>
-        <!-- 批量导入弹窗 -->
+        <!-- 批量导入弹窗：支持 Excel 模板导入卡片数据 -->
         <div id="import-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1210,7 +1227,7 @@
                 </div>
             </div>
         </div>
-        <!-- 关联子级弹窗 -->
+        <!-- 关联子级弹窗：选择当前卡片要关联的下一层级子卡片 -->
         <div id="connect-children-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1235,7 +1252,7 @@
                 </div>
             </div>
         </div>
-        <!-- 删除确认弹窗 -->
+        <!-- 删除确认弹窗：二次确认是否删除指定卡片 -->
         <div id="delete-confirm-modal-overlay" class="modal-overlay darker-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
@@ -1251,7 +1268,7 @@
                 </div>
             </div>
         </div>
-        <!-- 详情弹窗 -->
+        <!-- 详情弹窗：展示卡片的完整内容信息 -->
         <div id="detail-modal-overlay" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">

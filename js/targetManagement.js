@@ -1,26 +1,47 @@
 /**
  * targetManagement.js - 目标管理页面核心脚本
- * 
- * 功能说明：
+ *
+ * 功能概述：
  *   1. 能力条目的 CRUD 管理（创建、编辑、删除、批量删除）
  *   2. 标签管理（添加、编辑、删除标签，支持搜索过滤）
  *   3. 知识点树形选择（多级树结构，勾选/取消）
  *   4. 数据导入导出（JSON 格式）
  *   5. 表格筛选（按名称搜索、按标签过滤）
- * 
+ *
+ * 模块结构：
+ *   一、常量与状态：存储键、数据状态、DOM引用、颜色池
+ *   二、工具函数：知识点查找、树统计、数据筛选、UI状态更新
+ *   三、数据持久化：加载与保存
+ *   四、表格渲染：能力管理表格
+ *   五、创建/编辑弹窗：表单与确认逻辑
+ *   六、表单标签/知识点渲染
+ *   七、标签选择弹窗
+ *   八、知识点树渲染
+ *   九、确认弹窗
+ *   十、删除能力
+ *   十一、标签筛选器
+ *   十二、数据导入导出
+ *   十三、事件绑定：集中注册所有事件监听
+ *   十四、初始化入口
+ *
  * 数据存储键：
  *   - abilityMapData：能力条目数据
  *   - targetTags：标签列表
  *   - knowledgeTreeData：知识点树形数据
- * 
+ *
  * 依赖：
  *   - common.js（StorageManager）
- *   - Font Awesome（图标）
+ *   - Font Awesome（图标库）
  */
+
 (function () {
     'use strict';
 
-    // ==================== 存储键常量 ====================
+    /* ============================================================
+     * 一、常量与状态
+     * ============================================================ */
+
+    // --- 1.1 存储键常量 ---
 
     /** @type {string} 能力数据在 localStorage 中的键名 */
     var ABILITIES_KEY = 'abilityMapData';
@@ -31,7 +52,7 @@
     /** @type {string} 知识点树数据在 localStorage 中的键名 */
     var KNOWLEDGE_KEY = 'knowledgeTreeData';
 
-    // ==================== 核心数据状态 ====================
+    // --- 1.2 核心数据状态 ---
 
     /** @type {Array} 能力条目列表 */
     var abilities = [];
@@ -69,7 +90,7 @@
     /** @type {string} 当前名称搜索关键词 */
     var filterName = '';
 
-    // ==================== DOM 元素引用 ====================
+    // --- 1.3 DOM 元素引用 ---
 
     var tableBody = document.getElementById('table-body');
     var batchBar = document.getElementById('batch-bar');
@@ -126,14 +147,105 @@
     var confirmBtnCancel = document.getElementById('confirm-btn-cancel');
     var confirmBtnConfirm = document.getElementById('confirm-btn-confirm');
 
+    // --- 1.4 标签颜色池 ---
+
     /** @type {Array<string>} 标签颜色池，用于循环分配颜色 */
     var tagColors = ['#F77763', '#67c23a', '#5AC482', '#409eff', '#e6a23c'];
 
-    // ==================== 数据加载与持久化 ====================
+    /* ============================================================
+     * 二、工具函数
+     * ============================================================ */
+
+    /**
+     * 在知识点树中递归查找指定 ID 的名称
+     *
+     * @param {Array} tree - 知识点树形数据
+     * @param {string} id - 要查找的知识点 ID
+     * @returns {string|null} 知识点名称，未找到返回 null
+     */
+    function findKnowledgeName(tree, id) {
+        for (var i = 0; i < tree.length; i++) {
+            var node = tree[i];
+            if (node.id === id) return node.name;
+            if (node.children) {
+                var result = findKnowledgeName(node.children, id);
+                if (result) return result;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 统计知识点树中的节点总数
+     *
+     * @param {Array} tree - 知识点树形数据
+     * @returns {number} 节点总数
+     */
+    function countKnowledgeTree(tree) {
+        var count = 0;
+        function traverse(nodes) {
+            if (!nodes) return;
+            nodes.forEach(function (node) {
+                count++;
+                if (node.children) traverse(node.children);
+            });
+        }
+        traverse(tree);
+        return count;
+    }
+
+    /**
+     * 根据当前筛选条件过滤能力列表
+     *
+     * 筛选条件：
+     *   - filterTag：按标签筛选（空字符串表示不过滤）
+     *   - filterName：按名称模糊搜索（不区分大小写）
+     *
+     * @returns {Array} 过滤后的能力条目数组
+     */
+    function getFilteredAbilities() {
+        return abilities.filter(function (a) {
+            var match = true;
+            if (filterTag && a.tags && !a.tags.includes(filterTag)) {
+                match = false;
+            }
+            if (filterName && !(a.name || '').toLowerCase().includes(filterName.toLowerCase())) {
+                match = false;
+            }
+            return match;
+        });
+    }
+
+    /**
+     * 更新全选复选框状态
+     * 当所有筛选后的条目都被选中时，全选框为勾选状态
+     */
+    function updateCheckAll() {
+        var filtered = getFilteredAbilities();
+        checkAll.checked = filtered.length > 0 && filtered.every(function (a) {
+            return selectedIds.has(a.id);
+        });
+    }
+
+    /**
+     * 更新批量操作栏的显示/隐藏
+     * 有选中项时显示批量操作栏，否则隐藏
+     */
+    function updateBatchBar() {
+        if (selectedIds.size > 0) {
+            batchBar.classList.add('show');
+        } else {
+            batchBar.classList.remove('show');
+        }
+    }
+
+    /* ============================================================
+     * 三、数据持久化
+     * ============================================================ */
 
     /**
      * 从 localStorage 加载所有数据
-     * 
+     *
      * 加载内容：
      *   - abilities：能力条目列表（abilityMapData）
      *   - tags：标签列表（targetTags），默认提供 3 个示例标签
@@ -169,35 +281,13 @@
         StorageManager.set(TAGS_KEY, tags);
     }
 
-    // ==================== 数据筛选 ====================
-
-    /**
-     * 根据当前筛选条件过滤能力列表
-     * 
-     * 筛选条件：
-     *   - filterTag：按标签筛选（空字符串表示不过滤）
-     *   - filterName：按名称模糊搜索（不区分大小写）
-     * 
-     * @returns {Array} 过滤后的能力条目数组
-     */
-    function getFilteredAbilities() {
-        return abilities.filter(function (a) {
-            var match = true;
-            if (filterTag && a.tags && !a.tags.includes(filterTag)) {
-                match = false;
-            }
-            if (filterName && !(a.name || '').toLowerCase().includes(filterName.toLowerCase())) {
-                match = false;
-            }
-            return match;
-        });
-    }
-
-    // ==================== 表格渲染 ====================
+    /* ============================================================
+     * 四、表格渲染
+     * ============================================================ */
 
     /**
      * 渲染能力管理表格
-     * 
+     *
      * 表格列：
      *   - 复选框（批量选择）
      *   - 序号
@@ -205,7 +295,7 @@
      *   - 标签（彩色标签展示）
      *   - 描述
      *   - 操作（编辑 / 删除按钮）
-     * 
+     *
      * 每行数据绑定选中状态，支持全选/取消全选联动
      */
     function renderTable() {
@@ -287,81 +377,19 @@
         });
     }
 
-    /**
-     * 更新全选复选框状态
-     * 当所有筛选后的条目都被选中时，全选框为勾选状态
-     */
-    function updateCheckAll() {
-        var filtered = getFilteredAbilities();
-        checkAll.checked = filtered.length > 0 && filtered.every(function (a) {
-            return selectedIds.has(a.id);
-        });
-    }
-
-    /**
-     * 更新批量操作栏的显示/隐藏
-     * 有选中项时显示批量操作栏，否则隐藏
-     */
-    function updateBatchBar() {
-        if (selectedIds.size > 0) {
-            batchBar.classList.add('show');
-        } else {
-            batchBar.classList.remove('show');
-        }
-    }
-
-    // ==================== 全选与批量删除 ====================
-
-    /**
-     * 全选复选框变化事件
-     * 勾选时选中所有筛选后的条目，取消时清空选中
-     */
-    checkAll.addEventListener('change', function () {
-        var filtered = getFilteredAbilities();
-        if (checkAll.checked) {
-            filtered.forEach(function (a) { selectedIds.add(a.id); });
-        } else {
-            filtered.forEach(function (a) { selectedIds.delete(a.id); });
-        }
-        renderTable();
-        updateBatchBar();
-    });
-
-    /**
-     * 批量删除按钮点击事件
-     * 弹出确认框后删除所有选中的能力条目
-     */
-    batchDeleteBtn.addEventListener('click', function () {
-        if (selectedIds.size === 0) return;
-        showConfirm('确定是否删除选中的内容？', function () {
-            abilities = abilities.filter(function (a) { return !selectedIds.has(a.id); });
-            selectedIds.clear();
-            saveAbilities();
-            renderTable();
-            updateBatchBar();
-        });
-    });
-
-    // ==================== 导航按钮 ====================
-
-    /**
-     * 返回按钮 - 跳转到能力图谱教师视图
-     */
-    backBtn.addEventListener('click', function () {
-        window.location.href = 'targetMapTeacher.html';
-    });
-
-    // ==================== 创建/编辑弹窗 ====================
+    /* ============================================================
+     * 五、创建/编辑弹窗
+     * ============================================================ */
 
     /**
      * 打开创建/编辑弹窗
-     * 
+     *
      * @param {string|null} id - 能力 ID，为 null 时表示新建模式
-     * 
+     *
      * 新建模式：
      *   - 弹窗标题为"新建"
      *   - 表单字段清空
-     * 
+     *
      * 编辑模式：
      *   - 弹窗标题为"编辑"
      *   - 回填已有数据到表单
@@ -390,20 +418,16 @@
         createModal.classList.add('show');
     }
 
-    createBtn.addEventListener('click', function () { openCreateModal(null); });
-    createModalClose.addEventListener('click', function () { createModal.classList.remove('show'); });
-    createBtnCancel.addEventListener('click', function () { createModal.classList.remove('show'); });
-
     /**
-     * 确认创建/编辑按钮事件
-     * 
+     * 确认创建/编辑
+     *
      * 校验：
      *   - 名称不能为空
-     * 
+     *
      * 编辑模式：更新已有条目的字段
      * 新建模式：创建新条目，自动生成 ID 和随机背景色
      */
-    createBtnConfirm.addEventListener('click', function () {
+    function confirmCreateOrEdit() {
         var name = formName.value.trim();
         if (!name) {
             alert('请输入名称');
@@ -439,9 +463,11 @@
         saveAbilities();
         renderTable();
         createModal.classList.remove('show');
-    });
+    }
 
-    // ==================== 表单标签渲染 ====================
+    /* ============================================================
+     * 六、表单标签/知识点渲染
+     * ============================================================ */
 
     /**
      * 渲染编辑表单中的标签展示区
@@ -489,33 +515,24 @@
         });
     }
 
-    // ==================== 标签选择弹窗 ====================
+    /* ============================================================
+     * 七、标签选择弹窗
+     * ============================================================ */
 
     /**
      * 打开标签选择弹窗
      * 初始化临时选中列表为当前表单的标签列表
      */
-    addTagBtn.addEventListener('click', function () {
+    function openTagModal() {
         tempTagSelected = tempFormTags.slice();
         renderTagList();
         renderTagSelectedList();
         tagModal.classList.add('show');
-    });
-
-    /**
-     * 打开知识点选择弹窗
-     * 初始化临时选中列表为当前表单的知识点列表
-     */
-    addKnowledgeBtn.addEventListener('click', function () {
-        tempKnowledgeSelected = tempFormKnowledge.slice();
-        renderKnowledgeTree();
-        renderKnowledgeSelectedList();
-        knowledgeModal.classList.add('show');
-    });
+    }
 
     /**
      * 渲染标签选择列表
-     * 
+     *
      * 功能：
      *   - 支持搜索过滤标签
      *   - 每个标签可勾选/取消
@@ -610,111 +627,30 @@
         });
     }
 
-    tagModalClose.addEventListener('click', function () { tagModal.classList.remove('show'); });
-    tagBtnCancel.addEventListener('click', function () { tagModal.classList.remove('show'); });
-
     /**
-     * 标签弹窗确认按钮
+     * 确认标签选择
      * 将临时选中的标签同步到编辑表单
      */
-    tagBtnConfirm.addEventListener('click', function () {
+    function confirmTagSelection() {
         tempFormTags = tempTagSelected.slice();
         renderFormTags();
         tagModal.classList.remove('show');
-    });
-
-    // ==================== 新建标签 ====================
-
-    /**
-     * 显示新建标签输入框
-     */
-    newTagBtn.addEventListener('click', function () {
-        newTagForm.style.display = 'flex';
-        newTagName.value = '';
-        newTagName.focus();
-    });
-
-    /**
-     * 取消新建标签
-     */
-    newTagCancel.addEventListener('click', function () {
-        newTagForm.style.display = 'none';
-    });
-
-    /**
-     * 确认新建标签
-     * 
-     * 校验：
-     *   - 标签名称不能为空
-     *   - 标签名称不能重复
-     */
-    newTagConfirm.addEventListener('click', function () {
-        var name = newTagName.value.trim();
-        if (!name) {
-            alert('请输入标签名称');
-            newTagName.focus();
-            return;
-        }
-        if (tags.includes(name)) {
-            alert('标签已存在');
-            newTagName.focus();
-            return;
-        }
-        tags.push(name);
-        saveTags();
-        newTagForm.style.display = 'none';
-        renderTagList();
-    });
-
-    /**
-     * 标签搜索输入事件
-     * 实时过滤标签列表
-     */
-    tagSearchInput.addEventListener('input', function () {
-        renderTagList();
-    });
-
-    // ==================== 知识点树工具函数 ====================
-
-    /**
-     * 在知识点树中递归查找指定 ID 的名称
-     * 
-     * @param {Array} tree - 知识点树形数据
-     * @param {string} id - 要查找的知识点 ID
-     * @returns {string|null} 知识点名称，未找到返回 null
-     */
-    function findKnowledgeName(tree, id) {
-        for (var i = 0; i < tree.length; i++) {
-            var node = tree[i];
-            if (node.id === id) return node.name;
-            if (node.children) {
-                var result = findKnowledgeName(node.children, id);
-                if (result) return result;
-            }
-        }
-        return null;
     }
 
-    /**
-     * 统计知识点树中的节点总数
-     * 
-     * @param {Array} tree - 知识点树形数据
-     * @returns {number} 节点总数
-     */
-    function countKnowledgeTree(tree) {
-        var count = 0;
-        function traverse(nodes) {
-            if (!nodes) return;
-            nodes.forEach(function (node) {
-                count++;
-                if (node.children) traverse(node.children);
-            });
-        }
-        traverse(tree);
-        return count;
-    }
+    /* ============================================================
+     * 八、知识点树渲染
+     * ============================================================ */
 
-    // ==================== 知识点树渲染 ====================
+    /**
+     * 打开知识点选择弹窗
+     * 初始化临时选中列表为当前表单的知识点列表
+     */
+    function openKnowledgeModal() {
+        tempKnowledgeSelected = tempFormKnowledge.slice();
+        renderKnowledgeTree();
+        renderKnowledgeSelectedList();
+        knowledgeModal.classList.add('show');
+    }
 
     /**
      * 渲染知识点选择弹窗中的树形结构
@@ -729,11 +665,11 @@
 
     /**
      * 递归创建知识点树节点
-     * 
+     *
      * @param {Object} node - 当前知识点节点数据
      * @param {number} level - 当前层级深度（用于计算缩进）
      * @returns {HTMLElement} 树节点 DOM 元素
-     * 
+     *
      * 节点结构：
      *   - 展开/折叠箭头（仅父节点显示）
      *   - 节点名称文本
@@ -854,24 +790,23 @@
         });
     }
 
-    knowledgeModalClose.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
-    knowledgeBtnCancel.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
-
     /**
-     * 知识点弹窗确认按钮
+     * 确认知识点选择
      * 将临时选中的知识点同步到编辑表单
      */
-    knowledgeBtnConfirm.addEventListener('click', function () {
+    function confirmKnowledgeSelection() {
         tempFormKnowledge = tempKnowledgeSelected.slice();
         renderFormKnowledge();
         knowledgeModal.classList.remove('show');
-    });
+    }
 
-    // ==================== 确认弹窗 ====================
+    /* ============================================================
+     * 九、确认弹窗
+     * ============================================================ */
 
     /**
      * 显示通用确认弹窗
-     * 
+     *
      * @param {string} text - 确认提示文本
      * @param {Function} callback - 确认后的回调函数
      */
@@ -881,19 +816,30 @@
         confirmModal.classList.add('show');
     }
 
-    confirmModalClose.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
-    confirmBtnCancel.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
-    confirmBtnConfirm.addEventListener('click', function () {
+    /**
+     * 隐藏确认弹窗
+     */
+    function hideConfirm() {
+        confirmModal.classList.remove('show');
+        confirmCallback = null;
+    }
+
+    /**
+     * 执行确认回调
+     */
+    function executeConfirm() {
         confirmModal.classList.remove('show');
         if (confirmCallback) confirmCallback();
         confirmCallback = null;
-    });
+    }
 
-    // ==================== 删除能力 ====================
+    /* ============================================================
+     * 十、删除能力
+     * ============================================================ */
 
     /**
      * 删除指定 ID 的能力条目
-     * 
+     *
      * @param {string} id - 要删除的能力 ID
      */
     function deleteAbility(id) {
@@ -904,11 +850,13 @@
         updateBatchBar();
     }
 
-    // ==================== 标签筛选器 ====================
+    /* ============================================================
+     * 十一、标签筛选器
+     * ============================================================ */
 
     /**
      * 初始化标签筛选下拉框
-     * 
+     *
      * 选项：
      *   - "全部"：清除标签筛选
      *   - 各标签名：按标签筛选
@@ -941,35 +889,16 @@
             });
             tagFilterDropdown.appendChild(item);
         });
-
-        tagFilter.addEventListener('click', function (e) {
-            e.stopPropagation();
-            tagFilter.classList.toggle('open');
-        });
     }
 
-    /**
-     * 点击页面其他区域关闭标签筛选下拉框
-     */
-    document.addEventListener('click', function () {
-        tagFilter.classList.remove('open');
-    });
+    /* ============================================================
+     * 十二、数据导入导出
+     * ============================================================ */
 
     /**
-     * 名称搜索输入事件
-     * 实时按名称过滤表格
+     * 导出能力数据为 JSON 文件下载
      */
-    nameFilter.addEventListener('input', function () {
-        filterName = this.value;
-        renderTable();
-    });
-
-    // ==================== 数据导入导出 ====================
-
-    /**
-     * 导出按钮 - 将能力数据导出为 JSON 文件下载
-     */
-    exportBtn.addEventListener('click', function () {
+    function exportData() {
         var jsonStr = JSON.stringify(abilities, null, 2);
         var blob = new Blob([jsonStr], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
@@ -980,23 +909,25 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    });
+    }
 
     /**
-     * 模板导入按钮 - 触发隐藏的文件选择器
+     * 触发文件选择器导入 JSON 数据
      */
-    templateImportBtn.addEventListener('click', function () {
+    function triggerImport() {
         document.getElementById('template-file-input').click();
-    });
+    }
 
     /**
-     * 文件选择器变化事件 - 读取并解析 JSON 文件导入数据
-     * 
+     * 处理导入的 JSON 文件
+     *
+     * @param {Event} e - 文件选择器 change 事件
+     *
      * 校验：
      *   - 文件内容必须是有效的 JSON 数组
      *   - 导入成功后刷新表格
      */
-    document.getElementById('template-file-input').addEventListener('change', function (e) {
+    function handleFileImport(e) {
         var file = e.target.files[0];
         if (!file) return;
         var reader = new FileReader();
@@ -1016,20 +947,142 @@
             }
         };
         reader.readAsText(file);
-        this.value = '';
-    });
+        e.target.value = '';
+    }
 
-    // ==================== 应用初始化入口 ====================
+    /* ============================================================
+     * 十三、事件绑定
+     *    - 集中注册所有 DOM 事件监听
+     * ============================================================ */
+
+    /**
+     * 绑定所有事件监听器
+     */
+    function bindEvents() {
+        // --- 全选复选框 ---
+        checkAll.addEventListener('change', function () {
+            var filtered = getFilteredAbilities();
+            if (checkAll.checked) {
+                filtered.forEach(function (a) { selectedIds.add(a.id); });
+            } else {
+                filtered.forEach(function (a) { selectedIds.delete(a.id); });
+            }
+            renderTable();
+            updateBatchBar();
+        });
+
+        // --- 批量删除 ---
+        batchDeleteBtn.addEventListener('click', function () {
+            if (selectedIds.size === 0) return;
+            showConfirm('确定是否删除选中的内容？', function () {
+                abilities = abilities.filter(function (a) { return !selectedIds.has(a.id); });
+                selectedIds.clear();
+                saveAbilities();
+                renderTable();
+                updateBatchBar();
+            });
+        });
+
+        // --- 导航按钮 ---
+        backBtn.addEventListener('click', function () {
+            window.location.href = 'targetMapTeacher.html';
+        });
+
+        // --- 创建按钮 ---
+        createBtn.addEventListener('click', function () { openCreateModal(null); });
+
+        // --- 创建/编辑弹窗关闭 ---
+        createModalClose.addEventListener('click', function () { createModal.classList.remove('show'); });
+        createBtnCancel.addEventListener('click', function () { createModal.classList.remove('show'); });
+        createBtnConfirm.addEventListener('click', confirmCreateOrEdit);
+
+        // --- 标签选择弹窗 ---
+        addTagBtn.addEventListener('click', openTagModal);
+        tagModalClose.addEventListener('click', function () { tagModal.classList.remove('show'); });
+        tagBtnCancel.addEventListener('click', function () { tagModal.classList.remove('show'); });
+        tagBtnConfirm.addEventListener('click', confirmTagSelection);
+
+        // --- 新建标签 ---
+        newTagBtn.addEventListener('click', function () {
+            newTagForm.style.display = 'flex';
+            newTagName.value = '';
+            newTagName.focus();
+        });
+        newTagCancel.addEventListener('click', function () {
+            newTagForm.style.display = 'none';
+        });
+        newTagConfirm.addEventListener('click', function () {
+            var name = newTagName.value.trim();
+            if (!name) {
+                alert('请输入标签名称');
+                newTagName.focus();
+                return;
+            }
+            if (tags.includes(name)) {
+                alert('标签已存在');
+                newTagName.focus();
+                return;
+            }
+            tags.push(name);
+            saveTags();
+            newTagForm.style.display = 'none';
+            renderTagList();
+        });
+
+        // --- 标签搜索 ---
+        tagSearchInput.addEventListener('input', function () {
+            renderTagList();
+        });
+
+        // --- 知识点选择弹窗 ---
+        addKnowledgeBtn.addEventListener('click', openKnowledgeModal);
+        knowledgeModalClose.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
+        knowledgeBtnCancel.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
+        knowledgeBtnConfirm.addEventListener('click', confirmKnowledgeSelection);
+
+        // --- 确认弹窗 ---
+        confirmModalClose.addEventListener('click', hideConfirm);
+        confirmBtnCancel.addEventListener('click', hideConfirm);
+        confirmBtnConfirm.addEventListener('click', executeConfirm);
+
+        // --- 标签筛选器 ---
+        tagFilter.addEventListener('click', function (e) {
+            e.stopPropagation();
+            tagFilter.classList.toggle('open');
+        });
+        document.addEventListener('click', function () {
+            tagFilter.classList.remove('open');
+        });
+
+        // --- 名称搜索 ---
+        nameFilter.addEventListener('input', function () {
+            filterName = this.value;
+            renderTable();
+        });
+
+        // --- 数据导出 ---
+        exportBtn.addEventListener('click', exportData);
+
+        // --- 数据导入 ---
+        templateImportBtn.addEventListener('click', triggerImport);
+        document.getElementById('template-file-input').addEventListener('change', handleFileImport);
+    }
+
+    /* ============================================================
+     * 十四、初始化入口
+     * ============================================================ */
 
     /**
      * 应用初始化
-     * 加载数据 → 初始化筛选器 → 渲染表格
+     * 加载数据 → 初始化筛选器 → 绑定事件 → 渲染表格
      */
     function init() {
         loadData();
         initTagFilter();
+        bindEvents();
         renderTable();
     }
 
     init();
+
 })();

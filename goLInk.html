@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：探索模式 - 连线页
+  功能：学生端探索模式下的连线操作页面，支持拖拽连线、终止探索、提交结果
+  依赖：Font Awesome 图标库、common.css、goLink.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>探索模式 - 连线</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/common.css">
-    <!-- <link rel="stylesheet" href="css/index.css"> -->
     <link rel="stylesheet" href="css/goLink.css">
-    <!-- <link rel="stylesheet" href="css/exploreList.css"> -->
+    <!-- ==================== 脚本库 ==================== -->
     <script src="js/common.js"></script>
 </head>
 
 <body>
-    <!-- 公共导航 -->
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <!-- 公共导航：问题图谱 / 能力图谱 标签切换 -->
     <div class="tab-nav">
         <div class="tab-item active" data-tab="question">
             <i class="fas fa-question-circle"></i> 问题图谱
@@ -24,7 +31,8 @@
         </div>
     </div>
 
-    <!-- 头部工具栏 -->
+    <!-- ==================== 头部工具栏 ==================== -->
+    <!-- 包含提示文字、终止探索和提交按钮 -->
     <div class="w_head">
         <div class="w_head_txt">提示：请将主线与子级进行关联</div>
         <div class="w_head_btnwrap">
@@ -39,12 +47,13 @@
         </div>
     </div>
 
-    <!-- 主工作区 -->
+    <!-- ==================== 主工作区 ==================== -->
     <div class="main-container" id="main-container">
 
-        <!-- SVG 画布 -->
+        <!-- SVG 画布：绘制层级间连接线 -->
         <svg id="golink-connections-svg" class="connections-svg">
             <defs>
+                <!-- 渐变色定义：用于不同层级之间的连接线颜色过渡 -->
                 <linearGradient id="gradient-level-1-to-level-2" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#409eff" />
                     <stop offset="100%" stop-color="#67c23a" />
@@ -64,8 +73,9 @@
             </defs>
         </svg>
 
+        <!-- 内容区域：五列层级布局，卡片由 JS 动态生成 -->
         <div class="w_cont golink-cont">
-            <!-- 第一层级 -->
+            <!-- 第一层级（A组）：蓝色主题 -->
             <div class="w_cont_problem ABox golink-box" id="golink-level-1">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #409eff;">
@@ -79,7 +89,7 @@
                 </div>
             </div>
 
-            <!-- 第二层级 -->
+            <!-- 第二层级（B组）：绿色主题 -->
             <div class="w_cont_problem BBox golink-box" id="golink-level-2">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #67c23a;">
@@ -93,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- 第三层级 -->
+            <!-- 第三层级（C组）：橙色主题 -->
             <div class="w_cont_problem CBox golink-box" id="golink-level-3">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #e6a23c;">
@@ -107,7 +117,7 @@
                 </div>
             </div>
 
-            <!-- 第四层级 -->
+            <!-- 第四层级（D组）：红色主题 -->
             <div class="w_cont_problem DBox golink-box" id="golink-level-4">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #f56c6c;">
@@ -121,7 +131,7 @@
                 </div>
             </div>
 
-            <!-- 第五层级 -->
+            <!-- 第五层级（E组）：紫色主题 -->
             <div class="w_cont_problem EBox golink-box" id="golink-level-5">
                 <div class="w_contp_head">
                     <div class="w_contp_icon" style="background: #E372DB;">
@@ -137,7 +147,8 @@
         </div>
     </div>
 
-    <!-- 详情弹窗 -->
+    <!-- ==================== 详情弹窗 ==================== -->
+    <!-- 点击卡片时展示卡片的完整描述内容 -->
     <div class="golink-modal" id="golink-detail-modal">
         <div class="golink-modal-overlay" id="golink-modal-overlay"></div>
         <div class="golink-modal-content">

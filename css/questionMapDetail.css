@@ -1,11 +1,14 @@
-/* questionMapDetail 页面特定样式 */
+/* ==================== 基础样式 ==================== */
+/* 全局重置与基础样式 - questionMapDetail题目地图详情页 */
 
+/* 全局盒模型重置：统一使用border-box，消除默认内外边距 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* 页面主体：系统字体栈、浅灰背景、禁止溢出滚动（由JS控制平移缩放） */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7fa;
@@ -13,6 +16,10 @@ body {
     overflow: hidden;
 }
 
+/* ==================== 布局样式 ==================== */
+/* 页面整体布局 - 全屏地图容器与内容区域 */
+
+/* 地图详情主容器：相对定位、全屏尺寸、隐藏溢出 */
 .map-detail-container {
     position: relative;
     width: 100%;
@@ -20,6 +27,7 @@ body {
     overflow: hidden;
 }
 
+/* 返回按钮容器：绝对定位左上角、高层级确保可点击 */
 .back-btn-container {
     position: absolute;
     top: 20px;
@@ -27,6 +35,40 @@ body {
     z-index: 999;
 }
 
+/* 内容容器：绝对定位覆盖全屏、transform-origin为左上角（用于缩放平移）、顶部留出返回按钮空间 */
+.content-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: top left;
+    padding: 80px 20px 20px;
+    z-index: 1;
+}
+
+/* 问题列容器：相对定位、z-index层级管理 */
+.w_cont_problem {
+    position: relative;
+    z-index: 10;
+}
+
+/* 卡片项层级 */
+.w_contp_item {
+    z-index: 20;
+}
+
+/* 卡片列布局：不换行、相对定位 */
+.w_cont {
+    flex-wrap: nowrap;
+    position: relative;
+    z-index: 2;
+}
+
+/* ==================== 组件样式 ==================== */
+/* 返回按钮组件 */
+
+/* 返回按钮：白色背景、蓝色边框、圆角、悬停时填充蓝色 */
 .back-btn {
     display: flex;
     align-items: center;
@@ -43,6 +85,7 @@ body {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* 返回按钮悬停：蓝色填充、白色文字、上浮效果 */
 .back-btn:hover {
     background: #409eff;
     color: #fff;
@@ -50,131 +93,9 @@ body {
     box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
 }
 
- 
+/* 卡片操作按钮组件 */
 
-.content-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform-origin: top left;
-    padding: 80px 20px 20px;
-    z-index: 1;
-}
-
-.w_cont_problem {
-    position: relative;
-    z-index: 10;
-}
-
-.w_contp_item {
-    z-index: 20;
-}
-
-.connector-point {
-    position: absolute;
-    z-index: 30;
-}
-
-#connector-points-group {
-    pointer-events: none;
-}
-
-.svg-connector-point {
-    pointer-events: all;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-}
-
-.svg-connector-outer {
-    transition: fill 0.15s, stroke 0.15s;
-}
-
-.svg-connector-badge-text {
-    pointer-events: none;
-    user-select: none;
-}
-
-.path-line {
-    fill: none;
-    stroke-width: 2.5;
-    stroke-dasharray: none;
-}
-
-.path-line.level-1-to-level-2 {
-    stroke: url(#gradient-level-1-to-level-2);
-}
-
-.path-line.level-2-to-level-3 {
-    stroke: url(#gradient-level-2-to-level-3);
-}
-
-.path-line.level-3-to-level-4 {
-    stroke: url(#gradient-level-3-to-level-4);
-}
-
-.path-line.level-4-to-level-5 {
-    stroke: url(#gradient-level-4-to-level-5);
-}
-
-.w_contp_inum {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: #409eff;
-    color: #fff;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.level-2 .w_contp_inum {
-    background: #67c23a;
-}
-
-.level-3 .w_contp_inum {
-    background: #e6a23c;
-}
-
-.level-4 .w_contp_inum {
-    background: #f56c6c;
-}
-
-.level-5 .w_contp_inum {
-    background: #E372DB;
-}
-
-.w_contp_btn {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #409eff;
-    cursor: pointer;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.w_contp_btn:hover {
-    text-decoration: none;
-}
-
-.w_cont {
-    flex-wrap: nowrap;
-    position: relative;
-    z-index: 2;
-}
-
+/* 操作按钮行：弹性布局、右对齐、上边距 */
 .block-actions {
     display: flex;
     gap: 8px;
@@ -183,6 +104,7 @@ body {
     position: relative;
 }
 
+/* 操作按钮：圆形、白色背景、灰色边框、悬停时蓝色填充 */
 .action-btn {
     display: flex;
     align-items: center;
@@ -203,15 +125,20 @@ body {
     color: #fff;
 }
 
+/* 删除按钮悬停：红色填充 */
 .action-btn.delete-btn:hover {
     background: #f56c6c;
     border-color: #f56c6c;
 }
 
+/* 操作按钮内SVG图标悬停时变为白色 */
 .action-btn:hover svg path {
     fill: #fff !important;
 }
 
+/* 缩放控制组件 */
+
+/* 缩放控制容器：绝对定位左下角 */
 .zoom-control-container {
     position: absolute;
     bottom: 20px;
@@ -219,6 +146,7 @@ body {
     z-index: 999;
 }
 
+/* 缩放控制条：白色背景、圆角、内边距、阴影 */
 .zoom-control {
     display: flex;
     align-items: center;
@@ -229,6 +157,7 @@ body {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* 缩放按钮：36px正方形、浅灰背景、悬停时蓝色填充 */
 .zoom-btn {
     width: 36px;
     height: 36px;
@@ -250,6 +179,7 @@ body {
     border-color: #409eff;
 }
 
+/* 缩放比例显示：最小宽度60px、居中文字 */
 .zoom-level {
     min-width: 60px;
     text-align: center;
@@ -258,6 +188,125 @@ body {
     color: #303133;
 }
 
+/* 卡片序号徽标组件 */
+
+/* 序号徽标：绝对定位右上角、圆形、蓝色背景 */
+.w_contp_inum {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #409eff;
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 不同层级的序号徽标颜色区分 */
+.level-2 .w_contp_inum {
+    background: #67c23a;
+}
+
+.level-3 .w_contp_inum {
+    background: #e6a23c;
+}
+
+.level-4 .w_contp_inum {
+    background: #f56c6c;
+}
+
+.level-5 .w_contp_inum {
+    background: #E372DB;
+}
+
+/* 卡片操作按钮组件 */
+
+/* 操作按钮：绝对定位右下角、半透明白色背景 */
+.w_contp_btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #409eff;
+    cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.w_contp_btn:hover {
+    text-decoration: none;
+}
+
+/* SVG连接点组件 */
+
+/* 连接点：绝对定位、高层级 */
+.connector-point {
+    position: absolute;
+    z-index: 30;
+}
+
+/* 连接点容器组：禁止鼠标事件穿透 */
+#connector-points-group {
+    pointer-events: none;
+}
+
+/* 单个连接点：允许鼠标事件、投影增强立体感 */
+.svg-connector-point {
+    pointer-events: all;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+/* 连接点外圈：填充和描边颜色过渡动画 */
+.svg-connector-outer {
+    transition: fill 0.15s, stroke 0.15s;
+}
+
+/* 连接点徽标文字：禁止鼠标事件和文本选择 */
+.svg-connector-badge-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 连接路径线组件 */
+
+/* 路径线基础样式：无填充、2.5px描边宽度、实线 */
+.path-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+}
+
+/* 各层级之间的渐变路径线颜色 */
+.path-line.level-1-to-level-2 {
+    stroke: url(#gradient-level-1-to-level-2);
+}
+
+.path-line.level-2-to-level-3 {
+    stroke: url(#gradient-level-2-to-level-3);
+}
+
+.path-line.level-3-to-level-4 {
+    stroke: url(#gradient-level-3-to-level-4);
+}
+
+.path-line.level-4-to-level-5 {
+    stroke: url(#gradient-level-4-to-level-5);
+}
+
+/* ==================== 页面特定样式 ==================== */
+/* 弹窗组件 - 题目编辑弹窗 */
+
+/* 弹窗内容：白色背景、圆角、阴影、下滑动画 */
 .modal-content {
     background: #fff;
     border-radius: 8px;
@@ -268,6 +317,7 @@ body {
     animation: modalSlideIn 0.3s;
 }
 
+/* 弹窗下滑动画：从上方50px滑入并淡入 */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -279,6 +329,9 @@ body {
     }
 }
 
+/* 富文本编辑器组件 */
+
+/* 编辑器容器：最小高度120px、白色背景、边框 */
 .form-editor {
     min-height: 120px;
     background: #fff;
@@ -286,24 +339,31 @@ body {
     border: 1px solid #e4e7ed;
 }
 
+/* 编辑器工具栏：去除边框、底部边框分隔 */
 .form-editor .ql-toolbar {
     border: none;
     border-bottom: 1px solid #e4e7ed;
     border-radius: 4px 4px 0 0;
 }
 
+/* 编辑器内容区：去除边框、14px字号 */
 .form-editor .ql-container {
     border: none;
     font-size: 14px;
     min-height: 80px;
 }
 
+/* 编辑器编辑区：最小高度80px、行高1.6 */
 .form-editor .ql-editor {
     min-height: 80px;
     line-height: 1.6;
 }
 
+/* ==================== 响应式样式 ==================== */
+/* 平板适配（≤768px） */
+
 @media (max-width: 768px) {
+    /* 返回按钮位置和尺寸调整 */
     .back-btn-container {
         top: 10px;
         left: 10px;
@@ -314,58 +374,72 @@ body {
         font-size: 14px;
     }
 
+    /* 内容容器内边距缩小 */
     .content-container {
         padding: 70px 10px 10px;
     }
 
+    /* 缩放控制位置调整 */
     .zoom-control-container {
         bottom: 10px;
         left: 10px;
     }
 
+    /* 弹窗宽度调整 */
     .modal-content {
         max-width: 90%;
     }
 }
 
+/* 手机适配（≤576px） */
+
 @media (max-width: 576px) {
+    /* 卡片图标缩小 */
     .w_contp_icon {
         width: 28px;
         height: 28px;
         font-size: 14px;
     }
 
+    /* 卡片标题文字缩小 */
     .w_contp_txt {
         font-size: 14px;
     }
 
+    /* 区块标题缩小 */
     .block-title {
         font-size: 14px;
     }
 
+    /* 区块内容文字缩小 */
     .block-content-text {
         font-size: 12px;
     }
 
+    /* 操作按钮缩小 */
     .action-btn {
         width: 24px;
         height: 24px;
     }
 
+    /* 弹窗全宽、内边距缩小 */
     .modal-content {
         width: 95%;
         padding: 16px;
         margin: 10px;
     }
 
+    /* 弹窗标题缩小 */
     .modal-header h3 {
         font-size: 18px;
     }
 
+    /* 弹窗内容最大高度限制 */
     .modal-body {
         max-height: 50vh;
     }
 
+    /* 通用按钮缩小 */
     .btn {
         padding: 8px 16px;
         font-size: 13px;

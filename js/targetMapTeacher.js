@@ -1,18 +1,33 @@
 /**
  * targetMapTeacher.js - 能力图谱教师视图核心脚本
- * 
- * 功能说明：
+ *
+ * 功能概述：
  *   1. 能力卡片列表渲染（支持拖拽排序、删除、显隐设置）
  *   2. ECharts 柱状图展示各能力关联的知识点数量
  *   3. SVG 知识点关系图谱（力导向布局、节点拖拽、缩放平移）
  *   4. 班级筛选器（按班级过滤能力卡片）
  *   5. 知识点关联编辑（弹窗选择知识点树）
- * 
+ *
+ * 模块结构：
+ *   一、常量与状态：存储键、核心状态、SVG状态、DOM引用
+ *   二、数据加载与持久化
+ *   三、数据筛选
+ *   四、班级筛选器
+ *   五、ECharts图表
+ *   六、能力卡片渲染
+ *   七、卡片拖拽排序
+ *   八、SVG知识点图谱渲染
+ *   九、SVG画布平移与缩放
+ *   十、显隐设置弹窗
+ *   十一、知识点关联编辑弹窗
+ *   十二、确认弹窗
+ *   十三、事件绑定与初始化
+ *
  * 数据存储键：
  *   - abilityMapData：能力条目数据
  *   - abilityMapClasses：班级列表
  *   - knowledgeTreeData：知识点树形数据
- * 
+ *
  * 依赖：
  *   - common.js（StorageManager）
  *   - ECharts（图表库）
@@ -21,7 +36,11 @@
 (function () {
     'use strict';
 
-    // ==================== 存储键常量 ====================
+    /* ============================================================
+     * 一、常量与状态
+     * ============================================================ */
+
+    // --- 1.1 存储键常量 ---
 
     /** @type {string} 能力数据在 localStorage 中的键名 */
     var STORAGE_KEY = 'abilityMapData';
@@ -32,7 +51,7 @@
     /** @type {string} 知识点树数据在 localStorage 中的键名 */
     var KNOWLEDGE_KEY = 'knowledgeTreeData';
 
-    // ==================== 核心数据状态 ====================
+    // --- 1.2 核心数据状态 ---
 
     /** @type {Array} 能力条目列表 */
     var abilities = [];
@@ -52,7 +71,7 @@
     /** @type {number} 拖拽排序起始 Y 坐标 */
     var dragStartY = 0;
 
-    // ==================== SVG 图谱状态 ====================
+    // --- 1.3 SVG 图谱状态 ---
 
     /** @type {number} SVG 画布缩放比例（1 = 100%） */
     var svgScale = 1;
@@ -99,7 +118,7 @@
     /** @type {Set<string>} 已折叠的父节点 ID 集合 */
     var collapsedNodes = new Set();
 
-    // ==================== DOM 元素引用 ====================
+    // --- 1.4 DOM 元素引用 ---
 
     var classSelector = document.getElementById('class-selector');
     var selectorDisplay = document.getElementById('selector-display');
@@ -145,11 +164,13 @@
     /** @type {Function|null} 确认弹窗的回调函数 */
     var confirmCallback = null;
 
-    // ==================== 数据加载与持久化 ====================
+    /* ============================================================
+     * 二、数据加载与持久化
+     * ============================================================ */
 
     /**
      * 从 localStorage 加载能力数据
-     * 
+     *
      * 如果 localStorage 中没有数据，则使用默认的 3 条示例数据：
      *   - 能力1：关联 2 个知识点，无标签
      *   - 能力2：关联 4 个知识点，无标签
@@ -178,7 +199,7 @@
 
     /**
      * 加载班级列表
-     * 
+     *
      * @returns {Array<string>} 班级名称数组，默认 6 个班级
      */
     function loadClasses() {
@@ -191,7 +212,7 @@
 
     /**
      * 加载知识点树数据
-     * 
+     *
      * @returns {Array} 知识点树形数据，默认 4 个父级知识点
      */
     function loadKnowledgeTree() {
@@ -207,15 +228,37 @@
         ];
     }
 
-    // ==================== 班级筛选器 ====================
+    /* ============================================================
+     * 三、数据筛选
+     * ============================================================ */
+
+    /**
+     * 根据当前班级筛选能力列表
+     *
+     * @returns {Array} 过滤后的能力条目数组
+     *
+     * 筛选逻辑：
+     *   - currentClass === 'all'：返回全部能力
+     *   - 否则：返回 classes 包含 'all' 或当前班级的能力
+     */
+    function getFilteredAbilities() {
+        if (currentClass === 'all') return abilities;
+        return abilities.filter(function (a) {
+            return a.classes.includes('all') || a.classes.includes(currentClass);
+        });
+    }
+
+    /* ============================================================
+     * 四、班级筛选器
+     * ============================================================ */
 
     /**
      * 初始化班级选择下拉框
-     * 
+     *
      * 选项：
      *   - "全部班级"：显示所有能力
      *   - 各班级名：仅显示该班级可见的能力
-     * 
+     *
      * 交互：
      *   - 点击选择器展开/收起下拉列表
      *   - 选择后自动刷新所有视图
@@ -256,7 +299,9 @@
         });
     }
 
-    // ==================== ECharts 图表 ====================
+    /* ============================================================
+     * 五、ECharts 图表
+     * ============================================================ */
 
     /**
      * 初始化 ECharts 柱状图实例
@@ -271,7 +316,7 @@
 
     /**
      * 更新柱状图数据
-     * 
+     *
      * 图表配置：
      *   - X 轴：能力名称（超过 8 个时标签旋转 30°）
      *   - Y 轴：关联知识点数量
@@ -335,25 +380,9 @@
         chartInstance.setOption(option);
     }
 
-    // ==================== 数据筛选 ====================
-
-    /**
-     * 根据当前班级筛选能力列表
-     * 
-     * @returns {Array} 过滤后的能力条目数组
-     * 
-     * 筛选逻辑：
-     *   - currentClass === 'all'：返回全部能力
-     *   - 否则：返回 classes 包含 'all' 或当前班级的能力
-     */
-    function getFilteredAbilities() {
-        if (currentClass === 'all') return abilities;
-        return abilities.filter(function (a) {
-            return a.classes.includes('all') || a.classes.includes(currentClass);
-        });
-    }
-
-    // ==================== 能力卡片渲染 ====================
+    /* ============================================================
+     * 六、能力卡片渲染
+     * ============================================================ */
 
     /**
      * 渲染能力卡片列表
@@ -372,10 +401,10 @@
 
     /**
      * 创建单个能力卡片 DOM 元素
-     * 
+     *
      * @param {Object} ability - 能力数据对象
      * @returns {HTMLElement} 卡片 DOM 元素
-     * 
+     *
      * 卡片结构：
      *   - 拖拽手柄（排序用）
      *   - 删除按钮
@@ -384,7 +413,7 @@
      *   - 标签列表
      *   - 描述文本
      *   - 显隐设置按钮
-     * 
+     *
      * 交互：
      *   - 点击卡片 → 选中并展示知识点图谱
      *   - 点击删除 → 确认后删除
@@ -446,9 +475,9 @@
 
     /**
      * 选中指定能力
-     * 
+     *
      * @param {string} id - 能力 ID
-     * 
+     *
      * 行为：
      *   - 重置 SVG 缩放和平移状态
      *   - 清除折叠状态
@@ -469,7 +498,7 @@
 
     /**
      * 删除指定能力
-     * 
+     *
      * @param {string} id - 要删除的能力 ID
      */
     function removeAbility(id) {
@@ -481,15 +510,17 @@
         renderAll();
     }
 
-    // ==================== 卡片拖拽排序 ====================
+    /* ============================================================
+     * 七、卡片拖拽排序
+     * ============================================================ */
 
     /**
      * 开始拖拽排序
-     * 
+     *
      * @param {MouseEvent} e - 鼠标事件
      * @param {HTMLElement} item - 被拖拽的卡片元素
      * @param {string} id - 能力 ID
-     * 
+     *
      * 排序逻辑：
      *   - 监听 mousemove，根据鼠标位置动态调整卡片顺序
      *   - 当鼠标越过相邻卡片中线时触发位置交换
@@ -535,15 +566,17 @@
         document.addEventListener('mouseup', onUp);
     }
 
-    // ==================== SVG 知识点图谱渲染 ====================
+    /* ============================================================
+     * 八、SVG 知识点图谱渲染
+     * ============================================================ */
 
     /**
      * 渲染知识点关系图谱
-     * 
+     *
      * 渲染条件：
      *   - 必须选中一个能力
      *   - 该能力必须有关联的知识点
-     * 
+     *
      * 布局算法：
      *   1. 收集所有匹配的知识点（父级 + 独立子级）
      *   2. 父级节点排列在第一行（y=60）
@@ -666,7 +699,7 @@
 
     /**
      * 在知识点树中查找指定 ID 集合的节点
-     * 
+     *
      * @param {Array} tree - 知识点树
      * @param {Array<string>} ids - 要查找的 ID 列表
      * @returns {Array} 匹配的节点数组
@@ -688,7 +721,7 @@
 
     /**
      * 获取可见的节点和连线（排除折叠的节点）
-     * 
+     *
      * @returns {Object} { visibleNodes, visibleLinks, hiddenIds }
      */
     function getVisibleNodesAndLinks() {
@@ -709,7 +742,7 @@
 
     /**
      * 递归收集所有后代节点 ID
-     * 
+     *
      * @param {string} parentId - 父节点 ID
      * @param {Set<string>} hiddenIds - 隐藏节点 ID 集合
      */
@@ -724,13 +757,13 @@
 
     /**
      * 绘制 SVG 图谱
-     * 
+     *
      * 绘制内容：
      *   - defs：渐变和箭头标记定义
      *   - 连线组：贝塞尔曲线连线（带箭头）
      *   - 节点组：圆形节点 + 文字标签
      *   - 折叠/展开按钮（父节点下方）
-     * 
+     *
      * 交互：
      *   - 节点拖拽（长按 200ms 激活）
      *   - 折叠按钮点击
@@ -1008,11 +1041,13 @@
         });
     }
 
-    // ==================== SVG 画布平移与缩放 ====================
+    /* ============================================================
+     * 九、SVG 画布平移与缩放
+     * ============================================================ */
 
     /**
      * 初始化 SVG 画布的平移和缩放交互
-     * 
+     *
      * 缩放：鼠标滚轮，以鼠标位置为中心缩放（范围 20%~300%）
      * 平移：在空白区域按住鼠标拖拽
      */
@@ -1083,17 +1118,19 @@
         display.textContent = Math.round(svgScale * 100) + '%';
     }
 
-    // ==================== 显隐设置弹窗 ====================
+    /* ============================================================
+     * 十、显隐设置弹窗
+     * ============================================================ */
 
     /**
      * 显示班级可见性设置弹窗
-     * 
+     *
      * @param {string} abilityId - 能力 ID
-     * 
+     *
      * 弹窗内容：
      *   - "全部班级"复选框（选中后其他班级自动禁用）
      *   - 各班级复选框
-     * 
+     *
      * 逻辑：
      *   - 选中"全部班级" → classes = ['all']
      *   - 取消"全部班级" → classes = 选中的班级列表
@@ -1135,35 +1172,13 @@
         visibilityModal.classList.add('show');
     }
 
-    visibilityClose.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
-    visibilityCancel.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
-
-    /**
-     * 显隐设置确认按钮
-     * 保存班级可见性配置
-     */
-    visibilityConfirm.addEventListener('click', function () {
-        var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
-        if (!ability) return;
-
-        var allCb = visibilityCheckboxes.querySelector('#visibility-all-classes');
-        if (allCb.checked) {
-            ability.classes = ['all'];
-        } else {
-            ability.classes = [];
-            visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input:checked').forEach(function (cb) {
-                ability.classes.push(cb.getAttribute('data-class'));
-            });
-        }
-        saveData();
-        visibilityModal.classList.remove('show');
-    });
-
-    // ==================== 知识点关联编辑弹窗 ====================
+    /* ============================================================
+     * 十一、知识点关联编辑弹窗
+     * ============================================================ */
 
     /**
      * 显示知识点选择弹窗
-     * 
+     *
      * @param {Array<string>} selectedIds - 当前已选中的知识点 ID 列表
      */
     function showKnowledgeModal(selectedIds) {
@@ -1176,7 +1191,7 @@
 
     /**
      * 渲染知识点树
-     * 
+     *
      * @param {Array} tree - 知识点树形数据
      */
     function renderKnowledgeTree(tree) {
@@ -1198,7 +1213,7 @@
 
     /**
      * 递归创建知识点树节点 DOM
-     * 
+     *
      * @param {Object} node - 知识点节点数据
      * @param {number} level - 层级深度
      * @returns {HTMLElement} 树节点 DOM 元素
@@ -1291,7 +1306,7 @@
 
     /**
      * 切换知识点选中状态
-     * 
+     *
      * @param {string} id - 知识点 ID
      */
     function toggleKnowledgeSelection(id) {
@@ -1329,7 +1344,7 @@
 
     /**
      * 在知识点树中递归查找名称
-     * 
+     *
      * @param {Array} tree - 知识点树
      * @param {string} id - 知识点 ID
      * @returns {string|null} 知识点名称
@@ -1346,12 +1361,72 @@
         return null;
     }
 
+    /* ============================================================
+     * 十二、确认弹窗
+     * ============================================================ */
+
+    /**
+     * 显示通用确认弹窗
+     *
+     * @param {string} text - 确认提示文本
+     * @param {Function} callback - 确认后的回调函数
+     */
+    function showConfirm(text, callback) {
+        confirmText.textContent = text;
+        confirmCallback = callback;
+        confirmModal.classList.add('show');
+    }
+
+    /* ============================================================
+     * 十三、事件绑定与初始化
+     * ============================================================ */
+
+    /**
+     * 全局刷新所有视图
+     * 更新图表 → 渲染卡片 → 渲染图谱
+     * 如果没有选中能力且有可用能力，自动选中第一个
+     */
+    function renderAll() {
+        updateChart();
+        renderAbilities();
+        renderKnowledgeGraph();
+        if (!selectedAbilityId && abilities.length > 0) {
+            selectAbility(abilities[0].id);
+        }
+    }
+
+    // --- 显隐设置弹窗事件 ---
+
+    visibilityClose.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
+    visibilityCancel.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
+
+    /**
+     * 显隐设置确认按钮 - 保存班级可见性配置
+     */
+    visibilityConfirm.addEventListener('click', function () {
+        var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
+        if (!ability) return;
+
+        var allCb = visibilityCheckboxes.querySelector('#visibility-all-classes');
+        if (allCb.checked) {
+            ability.classes = ['all'];
+        } else {
+            ability.classes = [];
+            visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input:checked').forEach(function (cb) {
+                ability.classes.push(cb.getAttribute('data-class'));
+            });
+        }
+        saveData();
+        visibilityModal.classList.remove('show');
+    });
+
+    // --- 知识点关联编辑弹窗事件 ---
+
     knowledgeModalClose.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
     knowledgeCancel.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
 
     /**
-     * 知识点弹窗确认按钮
-     * 保存选中的知识点到当前编辑的能力
+     * 知识点弹窗确认按钮 - 保存选中的知识点到当前编辑的能力
      */
     knowledgeConfirm.addEventListener('click', function () {
         if (currentEditingAbilityId) {
@@ -1376,19 +1451,7 @@
         showKnowledgeModal(ability ? ability.knowledgeIds : []);
     });
 
-    // ==================== 确认弹窗 ====================
-
-    /**
-     * 显示通用确认弹窗
-     * 
-     * @param {string} text - 确认提示文本
-     * @param {Function} callback - 确认后的回调函数
-     */
-    function showConfirm(text, callback) {
-        confirmText.textContent = text;
-        confirmCallback = callback;
-        confirmModal.classList.add('show');
-    }
+    // --- 确认弹窗事件 ---
 
     confirmClose.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
     confirmCancel.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
@@ -1398,7 +1461,7 @@
         confirmCallback = null;
     });
 
-    // ==================== 导航按钮 ====================
+    // --- 导航按钮 ---
 
     /**
      * 添加能力按钮 - 跳转到目标管理页面
@@ -1407,23 +1470,7 @@
         window.location.href = 'targetManagement.html';
     });
 
-    // ==================== 全局刷新 ====================
-
-    /**
-     * 刷新所有视图
-     * 更新图表 → 渲染卡片 → 渲染图谱
-     * 如果没有选中能力且有可用能力，自动选中第一个
-     */
-    function renderAll() {
-        updateChart();
-        renderAbilities();
-        renderKnowledgeGraph();
-        if (!selectedAbilityId && abilities.length > 0) {
-            selectAbility(abilities[0].id);
-        }
-    }
-
-    // ==================== 应用初始化入口 ====================
+    // --- 应用初始化入口 ---
 
     /**
      * 应用初始化

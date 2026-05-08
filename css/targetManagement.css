@@ -1,9 +1,14 @@
+/* ==================== 基础样式 ==================== */
+/* 题目管理页面基础样式 */
+
+/* 全局盒模型重置 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* 页面主体：系统字体栈、浅灰背景 */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     background: #f5f7fa;
@@ -11,12 +16,30 @@ body {
     min-height: 100vh;
 }
 
+/* ==================== 布局样式 ==================== */
+/* 页面整体布局 */
+
+/* 管理页面容器：最小高度全屏、纵向弹性布局 */
 .management-page {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
+/* 表格容器：弹性填充、内边距、白色背景、圆角、水平滚动 */
+.management-table-wrap {
+    flex: 1;
+    padding: 0 28px;
+    background: #fff;
+    margin: 16px 28px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+/* ==================== 组件样式 ==================== */
+/* 导航栏组件 */
+
+/* 导航栏：弹性布局两端对齐、白色背景、底部边框、粘性定位 */
 .management-nav {
     display: flex;
     justify-content: space-between;
@@ -29,18 +52,28 @@ body {
     z-index: 100;
 }
 
+/* 导航栏左侧区域 */
 .nav-left {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
+/* 导航栏右侧区域 */
 .nav-right {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
+/* 导航栏标题 */
+.nav-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #181e33;
+}
+
+/* 导航按钮基础样式 */
 .nav-btn {
     display: flex;
     align-items: center;
@@ -53,6 +86,7 @@ body {
     transition: all 0.3s;
 }
 
+/* 返回按钮：白色背景、蓝色边框 */
 .back-btn {
     background: #fff;
     color: #3a8bff;
@@ -63,6 +97,7 @@ body {
     background: #f0f6ff;
 }
 
+/* 大纲按钮：白色背景、灰色边框 */
 .outline-btn {
     background: #fff;
     color: #606266;
@@ -74,12 +109,9 @@ body {
     color: #3a8bff;
 }
 
-.nav-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #181e33;
-}
+/* 工具栏组件 */
 
+/* 工具栏：弹性布局两端对齐、白色背景、底部边框 */
 .management-toolbar {
     display: flex;
     justify-content: space-between;
@@ -89,24 +121,28 @@ body {
     border-bottom: 1px solid #e4e7ed;
 }
 
+/* 筛选器区域 */
 .toolbar-filters {
     display: flex;
     gap: 16px;
     align-items: center;
 }
 
+/* 筛选组 */
 .filter-group {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
+/* 筛选标签 */
 .filter-label {
     font-size: 14px;
     color: #606266;
     white-space: nowrap;
 }
 
+/* 筛选输入框 */
 .filter-input {
     width: 200px;
     height: 34px;
@@ -123,6 +159,7 @@ body {
     border-color: #3a8bff;
 }
 
+/* 筛选下拉选择器 */
 .filter-selector {
     position: relative;
     height: 34px;
@@ -138,6 +175,7 @@ body {
     min-width: 120px;
 }
 
+/* 下拉箭头图标 */
 .filter-selector i {
     position: absolute;
     right: 10px;
@@ -145,6 +183,7 @@ body {
     color: #c0c4cc;
 }
 
+/* 下拉菜单 */
 .filter-dropdown {
     position: absolute;
     top: 100%;
@@ -161,10 +200,12 @@ body {
     overflow-y: auto;
 }
 
+/* 下拉菜单展开状态 */
 .filter-selector.open .filter-dropdown {
     display: block;
 }
 
+/* 下拉菜单项 */
 .filter-dropdown-item {
     padding: 8px 12px;
     font-size: 14px;
@@ -177,11 +218,15 @@ body {
     background: #f0f6ff;
 }
 
+/* 下拉菜单项选中状态 */
 .filter-dropdown-item.active {
     color: #3a8bff;
     font-weight: 600;
 }
 
+/* 按钮组件 */
+
+/* 通用按钮基础样式 */
 .btn {
     padding: 8px 20px;
     border: none;
@@ -194,6 +239,7 @@ body {
     gap: 6px;
 }
 
+/* 主要按钮：蓝色背景 */
 .btn-primary {
     background: #3a8bff;
     color: #fff;
@@ -203,6 +249,7 @@ body {
     background: #66b1ff;
 }
 
+/* 取消按钮：白色背景、蓝色边框 */
 .btn-cancel {
     background: #fff;
     color: #3a8bff;
@@ -213,6 +260,7 @@ body {
     background: #f0f6ff;
 }
 
+/* 确认按钮：渐变蓝紫背景、阴影 */
 .btn-confirm {
     background: linear-gradient(322deg, #5a33ff 0%, #6cc7ff 100%);
     color: #fff;
@@ -223,6 +271,7 @@ body {
     opacity: 0.9;
 }
 
+/* 危险按钮：红色背景 */
 .btn-danger {
     background: #f56c6c;
     color: #fff;
@@ -232,6 +281,7 @@ body {
     background: #f78989;
 }
 
+/* 文字按钮：无背景、蓝色文字 */
 .btn-text {
     background: none;
     border: none;
@@ -248,6 +298,7 @@ body {
     opacity: 0.8;
 }
 
+/* 小按钮 */
 .btn-sm {
     padding: 4px 12px;
     border: none;
@@ -257,6 +308,7 @@ body {
     transition: all 0.3s;
 }
 
+/* 添加按钮：虚线边框 */
 .btn-add {
     background: none;
     border: 1px dashed #3a8bff;
@@ -275,20 +327,15 @@ body {
     background: #f0f6ff;
 }
 
-.management-table-wrap {
-    flex: 1;
-    padding: 0 28px;
-    background: #fff;
-    margin: 16px 28px;
-    border-radius: 8px;
-    overflow-x: auto;
-}
+/* 表格组件 */
 
+/* 表格基础样式 */
 .management-table {
     width: 100%;
     border-collapse: collapse;
 }
 
+/* 表头：浅灰背景、加粗、底部边框 */
 .management-table th {
     padding: 12px 16px;
     text-align: left;
@@ -300,6 +347,7 @@ body {
     white-space: nowrap;
 }
 
+/* 表格单元格 */
 .management-table td {
     padding: 12px 16px;
     font-size: 14px;
@@ -308,10 +356,12 @@ body {
     vertical-align: middle;
 }
 
+/* 表格行悬停高亮 */
 .management-table tr:hover td {
     background: #f5f7fa;
 }
 
+/* 表格列宽定义 */
 .th-check {
     width: 40px;
 }
@@ -336,6 +386,7 @@ body {
     width: 120px;
 }
 
+/* 表格标签：内联块、圆角、小字号 */
 .table-tag {
     display: inline-block;
     padding: 2px 8px;
@@ -345,6 +396,7 @@ body {
     border: 1px solid;
 }
 
+/* 表格描述：最大宽度300px、超出省略号 */
 .table-desc {
     max-width: 300px;
     overflow: hidden;
@@ -352,6 +404,7 @@ body {
     white-space: nowrap;
 }
 
+/* 表格操作按钮 */
 .action-btn-td {
     background: none;
     border: none;
@@ -365,10 +418,14 @@ body {
     opacity: 0.8;
 }
 
+/* 表格删除按钮：红色 */
 .action-btn-td.delete-btn {
     color: #f56c6c;
 }
 
+/* 批量操作栏组件 */
+
+/* 批量操作栏：固定定位底部、白色背景、默认隐藏 */
 .batch-bar {
     display: none;
     position: fixed;
@@ -382,11 +439,16 @@ body {
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* 批量操作栏显示状态 */
 .batch-bar.show {
     display: flex;
     align-items: center;
 }
 
+/* ==================== 页面特定样式 ==================== */
+/* 弹窗组件 */
+
+/* 弹窗遮罩层：固定定位覆盖全屏、深色半透明背景、默认隐藏 */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -400,10 +462,12 @@ body {
     justify-content: center;
 }
 
+/* 弹窗显示状态 */
 .modal-overlay.show {
     display: flex;
 }
 
+/* 弹窗内容：白色背景、圆角、下滑动画 */
 .modal-content {
     background: #fff;
     border-radius: 8px;
@@ -411,6 +475,7 @@ body {
     animation: modalSlideIn 0.3s;
 }
 
+/* 弹窗下滑动画 */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -422,6 +487,7 @@ body {
     }
 }
 
+/* 弹窗头部：弹性布局两端对齐、底部边框 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -430,12 +496,14 @@ body {
     border-bottom: 1px solid #f2f2f2;
 }
 
+/* 弹窗标题 */
 .modal-header h3 {
     font-size: 16px;
     color: #181e33;
     font-weight: 600;
 }
 
+/* 弹窗关闭按钮 */
 .modal-close {
     background: none;
     border: none;
@@ -450,10 +518,12 @@ body {
     color: #3a8bff;
 }
 
+/* 弹窗内容区 */
 .modal-body {
     padding: 24px;
 }
 
+/* 弹窗底部按钮区 */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -462,15 +532,33 @@ body {
     border-top: 1px solid #f2f2f2;
 }
 
+/* 创建题目弹窗：固定宽度600px */
 .create-modal {
     width: 600px;
     min-width: 600px;
 }
 
+/* 确认弹窗：固定宽度440px */
+.confirm-modal {
+    width: 440px;
+    min-width: 440px;
+}
+
+/* 确认弹窗文字 */
+.confirm-text {
+    font-size: 14px;
+    color: #474c59;
+    line-height: 1.8;
+}
+
+/* 表单组件 */
+
+/* 表单组 */
 .form-group {
     margin-bottom: 20px;
 }
 
+/* 表单标签 */
 .form-group label {
     display: block;
     font-size: 14px;
@@ -479,10 +567,12 @@ body {
     margin-bottom: 8px;
 }
 
+/* 必填标记：红色星号 */
 .required {
     color: #f56c6c;
 }
 
+/* 表单输入框 */
 .form-input {
     width: 100%;
     height: 36px;
@@ -499,6 +589,7 @@ body {
     border-color: #3a8bff;
 }
 
+/* 表单文本域 */
 .form-textarea {
     width: 100%;
     padding: 8px 12px;
@@ -516,6 +607,7 @@ body {
     border-color: #3a8bff;
 }
 
+/* 表单标签容器 */
 .form-tags {
     display: flex;
     flex-wrap: wrap;
@@ -523,6 +615,7 @@ body {
     min-height: 32px;
 }
 
+/* 表单标签项 */
 .form-tag-item {
     display: inline-flex;
     align-items: center;
@@ -533,6 +626,7 @@ body {
     color: #fff;
 }
 
+/* 标签移除按钮 */
 .form-tag-item .tag-remove {
     cursor: pointer;
     font-size: 14px;
@@ -543,16 +637,21 @@ body {
     opacity: 1;
 }
 
+/* 标签管理弹窗组件 */
+
+/* 标签弹窗：固定宽度840px */
 .tag-modal {
     width: 840px;
     min-width: 840px;
 }
 
+/* 标签弹窗内容：左右分栏布局 */
 .tag-modal-content {
     display: flex;
     height: 470px;
 }
 
+/* 标签弹窗左侧：弹性填充、右侧边框分隔 */
 .tag-modal-left {
     flex: 1;
     border-right: 1px solid #f2f2f2;
@@ -560,6 +659,7 @@ body {
     flex-direction: column;
 }
 
+/* 标签弹窗左侧头部 */
 .tag-modal-left-header {
     padding: 14px 18px;
     display: flex;
@@ -568,6 +668,7 @@ body {
     border-bottom: 1px solid #f2f2f2;
 }
 
+/* 标签搜索框 */
 .tag-search {
     flex: 1;
 }
@@ -586,6 +687,7 @@ body {
     border-color: #3a8bff;
 }
 
+/* 新建标签表单 */
 .tag-new-form {
     padding: 8px 14px;
     display: flex;
@@ -604,12 +706,14 @@ body {
     gap: 4px;
 }
 
+/* 标签列表 */
 .tag-list {
     flex: 1;
     overflow-y: auto;
     list-style: none;
 }
 
+/* 标签列表项 */
 .tag-list li {
     position: relative;
     padding: 12px 14px;
@@ -624,12 +728,14 @@ body {
     background: #f0f6ff;
 }
 
+/* 标签名称 */
 .tag-list li .tag-name {
     flex: 1;
     font-size: 14px;
     color: #181e33;
 }
 
+/* 标签勾选框 */
 .tag-list li .tag-check {
     width: 16px;
     height: 16px;
@@ -642,6 +748,7 @@ body {
     transition: all 0.3s;
 }
 
+/* 标签勾选状态 */
 .tag-list li .tag-check.checked {
     background: #3a8bff;
     border-color: #3a8bff;
@@ -653,6 +760,7 @@ body {
     font-size: 12px;
 }
 
+/* 标签操作按钮（悬停显示） */
 .tag-list li .tag-actions {
     display: none;
     gap: 8px;
@@ -673,12 +781,14 @@ body {
     color: #f56c6c;
 }
 
+/* 标签弹窗右侧：已选标签区域 */
 .tag-modal-right {
     width: 259px;
     display: flex;
     flex-direction: column;
 }
 
+/* 已选标签头部 */
 .tag-selected-header {
     padding: 0 24px;
     height: 50px;
@@ -688,12 +798,14 @@ body {
     border-bottom: 1px solid #f2f2f2;
 }
 
+/* 已选标签列表 */
 .tag-selected-list {
     flex: 1;
     padding: 10px 24px;
     overflow-y: auto;
 }
 
+/* 已选标签项 */
 .tag-selected-item {
     position: relative;
     display: inline-block;
@@ -712,6 +824,7 @@ body {
     opacity: 0.7;
 }
 
+/* 已选标签移除按钮（悬停显示） */
 .tag-selected-item .tag-remove-btn {
     display: none;
     width: 16px;
@@ -737,16 +850,21 @@ body {
     line-height: 1;
 }
 
+/* 知识点选择弹窗组件 */
+
+/* 知识点弹窗：固定宽度840px */
 .knowledge-modal {
     width: 840px;
     min-width: 840px;
 }
 
+/* 知识点弹窗内容：左右分栏 */
 .knowledge-modal-content {
     display: flex;
     height: 470px;
 }
 
+/* 知识点弹窗左侧 */
 .knowledge-modal-left {
     flex: 1;
     border-right: 1px solid #f2f2f2;
@@ -754,11 +872,13 @@ body {
     flex-direction: column;
 }
 
+/* 知识点弹窗左侧头部 */
 .knowledge-modal-left-header {
     padding: 14px 18px;
     border-bottom: 1px solid #f2f2f2;
 }
 
+/* 知识点计数 */
 .knowledge-count {
     font-size: 14px;
     color: #8a8b99;
@@ -769,6 +889,7 @@ body {
     color: #3a8bff;
 }
 
+/* 已选知识点移除按钮 */
 .knowledge-selected-item .remove-btn {
     display: none;
     width: 16px;
@@ -794,44 +915,42 @@ body {
     line-height: 1;
 }
 
-.confirm-modal {
-    width: 440px;
-    min-width: 440px;
-}
-
-.confirm-text {
-    font-size: 14px;
-    color: #474c59;
-    line-height: 1.8;
-}
+/* ==================== 响应式样式 ==================== */
+/* 移动端适配（≤768px） */
 
 @media (max-width: 768px) {
+    /* 导航栏缩小内边距、允许换行 */
     .management-nav {
         padding: 12px 16px;
         flex-wrap: wrap;
         gap: 8px;
     }
 
+    /* 工具栏纵向排列 */
     .management-toolbar {
         padding: 12px 16px;
         flex-direction: column;
         gap: 12px;
     }
 
+    /* 筛选器换行 */
     .toolbar-filters {
         flex-wrap: wrap;
         width: 100%;
     }
 
+    /* 筛选输入框缩小 */
     .filter-input {
         width: 140px;
     }
 
+    /* 表格容器缩小边距 */
     .management-table-wrap {
         margin: 8px 16px;
         padding: 0 12px;
     }
 
+    /* 弹窗宽度自适应 */
     .create-modal,
     .tag-modal,
     .knowledge-modal {
@@ -839,6 +958,7 @@ body {
         min-width: auto;
     }
 
+    /* 弹窗内容高度缩小 */
     .tag-modal-content,
     .knowledge-modal-content {
         height: 350px;

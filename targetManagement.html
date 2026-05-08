@@ -1,18 +1,28 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：内容管理页
+  功能：管理图谱中的内容项（知识点/问题），支持新建、编辑、删除、标签管理、知识点关联、模板导入导出
+  依赖：Font Awesome 图标库、common.css、targetManagement.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>内容管理</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/targetManagement.css">
+    <!-- ==================== 脚本库 ==================== -->
     <script src="js/common.js"></script>
 </head>
 
 <body>
     <div class="management-page">
+        <!-- ==================== 顶部导航栏 ==================== -->
+        <!-- 包含返回按钮、页面标题、模板导入和导出按钮 -->
         <div class="management-nav">
             <div class="nav-left">
                 <button class="nav-btn back-btn" id="back-btn">
@@ -33,6 +43,8 @@
             </div>
         </div>
 
+        <!-- ==================== 筛选工具栏 ==================== -->
+        <!-- 提供标签筛选、名称搜索和新建按钮 -->
         <div class="management-toolbar">
             <div class="toolbar-filters">
                 <div class="filter-group">
@@ -54,6 +66,8 @@
             </button>
         </div>
 
+        <!-- ==================== 内容表格 ==================== -->
+        <!-- 展示所有内容项，支持全选、排序、编辑、删除等操作 -->
         <div class="management-table-wrap">
             <table class="management-table" id="content-table">
                 <thead>
@@ -72,6 +86,8 @@
             </table>
         </div>
 
+        <!-- ==================== 批量操作栏 ==================== -->
+        <!-- 选中内容项后显示，提供批量删除功能 -->
         <div class="batch-bar" id="batch-bar">
             <button class="btn btn-danger" id="batch-delete-btn">
                 <i class="fas fa-trash"></i>
@@ -80,6 +96,9 @@
         </div>
     </div>
 
+    <!-- ==================== 弹窗容器 ==================== -->
+
+    <!-- 新建/编辑内容弹窗：输入名称、描述、标签和关联知识点 -->
     <div class="modal-overlay" id="create-modal-overlay">
         <div class="modal-content create-modal">
             <div class="modal-header">
@@ -121,6 +140,7 @@
         </div>
     </div>
 
+    <!-- 标签管理弹窗：搜索、新建、选择标签 -->
     <div class="modal-overlay" id="tag-modal-overlay">
         <div class="modal-content tag-modal">
             <div class="modal-header">
@@ -164,6 +184,7 @@
         </div>
     </div>
 
+    <!-- 知识点关联弹窗：树形结构选择关联的知识点 -->
     <div class="modal-overlay" id="knowledge-modal-overlay">
         <div class="modal-content knowledge-modal">
             <div class="modal-header">
@@ -195,6 +216,7 @@
         </div>
     </div>
 
+    <!-- 通用确认弹窗：用于删除等操作的二次确认 -->
     <div class="modal-overlay" id="confirm-modal-overlay">
         <div class="modal-content confirm-modal">
             <div class="modal-header">
@@ -213,6 +235,7 @@
         </div>
     </div>
 
+    <!-- 隐藏的文件上传输入框，用于模板导入 -->
     <input type="file" id="template-file-input" accept=".xlsx,.xls" style="display:none;">
 
     <script src="js/targetManagement.js"></script>

@@ -12,12 +12,89 @@
  * 7. 卡片编辑/删除/关联子级 - 完整的内容管理功能
  * 8. 层级管理 - 设置弹窗中可添加、编辑、删除层级
  * 9. 响应式布局 - 窗口大小变化时自动调整
+ * 10. 探索模式 - 模拟体验，跳转至探索连线页面
  *
  * 数据结构说明：
  * - blocks: Array<HTMLElement> - 所有可拖拽卡片元素集合
  * - connections: Array<{id, startElement, endElement, element}> - 所有连接对象
  * - foldState: Map<HTMLElement, boolean> - 卡片折叠状态
  * - originalPos: Map<HTMLElement, {x, y}> - 卡片原始位置
+ *
+ * ======================= 模块结构 =======================
+ *
+ * 一、全局常量与变量
+ *    1.1 DOM 元素引用
+ *    1.2 核心状态变量（连线、连接点、层级颜色）
+ *    1.3 卡片拖拽排序状态
+ *    1.4 折叠相关状态（foldState、foldGroupLines、connectionPaths）
+ *
+ * 二、工具函数
+ *    2.1 卡片判断工具（isFirstLevelCard、getBlockSortKey 等）
+ *    2.2 坐标计算工具（getCurrentPos、getPointCoord、bezier 等）
+ *    2.3 连接关系查询（getDownstream、findParent、isAffected 等）
+ *    2.4 DOM 操作工具（normalizeActionButtonIcons、hasMeaningfulHtml 等）
+ *
+ * 三、SVG 连接点管理
+ *    3.1 连接点创建（createSvgConnectorPoint）
+ *    3.2 连接点初始化与同步（initAllSvgConnectorPoints、syncConnectorPoints）
+ *    3.3 连接点位置更新（updateSvgConnectorPositions）
+ *
+ * 四、连线管理
+ *    4.1 连线绘制与更新（updateAllLines、updateAllConnections）
+ *    4.2 连线验证（isValid）
+ *    4.3 连线拖拽交互（onPointDown、onSvgPointDown、onConnDrag、onConnEnd、onSvgConnEnd）
+ *    4.4 连线悬停删除（onPathMouseEnter、onPathMouseLeave）
+ *
+ * 五、折叠/展开功能
+ *    5.1 折叠操作（applyFold、updateAllFolds）
+ *    5.2 展开操作（applyUnfold、expandAll）
+ *    5.3 折叠状态切换（toggleFold）
+ *
+ * 六、卡片操作
+ *    6.1 新增卡片（createBlock、submitForm）
+ *    6.2 编辑卡片（showEditBlockModal、saveEditBlock）
+ *    6.3 关联子级（showConnectChildrenModal、saveConnectChildren）
+ *    6.4 删除卡片（deleteBlock、deleteCardConnections）
+ *    6.5 批量删除（enterDeleteMode、executeDelete 等）
+ *
+ * 七、卡片拖拽排序
+ *    7.1 拖拽手柄（addCardDragHandle、bindCardDragHandle）
+ *    7.2 拖拽流程（startCardDrag、onCardDragMove、onCardDragEnd）
+ *    7.3 位置交换（swapCardPositions）
+ *
+ * 八、弹窗管理
+ *    8.1 新增卡片弹窗（showModal、hideModal）
+ *    8.2 详情弹窗（showDetailModal、showTeacherModal）
+ *    8.3 层级编辑弹窗（showLevelEditModal、saveLevelEdit）
+ *    8.4 层级管理弹窗（showSettingsModal、renderLevelList）
+ *    8.5 导入导出弹窗（showImportModal、handleExport）
+ *
+ * 九、悬停高亮效果
+ *    9.1 展开状态悬停（handleExpandedStateHover）
+ *    9.2 收起状态悬停（handleCollapsedStateHover）
+ *    9.3 状态重置（resetHoverState）
+ *
+ * 十、数据持久化
+ *    10.1 保存到 localStorage（saveToLocalStorage、generateLevelData）
+ *    10.2 从 localStorage 恢复（loadFromLocalStorage）
+ *
+ * 十一、导航与路由
+ *    11.1 跳转详情页（navigateToQuestionMapDetail、buildRelationChain）
+ *
+ * 十二、探索模式
+ *    12.1 探索模式 UI 交互（initExploreMode）
+ *    12.2 层级数据收集（collectFullHierarchyData、extractBlockData）
+ *
+ * 十三、事件绑定与初始化
+ *    13.1 基础事件初始化（init、initButtonEvents）
+ *    13.2 弹窗事件初始化（initModalEvents、initLevelEditEvents、initSettingsEvents）
+ *    13.3 卡片操作事件初始化（initBlockActions、initBlockEvents）
+ *    13.4 应用启动入口（所有 init 调用和初始化逻辑）
+ *
+ * 依赖：
+ *   - common.js（StorageManager）
+ *   - Quill（富文本编辑器）
+ *   - Font Awesome（图标）
  */
 
 (function () {
@@ -408,20 +485,6 @@
             updateAllConnections();
             resizeTimer = null;
         }, 250);
-    }
-
-    updateSVGDimensions();
-    updateAllConnections();
-
-    window.addEventListener('resize', handleResize);
-
-    const resizeObserver = new ResizeObserver(handleResize);
-
-    if (container) {
-        resizeObserver.observe(container);
-    }
-    if (svg) {
-        resizeObserver.observe(svg);
     }
 
     // ==================== 辅助函数：位置与坐标计算 ====================
@@ -4502,7 +4565,21 @@
         return relatedLines;
     }
 
-    // ========== 启动所有功能 ==========
+    // ==================== 应用启动入口 ====================
+
+    updateSVGDimensions();
+    updateAllConnections();
+
+    window.addEventListener('resize', handleResize);
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (container) {
+        resizeObserver.observe(container);
+    }
+    if (svg) {
+        resizeObserver.observe(svg);
+    }
+
     normalizeActionButtonIcons();
     init();
     initAddButtons();
@@ -4755,8 +4832,6 @@
         }
     }
 
-    // 先尝试加载数据
     loadFromLocalStorage();
-    // 确保数据被保存
     saveToLocalStorage();
 })(); 

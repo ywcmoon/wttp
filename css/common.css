@@ -1,9 +1,24 @@
+/* ============================================================
+ * 文件名: common.css
+ * 描述: 项目全局公共样式表
+ * 包含: 基础重置样式、CSS变量、通用组件样式（卡片、连线、
+ *        弹窗、表单、知识树等）、响应式布局
+ * 适用范围: 所有页面共用
+ * ============================================================ */
+
+/* ============================================================
+ * 一、基础样式
+ * 包含: CSS重置、CSS自定义属性（变量）、全局body样式
+ * ============================================================ */
+
+/* --- CSS重置：统一浏览器默认样式 --- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* --- CSS自定义属性：全局设计令牌 --- */
 :root {
     --color-level-a: #409eff;
     --color-level-b: #67c23a;
@@ -15,14 +30,28 @@
     --transition-default: all 0.3s ease;
 }
 
+/* --- 全局body样式：字体、背景色、最小高度 --- */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7fa;
     min-height: 100vh;
 }
 
+/* ============================================================
+ * 二、布局样式
+ * 包含: 主容器、选项卡导航、卡片列布局
+ * ============================================================ */
 
-/* 选项卡导航 */
+/* --- 主工作区容器：全屏、隐藏溢出、内边距 --- */
+.main-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    padding: 20px;
+}
+
+/* --- 选项卡导航：弹性布局、渐变背景、圆角 --- */
 .tab-nav {
     display: flex;
     padding: 6px;
@@ -31,6 +60,7 @@ body {
     gap: 8px;
 }
 
+/* 选项卡项：等分宽度、过渡动画 */
 .tab-item {
     flex: 1;
     padding: 16px 32px;
@@ -54,6 +84,7 @@ body {
     transform: translateY(-2px);
 }
 
+/* 激活状态：渐变蓝色背景、白色文字、阴影 */
 .tab-item.active {
     color: #fff;
     background: linear-gradient(135deg, #3a8bff 0%, #6cc7ff 100%);
@@ -64,16 +95,7 @@ body {
     font-size: 20px;
 }
 
-/* 主工作区容器 */
-.main-container{
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    padding: 20px;
-}
-/* ========== 统一卡片与连线样式规范 ========== */
-
+/* --- 卡片列布局容器：弹性布局、间距、允许换行 --- */
 .w_cont {
     display: flex;
     justify-content: space-between;
@@ -81,6 +103,7 @@ body {
     flex-wrap: wrap;
 }
 
+/* 单列卡片面板：白色背景、圆角、阴影、弹性填充 */
 .w_cont_problem {
     flex: 1;
     background: #fff;
@@ -91,6 +114,7 @@ body {
     padding: 20px;
 }
 
+/* 列头部：标题与图标区域 */
 .w_contp_head {
     display: flex;
     align-items: center;
@@ -102,6 +126,7 @@ body {
     align-items: center;
 }
 
+/* 列图标：圆形、居中、彩色背景 */
 .w_contp_icon {
     width: 32px;
     height: 32px;
@@ -114,24 +139,36 @@ body {
     color: #fff;
 }
 
+/* 列标题文字 */
 .w_contp_txt {
     font-size: 16px;
     font-weight: 600;
     color: #303133;
 }
 
+/* 列提示文字 */
 .w_contp_tips {
     font-size: 12px;
     color: #909399;
     margin-bottom: 20px;
 }
 
+/* 列内容主区域：纵向弹性布局 */
 .w_contp_main {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
+/* ============================================================
+ * 三、组件样式
+ * 包含: 卡片组件、连接点、SVG连线、操作按钮、弹窗、表单、
+ *        知识树、徽章数字
+ * ============================================================ */
+
+/* --- 3.1 卡片组件 --- */
+
+/* 卡片项：白色背景、边框、圆角、阴影、悬停上浮 */
 .w_contp_item {
     background: #fff;
     border: 1px solid #e4e7ed;
@@ -148,6 +185,9 @@ body {
     transform: translateY(-2px);
 }
 
+/* --- 3.2 层级颜色标识 --- */
+
+/* 按列（Box）区分的左侧边框颜色 */
 .ABox .w_contp_item {
     border-left: 4px solid #409eff;
 }
@@ -168,6 +208,7 @@ body {
     border-left: 4px solid #E372DB;
 }
 
+/* 悬停时边框颜色加深 */
 .ABox .w_contp_item:hover {
     border-color: #409eff;
 }
@@ -188,6 +229,7 @@ body {
     border-color: #E372DB;
 }
 
+/* 按层级（level）区分的左侧边框颜色 */
 .level-1 {
     border-left: 4px solid #409eff;
 }
@@ -208,6 +250,9 @@ body {
     border-left: 4px solid #E372DB;
 }
 
+/* --- 3.3 卡片内容区域 --- */
+
+/* 卡片头部：标题与操作按钮行 */
 .block-header {
     display: flex;
     justify-content: space-between;
@@ -215,6 +260,7 @@ body {
     margin-bottom: 8px;
 }
 
+/* 卡片标题：加粗、单行省略 */
 .block-title {
     font-size: 16px;
     font-weight: 600;
@@ -226,6 +272,7 @@ body {
     min-width: 0;
 }
 
+/* 卡片内容区域 */
 .block-content {
     font-size: 0.875rem;
     color: #4b5563;
@@ -234,6 +281,7 @@ body {
     padding-right: 0;
 }
 
+/* 卡片内容文字：最多显示3行、超出省略 */
 .block-content-text {
     font-size: 14px;
     color: #606266;
@@ -246,6 +294,9 @@ body {
     text-overflow: ellipsis;
 }
 
+/* --- 3.4 操作按钮 --- */
+
+/* 查看详情按钮：蓝色链接样式 */
 .w_contp_btn {
     display: inline-flex;
     align-items: center;
@@ -262,6 +313,7 @@ body {
     text-decoration: underline;
 }
 
+/* 操作按钮行：用于放置编辑、连接、删除等操作按钮 */
 .block-action-row {
     display: flex;
     justify-content: space-between;
@@ -271,6 +323,7 @@ body {
     min-height: 28px;
 }
 
+/* 操作按钮组：默认隐藏，选中卡片后显示 */
 .block-actions {
     display: none;
     gap: 8px;
@@ -285,6 +338,7 @@ body {
     display: flex;
 }
 
+/* 单个操作按钮：圆形、白色背景、悬停变蓝 */
 .action-btn {
     width: 28px;
     height: 28px;
@@ -306,11 +360,15 @@ body {
     color: #fff;
 }
 
+/* 删除按钮悬停变红 */
 .action-btn.delete-btn:hover {
     background: #f56c6c;
     border-color: #f56c6c;
 }
 
+/* --- 3.5 徽章数字 --- */
+
+/* 卡片右上角数字徽章：圆形、彩色背景、白色文字 */
 .w_contp_inum {
     position: absolute;
     top: 8px;
@@ -327,6 +385,7 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* 按列区分的徽章颜色 */
 .ABox .w_contp_inum {
     background: #409eff;
 }
@@ -347,6 +406,9 @@ body {
     background: #E372DB;
 }
 
+/* --- 3.6 连接点组件 --- */
+
+/* 连接点：圆形、绝对定位、白色背景、彩色边框 */
 .connector-point {
     position: absolute;
     width: 16px;
@@ -365,18 +427,21 @@ body {
     background: #fff;
 }
 
+/* 起始连接点：位于卡片右侧中间 */
 .connector-point.start-point {
     right: -8px;
     top: 50%;
     transform: translateY(-50%);
 }
 
+/* 结束连接点：位于卡片左侧中间 */
 .connector-point.end-point {
     left: -8px;
     top: 50%;
     transform: translateY(-50%);
 }
 
+/* A列起始连接点稍大，便于拖拽操作 */
 .ABox .connector-point.start-point {
     width: 20px;
     height: 20px;
@@ -386,6 +451,7 @@ body {
     z-index: 1001;
 }
 
+/* 按列区分的连接点边框颜色 */
 .ABox .connector-point {
     border-color: #409eff;
 }
@@ -406,6 +472,9 @@ body {
     border-color: #E372DB;
 }
 
+/* --- 3.7 SVG连线组件 --- */
+
+/* SVG连线层：绝对定位覆盖、禁止鼠标事件穿透 */
 .connections-svg {
     position: absolute;
     top: 0;
@@ -416,12 +485,14 @@ body {
     z-index: 999;
 }
 
+/* 连线路径：无填充、圆角端点 */
 .path-line {
     fill: none;
     stroke-width: 2.5;
     stroke-linecap: round;
 }
 
+/* 跨层级连线使用渐变色，增强视觉层次感 */
 .path-line.level-1-to-level-2 {
     stroke: url(#gradient-level-1-to-level-2);
 }
@@ -438,6 +509,7 @@ body {
     stroke: url(#gradient-level-4-to-level-5);
 }
 
+/* 同层级连线使用纯色 */
 .path-line.level-1-to-level-1 {
     stroke: #409eff;
 }
@@ -458,12 +530,9 @@ body {
     stroke: #E372DB;
 }
 
-.w_contp_ibtn {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
+/* --- 3.8 按钮组件 --- */
 
+/* 标签按钮：黄色背景、棕色文字 */
 .bluebtn {
     color: #AB6400;
     background: #FFEE9C;
@@ -473,6 +542,14 @@ body {
     cursor: pointer;
 }
 
+/* 按钮容器 */
+.w_contp_ibtn {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* 添加按钮：虚线边框、居中、悬停变蓝 */
 .w_addbtn {
     display: flex;
     align-items: center;
@@ -495,6 +572,9 @@ body {
     color: #409eff;
 }
 
+/* --- 3.9 SVG图标容器 --- */
+
+/* SVG图标外层容器：居中 */
 .xcustomSvg {
     display: flex;
     align-items: center;
@@ -506,10 +586,14 @@ body {
     height: 14px;
 }
 
+/* 操作按钮悬停时SVG路径填充变白 */
 .action-btn:hover svg path {
     fill: #fff !important;
 }
 
+/* --- 3.10 弹窗组件 --- */
+
+/* 遮罩层：固定定位、半透明黑色背景、居中 */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -531,6 +615,7 @@ body {
     display: none;
 }
 
+/* 弹窗主体：白色背景、圆角、最大高度限制、滚动 */
 .modal {
     background: #fff;
     border-radius: 8px;
@@ -541,6 +626,7 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* 弹窗头部：标题与关闭按钮 */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -556,6 +642,7 @@ body {
     margin: 0;
 }
 
+/* 关闭按钮：大号字体、悬停变蓝 */
 .modal-close {
     font-size: 24px;
     color: #909399;
@@ -570,10 +657,12 @@ body {
     color: #409eff;
 }
 
+/* 弹窗内容区 */
 .modal-body {
     padding: 20px;
 }
 
+/* 弹窗底部：按钮右对齐 */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -582,10 +671,14 @@ body {
     border-top: 1px solid #e4e7ed;
 }
 
+/* --- 3.11 表单组件 --- */
+
+/* 表单组：底部间距 */
 .form-group {
     margin-bottom: 20px;
 }
 
+/* 表单标签：块级、加粗 */
 .form-group label {
     display: block;
     font-size: 14px;
@@ -594,10 +687,12 @@ body {
     margin-bottom: 8px;
 }
 
+/* 必填标记：红色星号 */
 .required {
     color: #f56c6c;
 }
 
+/* 表单输入框：全宽、边框、聚焦高亮 */
 .form-input {
     width: 100%;
     padding: 10px 12px;
@@ -614,6 +709,7 @@ body {
     border-color: #409eff;
 }
 
+/* 通用按钮：内边距、圆角、过渡 */
 .btn {
     padding: 10px 24px;
     border-radius: 4px;
@@ -623,6 +719,7 @@ body {
     border: none;
 }
 
+/* 取消按钮：浅灰背景 */
 .btn-cancel {
     background: #f5f7fa;
     color: #606266;
@@ -634,6 +731,7 @@ body {
     border-color: #c0c4cc;
 }
 
+/* 确认按钮：蓝色背景、白色文字 */
 .btn-confirm {
     background: #409eff;
     color: #fff;
@@ -643,8 +741,9 @@ body {
     background: #66b1ff;
 }
 
-/* ========== 知识树列表样式（共用） ========== */
+/* --- 3.12 知识树组件 --- */
 
+/* 知识树列表：弹性填充、纵向滚动 */
 .knowledge-tree {
     flex: 1;
     overflow-y: auto;
@@ -656,11 +755,13 @@ body {
     position: relative;
 }
 
+/* 树节点悬停高亮 */
 .knowledge-tree li:hover > .tree-main {
     background: #f0f6ff;
     border-radius: 4px;
 }
 
+/* 树节点主体：弹性布局、内边距 */
 .knowledge-tree .tree-main {
     display: flex;
     align-items: center;
@@ -670,6 +771,7 @@ body {
     position: relative;
 }
 
+/* 树箭头：展开/折叠指示器、旋转动画 */
 .knowledge-tree .tree-arrow {
     width: 20px;
     height: 20px;
@@ -687,6 +789,7 @@ body {
     transform: rotate(90deg);
 }
 
+/* 树节点文字：单行省略 */
 .knowledge-tree .tree-text {
     flex: 1;
     font-size: 14px;
@@ -696,6 +799,7 @@ body {
     white-space: nowrap;
 }
 
+/* 树复选框：绝对定位右侧、选中变蓝 */
 .knowledge-tree .tree-check {
     position: absolute;
     right: 14px;
@@ -717,12 +821,14 @@ body {
     border-color: #3a8bff;
 }
 
+/* 选中状态显示对勾 */
 .knowledge-tree .tree-check.checked::after {
     content: '\2713';
     color: #fff;
     font-size: 12px;
 }
 
+/* 子树：默认隐藏、展开显示 */
 .knowledge-tree .tree-children {
     display: none;
     padding-left: 20px;
@@ -733,12 +839,16 @@ body {
     display: block;
 }
 
+/* --- 3.13 知识选择弹窗 --- */
+
+/* 弹窗右侧已选区域 */
 .knowledge-modal-right {
     width: 259px;
     display: flex;
     flex-direction: column;
 }
 
+/* 已选区域头部 */
 .knowledge-selected-header {
     padding: 0 24px;
     height: 50px;
@@ -748,12 +858,14 @@ body {
     border-bottom: 1px solid #f2f2f2;
 }
 
+/* 已选列表：纵向滚动 */
 .knowledge-selected-list {
     flex: 1;
     padding: 10px 24px;
     overflow-y: auto;
 }
 
+/* 已选标签项：虚线边框、悬停显示删除按钮 */
 .knowledge-selected-item {
     position: relative;
     display: inline-block;
@@ -772,6 +884,7 @@ body {
     opacity: 0.7;
 }
 
+/* 删除按钮：红色圆形、默认隐藏、悬停显示 */
 .knowledge-selected-item .remove-btn {
     display: none;
     position: absolute;
@@ -796,6 +909,12 @@ body {
     content: '\00d7';
 }
 
+/* ============================================================
+ * 四、响应式样式
+ * 包含: 大屏(≥1200px)、中屏(992px-1199px)、小屏(≤768px)
+ * ============================================================ */
+
+/* --- 大屏幕适配 (≤1200px)：减小间距和内边距 --- */
 @media (max-width: 1200px) {
     .w_cont {
         gap: 10px;
@@ -810,6 +929,7 @@ body {
     }
 }
 
+/* --- 中屏幕适配 (≤992px)：两列布局 --- */
 @media (max-width: 992px) {
     .w_cont {
         flex-wrap: wrap;
@@ -821,6 +941,7 @@ body {
     }
 }
 
+/* --- 小屏幕适配 (≤768px)：单列布局 --- */
 @media (max-width: 768px) {
     .w_cont_problem {
         flex: 0 0 100%;

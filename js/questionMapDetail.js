@@ -1,31 +1,47 @@
 /**
  * questionMapDetail.js - 问题图谱详情页核心脚本
- * 
- * 功能说明：
+ *
+ * 功能概述：
  *   1. 层级卡片渲染（按 level1~level5 分组展示）
- *   2. SVG 连线绘制（卡片间关系连线，渐变色路径）
+ *   2. SVG 连线绘制（卡片间关系连线，渐变色贝塞尔曲线路径）
  *   3. 画布拖拽与缩放（鼠标拖拽平移、滚轮缩放、双击居中）
  *   4. 卡片详情弹窗（查看卡片标题和描述）
  *   5. 卡片编辑弹窗（Quill 富文本编辑器，支持标题/描述/教师备注）
  *   6. 关系链模式（从 index 页传入 relationChain，仅展示链路上的卡片）
- * 
+ *
+ * 模块结构：
+ *   一、常量与状态：DOM引用、状态变量、层级颜色映射
+ *   二、工具函数：卡片查找、连线统计、角标更新
+ *   三、SVG连线绘制：连接点创建、位置更新、连线渲染
+ *   四、数据加载与渲染：卡片数据加载、DOM渲染
+ *   五、缩放功能：按钮缩放、滚轮缩放、居中定位
+ *   六、拖拽功能：画布平移拖拽
+ *   七、弹窗功能：详情弹窗、编辑弹窗（Quill富文本）
+ *   八、事件绑定：集中注册所有事件监听
+ *   九、初始化入口：DOMContentLoaded
+ *
  * 数据存储键：
  *   - fullHierarchyData：完整层级卡片数据
  *   - ls1：连线数据（connections 数组）
  *   - relationChain：关系链卡片 ID 列表
  *   - currentBlockId：当前查看的卡片 ID
- * 
+ *
  * 依赖：
  *   - common.js（StorageManager）
  *   - Quill（富文本编辑器）
- *   - Font Awesome（图标）
+ *   - Font Awesome（图标库）
  */
+
 (function () {
     'use strict';
 
-    // ==================== DOM 元素引用 ====================
+    /* ============================================================
+     * 一、常量与状态
+     * ============================================================ */
 
-    /** @type {HTMLElement} 画布容器（拖拽/缩放区域） */ 
+    // --- 1.1 DOM 元素引用 ---
+
+    /** @type {HTMLElement} 画布容器（拖拽/缩放区域） */
     var mainContainer = document.getElementById('main-container');
 
     /** @type {HTMLElement} 内容容器（应用 transform 变换） */
@@ -52,7 +68,7 @@
     var editBlockDesc = document.getElementById('edit-block-desc');
     var editBlockTeacher = document.getElementById('edit-block-teacher');
 
-    // ==================== 核心状态变量 ====================
+    // --- 1.2 核心状态变量 ---
 
     /** @type {number} 当前缩放百分比（100 = 原始大小） */
     var currentZoom = 100;
@@ -90,6 +106,8 @@
     /** @type {SVGGElement|null} SVG 连接点组 */
     var connectorGroup = null;
 
+    // --- 1.3 层级颜色映射 ---
+
     /**
      * 层级颜色映射（从 CSS 变量动态读取）
      * a: 蓝色, b: 绿色, c: 橙色, d: 红色, e: 粉色
@@ -102,49 +120,346 @@
         e: getComputedStyle(document.documentElement).getPropertyValue('--color-level-e').trim() || '#E372DB'
     };
 
-    // ==================== 应用初始化入口 ====================
+    /* ============================================================
+     * 二、工具函数
+     * ============================================================ */
 
     /**
-     * DOMContentLoaded 初始化
-     * 
-     * 初始化流程：
-     *   1. 检查是否有 relationChain（关系链模式）
-     *   2. 否则检查 currentBlockId（单卡片模式）
-     *   3. 都没有则跳回首页
-     *   4. 初始化按钮、缩放、拖拽、弹窗
-     *   5. 绑定窗口 resize 事件更新连线
+     * 在层级数据中查找指定 ID 的卡片
+     *
+     * @param {Object} data - fullHierarchyData 数据
+     * @param {string} blockId - 卡片 ID
+     * @returns {Object|null} 找到的卡片数据
      */
-    document.addEventListener('DOMContentLoaded', function () {
-        var relationChain = StorageManager.get('relationChain', null);
-        if (relationChain) {
-            showRelationChain(relationChain);
-        } else {
-            currentBlockId = StorageManager.get('currentBlockId', null);
-            if (!currentBlockId) {
-                window.location.href = 'index.html';
-                return;
+    function findBlockById(data, blockId) {
+        for (var level in data) {
+            if (data.hasOwnProperty(level) && Array.isArray(data[level])) {
+                var block = data[level].find(function (b) { return b.id === blockId; });
+                if (block) {
+                    return block;
+                }
             }
-            loadBlockData();
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前卡片及其所有下级卡片
+     *
+     * @param {Object} currentBlock - 当前卡片数据
+     * @param {Object} data - fullHierarchyData 数据
+     * @returns {Array} 包含当前卡片和所有下级卡片的数组
+     */
+    function getAllBlocks(currentBlock, data) {
+        var allBlocks = [currentBlock];
+        var level = parseInt(currentBlock.id[1]);
+
+        for (var i = level + 1; i <= 5; i++) {
+            var levelKey = 'level' + i;
+            if (data[levelKey]) {
+                allBlocks.push.apply(allBlocks, data[levelKey]);
+            }
         }
 
-        initButtons();
-        initZoom();
-        initDrag();
-        initModal();
-
-        window.addEventListener('resize', function () {
-            if (typeof updateSvgConnectorPositions === 'function') {
-                updateSvgConnectorPositions();
-            }
-            drawConnections();
-        });
-    });
-
-    // ==================== 数据加载 ====================
+        return allBlocks;
+    }
 
     /**
-     * 加载卡片数据并渲染
-     * 
+     * 计算每个起始节点的连线数量
+     * 结果存入 connectionCountMap
+     */
+    function calculateConnectionCounts() {
+        connectionCountMap.clear();
+
+        connections.forEach(function (conn) {
+            if (connectionCountMap.has(conn.startId)) {
+                connectionCountMap.set(conn.startId, connectionCountMap.get(conn.startId) + 1);
+            } else {
+                connectionCountMap.set(conn.startId, 1);
+            }
+        });
+    }
+
+    /**
+     * 更新连线数量角标
+     *
+     * 统计每个 start 连接点对应的连线数量：
+     *   - a 级卡片：更新 SVG 连接点内的文字
+     *   - 其他卡片：更新 DOM 中的 w_contp_inum 角标
+     */
+    function updateBadges() {
+        var map = new Map();
+        svgConnectorPoints.forEach(function (info) {
+            if (info.type === 'start') {
+                map.set(info.dataId, 0);
+            }
+        });
+        connections.forEach(function (c) {
+            var sDataId = c.startId + '-start';
+            if (map.has(sDataId)) {
+                map.set(sDataId, map.get(sDataId) + 1);
+            }
+        });
+        map.forEach(function (cnt, dataId) {
+            var info = svgConnectorPoints.get(dataId);
+            if (!info) return;
+            var block = info.block;
+            if (block && block.getAttribute('data-card-id') && block.getAttribute('data-card-id').startsWith('a')) {
+                var textEl = info.element.querySelector('.svg-connector-badge-text');
+                if (textEl) textEl.textContent = cnt;
+            } else if (block) {
+                var badge = block.querySelector('.w_contp_inum');
+                if (badge) badge.textContent = cnt;
+            }
+        });
+    }
+
+    /* ============================================================
+     * 三、SVG 连线绘制
+     * ============================================================ */
+
+    /**
+     * 绘制所有连线
+     *
+     * 绘制流程：
+     *   1. 清空 SVG
+     *   2. 创建 defs（渐变定义容器）
+     *   3. 创建连线组和连接点组
+     *   4. 为每个卡片创建起始/结束连接点
+     *   5. 更新连接点位置
+     *   6. 绘制每条连线（渐变色贝塞尔曲线）
+     *   7. 更新角标数字
+     */
+    function drawConnections() {
+        svg.innerHTML = '';
+
+        var svgNS = 'http://www.w3.org/2000/svg';
+
+        var defs = document.createElementNS(svgNS, 'defs');
+        svg.appendChild(defs);
+
+        var linesGroup = document.createElementNS(svgNS, 'g');
+        linesGroup.setAttribute('class', 'svg-lines-group');
+        svg.appendChild(linesGroup);
+
+        connectorGroup = document.createElementNS(svgNS, 'g');
+        connectorGroup.setAttribute('id', 'connector-points-group');
+        svg.appendChild(connectorGroup);
+
+        svgConnectorPoints.clear();
+
+        var allCards = document.querySelectorAll('.w_contp_item');
+        var maxLevel = 0;
+        allCards.forEach(function (card) {
+            var m = card.className.match(/level-(\d+)/);
+            if (m) maxLevel = Math.max(maxLevel, parseInt(m[1], 10));
+        });
+
+        allCards.forEach(function (card) {
+            var cardId = card.getAttribute('data-card-id');
+            if (!cardId) return;
+            var levelMatch = card.className.match(/level-(\d+)/);
+            var level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+            var isFirstLevel = level === 1;
+            var isLastLevel = level === maxLevel;
+
+            if (!isLastLevel) {
+                createSvgConnectorPoint(card, 'start', cardId);
+            }
+            if (!isFirstLevel) {
+                createSvgConnectorPoint(card, 'end', cardId);
+            }
+        });
+
+        updateSvgConnectorPositions();
+
+        connections.forEach(function (conn) {
+            drawConnection(conn, linesGroup);
+        });
+
+        updateBadges();
+    }
+
+    /**
+     * 创建 SVG 连接点（卡片左右两侧的圆形端点）
+     *
+     * @param {HTMLElement} block - 卡片 DOM 元素
+     * @param {string} type - 连接点类型：'start'（右侧输出）或 'end'（左侧输入）
+     * @param {string} blockId - 卡片 ID
+     *
+     * 连接点样式：
+     *   - start 点：实心圆（填充层级颜色），a 级卡片半径 10，其他 8
+     *   - end 点：空心圆（白色填充 + 层级颜色描边）
+     *   - a 级 start 点额外显示连线数量文字
+     */
+    function createSvgConnectorPoint(block, type, blockId) {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var dataId = blockId + '-' + type;
+        var levelKey = blockId[0].toLowerCase();
+        var color = LEVEL_COLORS[levelKey] || '#409eff';
+        var baseRadius = blockId.startsWith('a') ? 10 : 8;
+        var scale = currentZoom / 100;
+        var radius = baseRadius * scale;
+
+        var g = document.createElementNS(svgNS, 'g');
+        g.setAttribute('class', 'svg-connector-point svg-' + type + '-point');
+        g.setAttribute('data-id', dataId);
+        g.setAttribute('data-block-id', blockId);
+
+        var outerCircle = document.createElementNS(svgNS, 'circle');
+        outerCircle.setAttribute('r', String(radius));
+        outerCircle.setAttribute('fill', type === 'start' && blockId.startsWith('a') ? color : '#fff');
+        outerCircle.setAttribute('stroke', color);
+        outerCircle.setAttribute('stroke-width', String(2 * scale));
+        outerCircle.setAttribute('class', 'svg-connector-outer');
+        g.appendChild(outerCircle);
+
+        if (type === 'start' && blockId.startsWith('a')) {
+            var text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            text.setAttribute('fill', '#fff');
+            text.setAttribute('font-size', String(10 * scale));
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('class', 'svg-connector-badge-text');
+            text.textContent = '0';
+            g.appendChild(text);
+        }
+
+        connectorGroup.appendChild(g);
+
+        svgConnectorPoints.set(dataId, {
+            element: g,
+            outerCircle: outerCircle,
+            block: block,
+            type: type,
+            dataId: dataId
+        });
+    }
+
+    /**
+     * 更新所有 SVG 连接点的位置
+     *
+     * 根据卡片在视口中的实际位置计算连接点坐标：
+     *   - start 点：卡片右边缘中心
+     *   - end 点：卡片左边缘中心
+     *
+     * 如果卡片不可见（offsetParent 为 null），隐藏连接点
+     */
+    function updateSvgConnectorPositions() {
+        var svgRect = svg.getBoundingClientRect();
+
+        svgConnectorPoints.forEach(function (info) {
+            var element = info.element;
+            var block = info.block;
+            var type = info.type;
+
+            if (!block || !block.offsetParent) {
+                element.style.display = 'none';
+                return;
+            }
+
+            element.style.display = '';
+
+            var blockRect = block.getBoundingClientRect();
+            var cx, cy;
+
+            if (type === 'start') {
+                cx = blockRect.right - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            } else {
+                cx = blockRect.left - svgRect.left;
+                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
+            }
+
+            element.setAttribute('transform', 'translate(' + cx + ',' + cy + ')');
+        });
+    }
+
+    /**
+     * 绘制单条连线
+     *
+     * @param {Object} conn - 连线数据 {startId, endId}
+     * @param {SVGGElement} linesGroup - 连线组元素
+     *
+     * 连线样式：
+     *   - 渐变色：从起始节点颜色渐变到结束节点颜色
+     *   - 贝塞尔曲线：水平方向的 S 形曲线
+     *   - 线宽 2.5px
+     */
+    function drawConnection(conn, linesGroup) {
+        var startInfo = svgConnectorPoints.get(conn.startId + '-start');
+        var endInfo = svgConnectorPoints.get(conn.endId + '-end');
+
+        if (!startInfo || !endInfo) return;
+
+        var startElement = startInfo.element;
+        var endElement = endInfo.element;
+
+        var startTransform = startElement.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var startX = parseFloat(startMatch[1]);
+        var startY = parseFloat(startMatch[2]);
+
+        var endTransform = endElement.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var endX = parseFloat(endMatch[1]);
+        var endY = parseFloat(endMatch[2]);
+
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('class', 'path-line');
+        path.setAttribute('stroke-width', '2.5');
+        path.setAttribute('fill', 'none');
+
+        var startBlock = startInfo.block;
+        var endBlock = endInfo.block;
+        var startLevelKey = startBlock ? startBlock.getAttribute('data-card-id')[0].toLowerCase() : 'a';
+        var endLevelKey = endBlock ? endBlock.getAttribute('data-card-id')[0].toLowerCase() : 'b';
+
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
+
+        var gradientId = 'conn-grad-' + conn.startId + '-' + conn.endId;
+        var lg = document.createElementNS(svgNS, 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(startX));
+        lg.setAttribute('y1', String(startY));
+        lg.setAttribute('x2', String(endX));
+        lg.setAttribute('y2', String(endY));
+        var s1 = document.createElementNS(svgNS, 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS(svgNS, 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
+
+        var cx = (startX + endX) / 2;
+        var bend = Math.abs(startY - endY) < 0.1 ? 0.5 : 0;
+        var d = 'M ' + startX + ' ' + startY + ' C ' + cx + ' ' + (startY + bend) + ', ' + cx + ' ' + (endY - bend) + ', ' + endX + ' ' + endY;
+        path.setAttribute('d', d);
+
+        linesGroup.appendChild(path);
+    }
+
+    /* ============================================================
+     * 四、数据加载与渲染
+     * ============================================================ */
+
+    /**
+     * 加载卡片数据并渲染（普通模式）
+     *
      * 从 fullHierarchyData 中查找 currentBlockId 对应的卡片，
      * 然后获取该卡片及其所有下级卡片，按层级渲染
      */
@@ -165,11 +480,11 @@
 
     /**
      * 展示关系链卡片（关系链模式）
-     * 
+     *
      * 与普通模式的区别：
      *   - 仅渲染 relationChain 中指定的卡片
      *   - 不渲染无关的层级卡片
-     * 
+     *
      * @param {Array<string>} relationChain - 关系链卡片 ID 列表
      */
     function showRelationChain(relationChain) {
@@ -244,7 +559,7 @@
 
     /**
      * 渲染所有卡片（普通模式）
-     * 
+     *
      * @param {Array} allBlocks - 所有需要渲染的卡片数据
      */
     function renderBlocks(allBlocks) {
@@ -297,17 +612,17 @@
 
     /**
      * 渲染单个卡片 DOM
-     * 
+     *
      * @param {Object} block - 卡片数据 {id, title, desc, teacherNote}
      * @param {number} level - 卡片层级（1~5）
      * @param {number} maxLevel - 当前视图中的最大层级
-     * 
+     *
      * 卡片结构：
      *   - block-header：标题
      *   - block-content：描述文本 + 详情按钮
      *   - block-actions：编辑按钮（SVG 图标）
      *   - badge：连线数量角标（中间层级显示）
-     * 
+     *
      * 交互：
      *   - 详情按钮 → 打开详情弹窗
      *   - 编辑按钮 → 打开编辑弹窗
@@ -388,380 +703,62 @@
         });
     }
 
-    // ==================== 连线统计 ====================
+    /* ============================================================
+     * 五、缩放功能
+     * ============================================================ */
 
     /**
-     * 计算每个起始节点的连线数量
-     * 结果存入 connectionCountMap
+     * 设置缩放百分比
+     *
+     * @param {number} percent - 缩放百分比（20~300）
      */
-    function calculateConnectionCounts() {
-        connectionCountMap.clear();
+    function setZoom(percent) {
+        currentZoom = percent;
+        applyGroupTransform();
+        zoomLevel.textContent = Math.round(currentZoom) + '%';
 
-        connections.forEach(function (conn) {
-            if (connectionCountMap.has(conn.startId)) {
-                connectionCountMap.set(conn.startId, connectionCountMap.get(conn.startId) + 1);
-            } else {
-                connectionCountMap.set(conn.startId, 1);
-            }
-        });
-    }
-
-    // ==================== SVG 连线绘制 ====================
-
-    /**
-     * 绘制所有连线
-     * 
-     * 绘制流程：
-     *   1. 清空 SVG
-     *   2. 创建 defs（渐变定义容器）
-     *   3. 创建连线组和连接点组
-     *   4. 为每个卡片创建起始/结束连接点
-     *   5. 更新连接点位置
-     *   6. 绘制每条连线（渐变色贝塞尔曲线）
-     *   7. 更新角标数字
-     */
-    function drawConnections() {
-        svg.innerHTML = '';
-
-        var svgNS = 'http://www.w3.org/2000/svg';
-
-        var defs = document.createElementNS(svgNS, 'defs');
-        svg.appendChild(defs);
-
-        var linesGroup = document.createElementNS(svgNS, 'g');
-        linesGroup.setAttribute('class', 'svg-lines-group');
-        svg.appendChild(linesGroup);
-
-        connectorGroup = document.createElementNS(svgNS, 'g');
-        connectorGroup.setAttribute('id', 'connector-points-group');
-        svg.appendChild(connectorGroup);
-
-        svgConnectorPoints.clear();
-
-        var allCards = document.querySelectorAll('.w_contp_item');
-        var maxLevel = 0;
-        allCards.forEach(function (card) {
-            var m = card.className.match(/level-(\d+)/);
-            if (m) maxLevel = Math.max(maxLevel, parseInt(m[1], 10));
-        });
-
-        allCards.forEach(function (card) {
-            var cardId = card.getAttribute('data-card-id');
-            if (!cardId) return;
-            var levelMatch = card.className.match(/level-(\d+)/);
-            var level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
-            var isFirstLevel = level === 1;
-            var isLastLevel = level === maxLevel;
-
-            if (!isLastLevel) {
-                createSvgConnectorPoint(card, 'start', cardId);
-            }
-            if (!isFirstLevel) {
-                createSvgConnectorPoint(card, 'end', cardId);
-            }
-        });
-
-        updateSvgConnectorPositions();
-
-        connections.forEach(function (conn) {
-            drawConnection(conn, linesGroup);
-        });
-
-        updateBadges();
+        drawConnections();
     }
 
     /**
-     * 创建 SVG 连接点（卡片左右两侧的圆形端点）
-     * 
-     * @param {HTMLElement} block - 卡片 DOM 元素
-     * @param {string} type - 连接点类型：'start'（右侧输出）或 'end'（左侧输入）
-     * @param {string} blockId - 卡片 ID
-     * 
-     * 连接点样式：
-     *   - start 点：实心圆（填充层级颜色），a 级卡片半径 10，其他 8
-     *   - end 点：空心圆（白色填充 + 层级颜色描边）
-     *   - a 级 start 点额外显示连线数量文字
+     * 应用 CSS transform 到内容容器
+     * 使用 translate + scale 实现平移和缩放
      */
-    function createSvgConnectorPoint(block, type, blockId) {
-        var svgNS = 'http://www.w3.org/2000/svg';
-        var dataId = blockId + '-' + type;
-        var levelKey = blockId[0].toLowerCase();
-        var color = LEVEL_COLORS[levelKey] || '#409eff';
-        var baseRadius = blockId.startsWith('a') ? 10 : 8;
+    function applyGroupTransform() {
         var scale = currentZoom / 100;
-        var radius = baseRadius * scale;
-
-        var g = document.createElementNS(svgNS, 'g');
-        g.setAttribute('class', 'svg-connector-point svg-' + type + '-point');
-        g.setAttribute('data-id', dataId);
-        g.setAttribute('data-block-id', blockId);
-
-        var outerCircle = document.createElementNS(svgNS, 'circle');
-        outerCircle.setAttribute('r', String(radius));
-        outerCircle.setAttribute('fill', type === 'start' && blockId.startsWith('a') ? color : '#fff');
-        outerCircle.setAttribute('stroke', color);
-        outerCircle.setAttribute('stroke-width', String(2 * scale));
-        outerCircle.setAttribute('class', 'svg-connector-outer');
-        g.appendChild(outerCircle);
-
-        if (type === 'start' && blockId.startsWith('a')) {
-            var text = document.createElementNS(svgNS, 'text');
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('dominant-baseline', 'central');
-            text.setAttribute('fill', '#fff');
-            text.setAttribute('font-size', String(10 * scale));
-            text.setAttribute('font-weight', 'bold');
-            text.setAttribute('class', 'svg-connector-badge-text');
-            text.textContent = '0';
-            g.appendChild(text);
-        }
-
-        connectorGroup.appendChild(g);
-
-        svgConnectorPoints.set(dataId, {
-            element: g,
-            outerCircle: outerCircle,
-            block: block,
-            type: type,
-            dataId: dataId
-        });
+        contentContainer.style.transform = 'translate(' + groupOffsetX + 'px, ' + groupOffsetY + 'px) scale(' + scale + ')';
+        contentContainer.style.transformOrigin = 'top left';
     }
 
     /**
-     * 更新所有 SVG 连接点的位置
-     * 
-     * 根据卡片在视口中的实际位置计算连接点坐标：
-     *   - start 点：卡片右边缘中心
-     *   - end 点：卡片左边缘中心
-     * 
-     * 如果卡片不可见（offsetParent 为 null），隐藏连接点
+     * 将指定卡片居中显示在画布中
+     *
+     * @param {HTMLElement} cardElement - 卡片 DOM 元素
+     *
+     * 算法：计算卡片中心与画布中心的偏移差，调整 groupOffset
      */
-    function updateSvgConnectorPositions() {
-        var svgRect = svg.getBoundingClientRect();
+    function centerOnCard(cardElement) {
+        var mapRect = mainContainer.getBoundingClientRect();
+        var cardRect = cardElement.getBoundingClientRect();
 
-        svgConnectorPoints.forEach(function (info) {
-            var element = info.element;
-            var block = info.block;
-            var type = info.type;
+        var cardCenterX = cardRect.left - mapRect.left + cardRect.width / 2;
+        var cardCenterY = cardRect.top - mapRect.top + cardRect.height / 2;
 
-            if (!block || !block.offsetParent) {
-                element.style.display = 'none';
-                return;
-            }
+        var mapCenterX = mapRect.width / 2;
+        var mapCenterY = mapRect.height / 2;
 
-            element.style.display = '';
+        groupOffsetX += mapCenterX - cardCenterX;
+        groupOffsetY += mapCenterY - cardCenterY;
 
-            var blockRect = block.getBoundingClientRect();
-            var cx, cy;
-
-            if (type === 'start') {
-                cx = blockRect.right - svgRect.left;
-                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
-            } else {
-                cx = blockRect.left - svgRect.left;
-                cy = blockRect.top + blockRect.height / 2 - svgRect.top;
-            }
-
-            element.setAttribute('transform', 'translate(' + cx + ',' + cy + ')');
-        });
-    }
-
-    /**
-     * 更新连线数量角标
-     * 
-     * 统计每个 start 连接点对应的连线数量：
-     *   - a 级卡片：更新 SVG 连接点内的文字
-     *   - 其他卡片：更新 DOM 中的 w_contp_inum 角标
-     */
-    function updateBadges() {
-        var map = new Map();
-        svgConnectorPoints.forEach(function (info) {
-            if (info.type === 'start') {
-                map.set(info.dataId, 0);
-            }
-        });
-        connections.forEach(function (c) {
-            var sDataId = c.startId + '-start';
-            if (map.has(sDataId)) {
-                map.set(sDataId, map.get(sDataId) + 1);
-            }
-        });
-        map.forEach(function (cnt, dataId) {
-            var info = svgConnectorPoints.get(dataId);
-            if (!info) return;
-            var block = info.block;
-            if (block && block.getAttribute('data-card-id') && block.getAttribute('data-card-id').startsWith('a')) {
-                var textEl = info.element.querySelector('.svg-connector-badge-text');
-                if (textEl) textEl.textContent = cnt;
-            } else if (block) {
-                var badge = block.querySelector('.w_contp_inum');
-                if (badge) badge.textContent = cnt;
-            }
-        });
-    }
-
-    /**
-     * 绘制单条连线
-     * 
-     * @param {Object} conn - 连线数据 {startId, endId}
-     * @param {SVGGElement} linesGroup - 连线组元素
-     * 
-     * 连线样式：
-     *   - 渐变色：从起始节点颜色渐变到结束节点颜色
-     *   - 贝塞尔曲线：水平方向的 S 形曲线
-     *   - 线宽 2.5px
-     */
-    function drawConnection(conn, linesGroup) {
-        var startInfo = svgConnectorPoints.get(conn.startId + '-start');
-        var endInfo = svgConnectorPoints.get(conn.endId + '-end');
-
-        if (!startInfo || !endInfo) return;
-
-        var startElement = startInfo.element;
-        var endElement = endInfo.element;
-
-        var startTransform = startElement.getAttribute('transform');
-        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        if (!startMatch) return;
-        var startX = parseFloat(startMatch[1]);
-        var startY = parseFloat(startMatch[2]);
-
-        var endTransform = endElement.getAttribute('transform');
-        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        if (!endMatch) return;
-        var endX = parseFloat(endMatch[1]);
-        var endY = parseFloat(endMatch[2]);
-
-        var svgNS = 'http://www.w3.org/2000/svg';
-        var path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('class', 'path-line');
-        path.setAttribute('stroke-width', '2.5');
-        path.setAttribute('fill', 'none');
-
-        var startBlock = startInfo.block;
-        var endBlock = endInfo.block;
-        var startLevelKey = startBlock ? startBlock.getAttribute('data-card-id')[0].toLowerCase() : 'a';
-        var endLevelKey = endBlock ? endBlock.getAttribute('data-card-id')[0].toLowerCase() : 'b';
-
-        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
-        var c1 = levelColors[startLevelKey] || '#409eff';
-        var c2 = levelColors[endLevelKey] || '#67c23a';
-
-        var gradientId = 'conn-grad-' + conn.startId + '-' + conn.endId;
-        var lg = document.createElementNS(svgNS, 'linearGradient');
-        lg.setAttribute('id', gradientId);
-        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
-        lg.setAttribute('x1', String(startX));
-        lg.setAttribute('y1', String(startY));
-        lg.setAttribute('x2', String(endX));
-        lg.setAttribute('y2', String(endY));
-        var s1 = document.createElementNS(svgNS, 'stop');
-        s1.setAttribute('offset', '0%');
-        s1.setAttribute('stop-color', c1);
-        var s2 = document.createElementNS(svgNS, 'stop');
-        s2.setAttribute('offset', '100%');
-        s2.setAttribute('stop-color', c2);
-        lg.appendChild(s1);
-        lg.appendChild(s2);
-
-        var defs = svg.querySelector('defs');
-        if (defs) defs.appendChild(lg);
-
-        path.setAttribute('stroke', 'url(#' + gradientId + ')');
-
-        var cx = (startX + endX) / 2;
-        var bend = Math.abs(startY - endY) < 0.1 ? 0.5 : 0;
-        var d = 'M ' + startX + ' ' + startY + ' C ' + cx + ' ' + (startY + bend) + ', ' + cx + ' ' + (endY - bend) + ', ' + endX + ' ' + endY;
-        path.setAttribute('d', d);
-
-        linesGroup.appendChild(path);
-    }
-
-    // ==================== 卡片查找工具 ====================
-
-    /**
-     * 在层级数据中查找指定 ID 的卡片
-     * 
-     * @param {Object} data - fullHierarchyData 数据
-     * @param {string} blockId - 卡片 ID
-     * @returns {Object|null} 找到的卡片数据
-     */
-    function findBlockById(data, blockId) {
-        for (var level in data) {
-            if (data.hasOwnProperty(level) && Array.isArray(data[level])) {
-                var block = data[level].find(function (b) { return b.id === blockId; });
-                if (block) {
-                    return block;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 获取当前卡片及其所有下级卡片
-     * 
-     * @param {Object} currentBlock - 当前卡片数据
-     * @param {Object} data - fullHierarchyData 数据
-     * @returns {Array} 包含当前卡片和所有下级卡片的数组
-     */
-    function getAllBlocks(currentBlock, data) {
-        var allBlocks = [currentBlock];
-        var level = parseInt(currentBlock.id[1]);
-
-        for (var i = level + 1; i <= 5; i++) {
-            var levelKey = 'level' + i;
-            if (data[levelKey]) {
-                allBlocks.push.apply(allBlocks, data[levelKey]);
-            }
-        }
-
-        return allBlocks;
-    }
-
-    // ==================== 按钮初始化 ====================
-
-    /**
-     * 初始化按钮事件
-     * 返回按钮 → 跳回首页
-     */
-    function initButtons() {
-        backBtn.addEventListener('click', function () {
-            window.location.href = 'index.html';
-        });
-    }
-
-    // ==================== 缩放功能 ====================
-
-    /**
-     * 初始化缩放功能
-     * 绑定缩放按钮和鼠标滚轮事件
-     */
-    function initZoom() {
-        zoomMinusBtn.addEventListener('click', function () {
-            setZoom(Math.max(20, currentZoom - 10));
-        });
-
-        zoomPlusBtn.addEventListener('click', function () {
-            setZoom(Math.min(300, currentZoom + 10));
-        });
-
-        initWheelZoom();
-    }
-
-    /**
-     * 初始化鼠标滚轮缩放
-     * 绑定到 mainContainer，passive: false 以允许 preventDefault
-     */
-    function initWheelZoom() {
-        mainContainer.addEventListener('wheel', handleWheelZoom, { passive: false });
+        applyGroupTransform();
+        drawConnections();
     }
 
     /**
      * 处理鼠标滚轮缩放事件
-     * 
+     *
      * @param {WheelEvent} e - 滚轮事件
-     * 
+     *
      * 缩放算法：
      *   1. 计算鼠标在容器内的位置
      *   2. 将鼠标位置转换为内容坐标系中的点
@@ -795,68 +792,9 @@
         drawConnections();
     }
 
-    /**
-     * 设置缩放百分比
-     * 
-     * @param {number} percent - 缩放百分比（20~300）
-     */
-    function setZoom(percent) {
-        currentZoom = percent;
-        applyGroupTransform();
-        zoomLevel.textContent = Math.round(currentZoom) + '%';
-
-        drawConnections();
-    }
-
-    /**
-     * 应用 CSS transform 到内容容器
-     * 使用 translate + scale 实现平移和缩放
-     */
-    function applyGroupTransform() {
-        var scale = currentZoom / 100;
-        contentContainer.style.transform = 'translate(' + groupOffsetX + 'px, ' + groupOffsetY + 'px) scale(' + scale + ')';
-        contentContainer.style.transformOrigin = 'top left';
-    }
-
-    /**
-     * 将指定卡片居中显示在画布中
-     * 
-     * @param {HTMLElement} cardElement - 卡片 DOM 元素
-     * 
-     * 算法：计算卡片中心与画布中心的偏移差，调整 groupOffset
-     */
-    function centerOnCard(cardElement) {
-        var mapRect = mainContainer.getBoundingClientRect();
-        var cardRect = cardElement.getBoundingClientRect();
-
-        var cardCenterX = cardRect.left - mapRect.left + cardRect.width / 2;
-        var cardCenterY = cardRect.top - mapRect.top + cardRect.height / 2;
-
-        var mapCenterX = mapRect.width / 2;
-        var mapCenterY = mapRect.height / 2;
-
-        groupOffsetX += mapCenterX - cardCenterX;
-        groupOffsetY += mapCenterY - cardCenterY;
-
-        applyGroupTransform();
-        drawConnections();
-    }
-
-    // ==================== 拖拽功能 ====================
-
-    /**
-     * 初始化画布拖拽功能
-     * 支持鼠标和触摸事件
-     */
-    function initDrag() {
-        mainContainer.addEventListener('mousedown', handleMouseDown);
-        mainContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-        document.addEventListener('mousemove', handleDragMove);
-        document.addEventListener('touchmove', handleDragMove, { passive: false });
-        document.addEventListener('mouseup', handleDragEnd);
-        document.addEventListener('touchend', handleDragEnd);
-        document.addEventListener('mouseleave', handleDragEnd);
-    }
+    /* ============================================================
+     * 六、拖拽功能
+     * ============================================================ */
 
     /**
      * 鼠标按下 - 开始拖拽
@@ -874,7 +812,7 @@
     }
 
     /**
-     * 触摸开始 - 开始拖拽
+     * 触摸开始 - 开始拖拽（移动端）
      */
     function handleTouchStart(e) {
         if (e.target.closest('.action-btn')) return;
@@ -914,48 +852,13 @@
         dragActive = false;
     }
 
-    // ==================== 弹窗功能 ====================
-
-    /**
-     * 初始化弹窗事件
-     * 
-     * 弹窗关闭方式：
-     *   - 点击关闭按钮
-     *   - 点击遮罩层
-     *   - 按 ESC 键
-     */
-    function initModal() {
-        detailModalClose.addEventListener('click', hideDetailModal);
-        detailModal.addEventListener('click', function (e) {
-            if (e.target === detailModal) {
-                hideDetailModal();
-            }
-        });
-
-        editModalClose.addEventListener('click', hideEditModal);
-        editModalCancel.addEventListener('click', hideEditModal);
-        editModal.addEventListener('click', function (e) {
-            if (e.target === editModal) {
-                hideEditModal();
-            }
-        });
-        editModalConfirm.addEventListener('click', confirmEdit);
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                if (detailModal.classList.contains('show')) {
-                    hideDetailModal();
-                }
-                if (editModal.classList.contains('show')) {
-                    hideEditModal();
-                }
-            }
-        });
-    }
+    /* ============================================================
+     * 七、弹窗功能
+     * ============================================================ */
 
     /**
      * 显示详情弹窗
-     * 
+     *
      * @param {string} title - 卡片标题
      * @param {string} content - 卡片描述内容
      */
@@ -976,11 +879,11 @@
 
     /**
      * 显示编辑弹窗
-     * 
+     *
      * @param {string} cardId - 卡片 ID
      * @param {string} title - 卡片标题
      * @param {string} desc - 卡片描述（HTML 格式）
-     * 
+     *
      * 编辑器配置：
      *   - 两个 Quill 富文本编辑器（描述 + 教师备注）
      *   - 工具栏：加粗、斜体、下划线、删除线、引用、代码块、列表、标题、链接
@@ -1049,12 +952,12 @@
 
     /**
      * 确认编辑 - 保存修改
-     * 
+     *
      * 保存内容：
      *   - title：标题文本
      *   - desc：描述（Quill HTML）
      *   - teacherNote：教师备注（Quill HTML）
-     * 
+     *
      * 保存后自动刷新视图
      */
     function confirmEdit() {
@@ -1081,7 +984,7 @@
 
     /**
      * 更新卡片数据到 localStorage
-     * 
+     *
      * @param {string} cardId - 卡片 ID
      * @param {string} newTitle - 新标题
      * @param {string} newDesc - 新描述（HTML）
@@ -1099,5 +1002,127 @@
             }
         }
     }
+
+    /* ============================================================
+     * 八、事件绑定
+     *    - 集中注册所有 DOM 事件监听
+     * ============================================================ */
+
+    /**
+     * 初始化按钮事件
+     * 返回按钮 → 跳回首页
+     */
+    function initButtons() {
+        backBtn.addEventListener('click', function () {
+            window.location.href = 'index.html';
+        });
+    }
+
+    /**
+     * 初始化缩放功能
+     * 绑定缩放按钮和鼠标滚轮事件
+     */
+    function initZoom() {
+        zoomMinusBtn.addEventListener('click', function () {
+            setZoom(Math.max(20, currentZoom - 10));
+        });
+
+        zoomPlusBtn.addEventListener('click', function () {
+            setZoom(Math.min(300, currentZoom + 10));
+        });
+
+        mainContainer.addEventListener('wheel', handleWheelZoom, { passive: false });
+    }
+
+    /**
+     * 初始化画布拖拽功能
+     * 支持鼠标和触摸事件
+     */
+    function initDrag() {
+        mainContainer.addEventListener('mousedown', handleMouseDown);
+        mainContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('touchmove', handleDragMove, { passive: false });
+        document.addEventListener('mouseup', handleDragEnd);
+        document.addEventListener('touchend', handleDragEnd);
+        document.addEventListener('mouseleave', handleDragEnd);
+    }
+
+    /**
+     * 初始化弹窗事件
+     *
+     * 弹窗关闭方式：
+     *   - 点击关闭按钮
+     *   - 点击遮罩层
+     *   - 按 ESC 键
+     */
+    function initModal() {
+        detailModalClose.addEventListener('click', hideDetailModal);
+        detailModal.addEventListener('click', function (e) {
+            if (e.target === detailModal) {
+                hideDetailModal();
+            }
+        });
+
+        editModalClose.addEventListener('click', hideEditModal);
+        editModalCancel.addEventListener('click', hideEditModal);
+        editModal.addEventListener('click', function (e) {
+            if (e.target === editModal) {
+                hideEditModal();
+            }
+        });
+        editModalConfirm.addEventListener('click', confirmEdit);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                if (detailModal.classList.contains('show')) {
+                    hideDetailModal();
+                }
+                if (editModal.classList.contains('show')) {
+                    hideEditModal();
+                }
+            }
+        });
+    }
+
+    /* ============================================================
+     * 九、初始化入口
+     * ============================================================ */
+
+    /**
+     * DOMContentLoaded 初始化
+     *
+     * 初始化流程：
+     *   1. 检查是否有 relationChain（关系链模式）
+     *   2. 否则检查 currentBlockId（单卡片模式）
+     *   3. 都没有则跳回首页
+     *   4. 初始化按钮、缩放、拖拽、弹窗
+     *   5. 绑定窗口 resize 事件更新连线
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+        var relationChain = StorageManager.get('relationChain', null);
+        if (relationChain) {
+            showRelationChain(relationChain);
+        } else {
+            currentBlockId = StorageManager.get('currentBlockId', null);
+            if (!currentBlockId) {
+                window.location.href = 'index.html';
+                return;
+            }
+            loadBlockData();
+        }
+
+        initButtons();
+        initZoom();
+        initDrag();
+        initModal();
+
+        window.addEventListener('resize', function () {
+            if (typeof updateSvgConnectorPositions === 'function') {
+                updateSvgConnectorPositions();
+            }
+            drawConnections();
+        });
+    });
 
 })();

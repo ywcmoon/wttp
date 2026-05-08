@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：问题图谱详情页
+  功能：展示问题图谱的完整层级结构和连线关系，支持缩放查看、卡片详情、卡片编辑
+  依赖：Quill 富文本编辑器、Font Awesome 图标库、common.css、questionMapDetail.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>问题图谱详情</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/quill.snow.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/questionMapDetail.css">
+    <!-- ==================== 脚本库 ==================== -->
      <script src="js/common.js"></script>
 </head>
 
 <body>
     <div class="map-detail-container">
-        <!-- 左上角返回按钮 -->
+        <!-- ==================== 左上角返回按钮 ==================== -->
         <div class="back-btn-container">
             <button class="back-btn" id="back-btn">
                 <i class="fas fa-arrow-left"></i>
@@ -22,15 +30,15 @@
             </button>
         </div>
 
-        <!-- 主工作区 -->
+        <!-- ==================== 主工作区 ==================== -->
         <div class="main-container" id="main-container">
 
-            <!-- 内容容器 - 这部分会被缩放 -->
+            <!-- 内容容器：包含所有层级卡片，支持缩放变换 -->
             <div class="content-container" id="content-container">
 
-                <!-- 卡片容器 - 按层级分组 -->
+                <!-- 卡片容器：按层级分组，共5个层级 -->
                 <div class="w_cont" id="w_cont">
-                    <!-- 第一层级 -->
+                    <!-- 第一层级（A组）：蓝色主题 -->
                     <div class="w_cont_problem ABox" id="golink-level-1" style="display:none;">
                         <div class="w_contp_head">
                             <div class="w_contp_icon" style="background: #409eff;">
@@ -44,7 +52,7 @@
                         </div>
                     </div>
 
-                    <!-- 第二层级 -->
+                    <!-- 第二层级（B组）：绿色主题 -->
                     <div class="w_cont_problem BBox" id="golink-level-2" style="display:none;">
                         <div class="w_contp_head">
                             <div class="w_contp_icon" style="background: #67c23a;">
@@ -58,7 +66,7 @@
                         </div>
                     </div>
 
-                    <!-- 第三层级 -->
+                    <!-- 第三层级（C组）：橙色主题 -->
                     <div class="w_cont_problem CBox" id="golink-level-3" style="display:none;">
                         <div class="w_contp_head">
                             <div class="w_contp_icon" style="background: #e6a23c;">
@@ -72,7 +80,7 @@
                         </div>
                     </div>
 
-                    <!-- 第四层级 -->
+                    <!-- 第四层级（D组）：红色主题 -->
                     <div class="w_cont_problem DBox" id="golink-level-4" style="display:none;">
                         <div class="w_contp_head">
                             <div class="w_contp_icon" style="background: #f56c6c;">
@@ -86,7 +94,7 @@
                         </div>
                     </div>
 
-                    <!-- 第五层级 -->
+                    <!-- 第五层级（E组）：紫色主题 -->
                     <div class="w_cont_problem EBox" id="golink-level-5" style="display:none;">
                         <div class="w_contp_head">
                             <div class="w_contp_icon" style="background: #E372DB;">
@@ -102,9 +110,10 @@
                 </div>
             </div>
 
-            <!-- SVG 画布 - 保持固定，在内容容器之上 -->
+            <!-- SVG 画布：绘制层级间连接线，固定在内容容器之上 -->
             <svg id="golink-connections-svg" class="connections-svg">
                 <defs>
+                    <!-- 渐变色定义：用于不同层级之间的连接线颜色过渡 -->
                     <linearGradient id="gradient-level-1-to-level-2" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stop-color="#409eff" />
                         <stop offset="100%" stop-color="#67c23a" />
@@ -125,7 +134,8 @@
             </svg>
         </div>
 
-        <!-- 左下角缩放控制 -->
+        <!-- ==================== 左下角缩放控制 ==================== -->
+        <!-- 提供放大、缩小按钮和当前缩放比例显示 -->
         <div class="zoom-control-container">
             <div class="zoom-control">
                 <button class="zoom-btn" id="zoom-minus">
@@ -139,9 +149,9 @@
         </div>
     </div>
 
-    <!-- 公共弹窗容器 -->
+    <!-- ==================== 公共弹窗容器 ==================== -->
     <div id="common_windows">
-        <!-- 详情弹窗 -->
+        <!-- 详情弹窗：展示卡片的完整内容信息 -->
         <div class="modal-overlay" id="detail-modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
@@ -156,7 +166,7 @@
             </div>
         </div>
 
-        <!-- 编辑卡片弹窗 -->
+        <!-- 编辑卡片弹窗：使用 Quill 富文本编辑器编辑卡片名称、描述和教师参考 -->
         <div id="edit-block-modal-overlay" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">

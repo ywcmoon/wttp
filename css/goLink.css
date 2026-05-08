@@ -1,5 +1,7 @@
-/* goLink 页面特定样式 */
+/* ==================== 基础样式 ==================== */
+/* 页面头部通用样式 - 用于goLink探索模式页面的顶部操作栏 */
 
+/* 页面头部容器：白色背景、底部阴影、弹性布局两端对齐 */
 .w_head {
     background: #fff;
     padding: 16px 24px;
@@ -10,20 +12,24 @@
     margin-bottom: 20px;
 }
 
+/* 头部标题文字 */
 .w_head_txt {
     font-size: 16px;
     color: #303133;
     font-weight: 500;
 }
 
+/* 头部按钮组容器：弹性布局、按钮间距12px */
 .w_head_btnwrap {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
- 
+/* ==================== 布局样式 ==================== */
+/* 主容器布局 - 探索模式卡片横向排列的核心布局 */
 
+/* 探索模式主容器：横向弹性布局、卡片间距40px、允许溢出滚动 */
 .golink-cont {
     display: flex;
     gap: 40px;
@@ -35,12 +41,17 @@
     transition: none;
 }
 
+/* 单个卡片容器：不收缩、最小宽度100px、默认宽度100px（由JS动态调整） */
 .golink-box {
     flex-shrink: 0;
     min-width: 100px;
     width: 100px;
 }
 
+/* ==================== 组件样式 ==================== */
+/* 按钮组件 - 探索模式操作按钮 */
+
+/* 通用按钮基础样式：弹性居中、圆角、过渡动画 */
 .golink-btn {
     display: flex;
     align-items: center;
@@ -56,31 +67,39 @@
     white-space: nowrap;
 }
 
+/* 按钮内图标样式 */
 .golink-btn i {
     font-size: 14px;
 }
 
+/* 停止探索按钮：灰色背景、灰色边框 */
 .golink-btn-stop {
     background: #f5f7fa;
     color: #909399;
     border: 1px solid #dcdfe6;
 }
 
+/* 停止探索按钮悬停效果：浅蓝背景、蓝色文字 */
 .golink-btn-stop:hover {
     background: #ecf5ff;
     color: #409eff;
     border-color: #b3d8ff;
 }
 
+/* 提交按钮：蓝色背景、白色文字 */
 .golink-btn-submit {
     background: #409eff;
     color: white;
 }
 
+/* 提交按钮悬停效果：浅蓝色背景 */
 .golink-btn-submit:hover {
     background: #66b1ff;
 }
 
+/* 卡片计数徽标 - 显示每层卡片数量的圆形标记 */
+
+/* 卡片计数徽标：绝对定位在卡片右上角、渐变紫色背景、圆形、白色数字 */
 .golink-card-count {
     position: absolute;
     top: -8px;
@@ -98,50 +117,9 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-#connector-points-group {
-    pointer-events: none;
-}
+/* 卡片内序号徽标 - 显示卡片在层级中的序号 */
 
-.svg-connector-point {
-    pointer-events: all;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-}
-
-.svg-connector-point.dragging {
-    filter: drop-shadow(0 4px 8px rgba(64, 158, 255, 0.5));
-}
-
-.svg-connector-outer {
-    transition: fill 0.15s, stroke 0.15s;
-}
-
-.svg-connector-badge-text {
-    pointer-events: none;
-    user-select: none;
-}
-
-.path-line {
-    fill: none;
-    stroke-width: 2.5;
-    stroke-dasharray: none;
-}
-
-.path-line.level-1-to-level-2 {
-    stroke: url(#gradient-level-1-to-level-2);
-}
-
-.path-line.level-2-to-level-3 {
-    stroke: url(#gradient-level-2-to-level-3);
-}
-
-.path-line.level-3-to-level-4 {
-    stroke: url(#gradient-level-3-to-level-4);
-}
-
-.path-line.level-4-to-level-5 {
-    stroke: url(#gradient-level-4-to-level-5);
-}
-
+/* 序号徽标基础样式：绝对定位右上角、蓝色圆形背景 */
 .w_contp_inum {
     position: absolute;
     top: 8px;
@@ -158,6 +136,7 @@
     font-weight: 600;
 }
 
+/* 不同层级的序号徽标颜色区分 */
 .level-2 .w_contp_inum {
     background: #67c23a;
 }
@@ -174,6 +153,9 @@
     background: #E372DB;
 }
 
+/* 卡片操作按钮 - 卡片右下角的操作入口 */
+
+/* 操作按钮：绝对定位右下角、半透明白色背景、蓝色文字 */
 .w_contp_btn {
     position: absolute;
     bottom: 0;
@@ -190,10 +172,70 @@
     border-radius: 4px;
 }
 
+/* 操作按钮悬停：去除下划线（继承自链接样式） */
 .w_contp_btn:hover {
     text-decoration: none;
 }
 
+/* SVG连接点组件 - 卡片之间的可视化连接点 */
+
+/* 连接点容器组：禁止鼠标事件穿透，确保连接点可交互 */
+#connector-points-group {
+    pointer-events: none;
+}
+
+/* 单个连接点：允许鼠标事件、添加投影增强立体感 */
+.svg-connector-point {
+    pointer-events: all;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+/* 拖拽中的连接点：蓝色高亮投影，提供拖拽反馈 */
+.svg-connector-point.dragging {
+    filter: drop-shadow(0 4px 8px rgba(64, 158, 255, 0.5));
+}
+
+/* 连接点外圈：填充和描边颜色过渡动画 */
+.svg-connector-outer {
+    transition: fill 0.15s, stroke 0.15s;
+}
+
+/* 连接点徽标文字：禁止鼠标事件和文本选择 */
+.svg-connector-badge-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 连接路径线组件 - 层级之间的SVG连接线 */
+
+/* 路径线基础样式：无填充、2.5px描边宽度、实线 */
+.path-line {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-dasharray: none;
+}
+
+/* 各层级之间的渐变路径线颜色 */
+.path-line.level-1-to-level-2 {
+    stroke: url(#gradient-level-1-to-level-2);
+}
+
+.path-line.level-2-to-level-3 {
+    stroke: url(#gradient-level-2-to-level-3);
+}
+
+.path-line.level-3-to-level-4 {
+    stroke: url(#gradient-level-3-to-level-4);
+}
+
+.path-line.level-4-to-level-5 {
+    stroke: url(#gradient-level-4-to-level-5);
+}
+
+/* ==================== 页面特定样式 ==================== */
+/* 弹窗组件 - 探索模式中查看题目详情的模态弹窗 */
+
+/* 弹窗遮罩层：固定定位覆盖全屏、z-index:10000确保最顶层、默认隐藏 */
 .golink-modal {
     position: fixed;
     top: 0;
@@ -207,10 +249,12 @@
     padding: 20px;
 }
 
+/* 弹窗显示状态：切换为弹性布局居中 */
 .golink-modal.show {
     display: flex;
 }
 
+/* 弹窗半透明遮罩：黑色60%透明度、淡入动画 */
 .golink-modal-overlay {
     position: absolute;
     top: 0;
@@ -222,6 +266,7 @@
     z-index: 1;
 }
 
+/* 弹窗内容容器：白色背景、圆角、最大宽度800px、上滑动画 */
 .golink-modal-content {
     position: relative;
     background: #ffffff;
@@ -236,16 +281,19 @@
     z-index: 2;
 }
 
+/* 弹窗淡入动画：透明度从0到1 */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
+/* 弹窗上滑动画：从下方30px滑入并淡入 */
 @keyframes slideUp {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* 弹窗头部：弹性布局两端对齐、底部边框分隔 */
 .golink-modal-header {
     display: flex;
     justify-content: space-between;
@@ -255,6 +303,7 @@
     flex-shrink: 0;
 }
 
+/* 弹窗标题 */
 .golink-modal-header h3 {
     font-size: 20px;
     font-weight: 600;
@@ -263,6 +312,7 @@
     line-height: 1.4;
 }
 
+/* 弹窗关闭按钮：圆形按钮、悬停时蓝色高亮 */
 .golink-modal-close {
     background: none;
     border: none;
@@ -279,11 +329,13 @@
     height: 40px;
 }
 
+/* 关闭按钮悬停效果：蓝色文字、浅蓝背景 */
 .golink-modal-close:hover {
     color: #409eff;
     background: #ecf5ff;
 }
 
+/* 弹窗内容区域：可滚动、自动填充剩余空间 */
 .golink-modal-body {
     padding: 28px;
     overflow-y: auto;
@@ -292,6 +344,7 @@
     min-height: 0;
 }
 
+/* 弹窗描述文字：支持换行和长单词断行，确保内容完整显示 */
 #golink-modal-desc {
     font-size: 16px;
     color: #606266;
@@ -303,58 +356,75 @@
     word-break: break-word;
 }
 
+/* ==================== 响应式样式 ==================== */
+/* 中等屏幕适配（平板横屏，≤1024px） */
+
 @media (max-width: 1024px) {
+    /* 缩小卡片间距 */
     .golink-cont {
         gap: 20px;
     }
 
+    /* 调整卡片最小宽度 */
     .golink-box {
         min-width: 260px;
     }
 }
 
+/* 小屏幕适配（手机竖屏，≤768px） */
+
 @media (max-width: 768px) {
+    /* 主容器内边距缩小 */
     .golink-main {
         padding: 12px;
     }
 
+    /* 卡片改为纵向排列 */
     .golink-cont {
         flex-direction: column;
         gap: 24px;
         overflow-x: visible;
     }
 
+    /* 卡片宽度占满容器 */
     .golink-box {
         min-width: 100%;
         width: 100%;
     }
 
+    /* 按钮弹性填充 */
     .golink-btn {
         flex: 1;
     }
 
+    /* 弹窗外边距缩小 */
     .golink-modal {
         padding: 10px;
     }
 
+    /* 弹窗内容全宽、调整最大高度和圆角 */
     .golink-modal-content {
         width: 100%;
         max-height: calc(100vh - 20px);
         border-radius: 8px;
     }
 
+    /* 弹窗头部内边距缩小 */
     .golink-modal-header {
         padding: 16px 20px;
     }
 
+    /* 弹窗标题字号缩小 */
     .golink-modal-header h3 {
         font-size: 18px;
     }
 
+    /* 弹窗内容区内边距缩小 */
     .golink-modal-body {
         padding: 20px;
     }
 
+    /* 弹窗描述文字字号缩小 */
     #golink-modal-desc {
         font-size: 15px;
     }

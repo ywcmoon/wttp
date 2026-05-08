@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 
+<!--
+  页面：探索模式入口页
+  功能：学生端探索模式的入口页面，展示可选的问题/能力卡片组，选择后进入连线探索
+  依赖：Font Awesome 图标库、common.css、exploreList.css
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>探索模式</title>
+    <!-- ==================== 样式表 ==================== -->
     <link rel="stylesheet" href="css/font-awesome/all.min.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/exploreList.css">
+    <!-- ==================== 脚本库 ==================== -->
     <script src="js/common.js"></script>
 </head>
 
 <body>
-    <!-- 公共导航 -->
+    <!-- ==================== 顶部导航栏 ==================== -->
+    <!-- 公共导航：问题图谱 / 能力图谱 标签切换 -->
     <div class="tab-nav">
         <div class="tab-item active" data-tab="question">
             <i class="fas fa-question-circle"></i> 问题图谱
@@ -22,9 +31,9 @@
         </div>
     </div>
 
-
+    <!-- ==================== 探索内容区 ==================== -->
     <div class="explore-container">
-        <!-- 选项卡内容 -->
+        <!-- 问题图谱选项卡 -->
         <div class="tab-content active" id="question-tab">
             <div class="tab-header">
                 <div class="tab-info">
@@ -40,6 +49,7 @@
             </div>
         </div>
 
+        <!-- 能力图谱选项卡 -->
         <div class="tab-content" id="ability-tab">
             <div class="tab-header">
                 <div class="tab-info">
@@ -56,7 +66,8 @@
         </div>
     </div>
 
-    <!-- 开始探索弹窗 -->
+    <!-- ==================== 开始探索确认弹窗 ==================== -->
+    <!-- 展示探索须知，用户确认后进入连线探索页面 -->
     <div class="explore-modal" id="explore-modal">
         <div class="modal-content">
             <h3>欢迎您进入探索模式</h3>
