@@ -50,11 +50,7 @@ body {
     border-color: #c0c4cc;
 }
 
-/* 主工作区：相对定位以便 SVG 覆盖 */
-.w_main {
-    padding: 20px;
-    position: relative;
-}
+ 
 
 /* 四列布局容器 */
 .w_cont {

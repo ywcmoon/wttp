@@ -30,7 +30,7 @@
     var svg = document.getElementById('golink-connections-svg');
 
     /** @type {HTMLElement} 主工作区容器 */
-    var mapContainer = document.getElementById('golink-workspace');
+    var mainContainer = document.getElementById('main-container');
 
     /** @type {HTMLElement} 终止探索按钮 */
     var stopBtn = document.getElementById('golink-stop-btn');
@@ -337,7 +337,7 @@
      * 绑定到工作区容器，passive: false 以允许 preventDefault
      */
     function initWheelZoom() {
-        var container = document.getElementById('golink-workspace');
+        var container = document.getElementById('main-container');
         if (!container) return;
 
         container.addEventListener('wheel', handleWheelZoom, { passive: false });
@@ -360,7 +360,7 @@
         e.preventDefault();
         e.stopPropagation();
 
-        var containerRect = mapContainer.getBoundingClientRect();
+        var containerRect = mainContainer.getBoundingClientRect();
         var mouseX = e.clientX - containerRect.left;
         var mouseY = e.clientY - containerRect.top;
 
@@ -1121,6 +1121,20 @@
             }
 
             element.setAttribute('transform', 'translate(' + cx + ',' + cy + ')');
+
+            var outerCircle = info.outerCircle;
+            if (outerCircle) {
+                var blockId = info.dataId.replace(/-start|-end$/, '');
+                var baseRadius = blockId.startsWith('a') ? 10 : 8;
+                var scale = currentZoom / 100;
+                outerCircle.setAttribute('r', String(baseRadius * scale));
+                outerCircle.setAttribute('stroke-width', String(2 * scale));
+            }
+
+            var badgeText = element.querySelector('.svg-connector-badge-text');
+            if (badgeText) {
+                badgeText.setAttribute('font-size', String(10 * currentZoom / 100));
+            }
         });
     }
 

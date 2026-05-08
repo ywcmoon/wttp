@@ -28,7 +28,7 @@
     /** @type {SVGSVGElement} SVG 画布，用于绘制连接线 */
     const svg = document.getElementById('connections-svg');
     /** @type {HTMLElement} 工作区容器，用于计算布局 */
-    const container = document.getElementById('workspace-container');
+    const container = document.getElementById('main-container');
 
     // ==================== 核心状态变量 ====================
     /**
@@ -3950,6 +3950,28 @@
 
 
     /**
+     * 设置卡片关联的SVG连接点变灰/恢复
+     * 当卡片处于dimmed状态时，其start和end连接点同步降低透明度
+     *
+     * @param {HTMLElement} block - 卡片元素
+     * @param {boolean} isDimmed - 是否变灰
+     * @returns {void}
+     */
+    function setConnectorPointDimmed(block, isDimmed) {
+        if (!block || !block.id) return;
+        const startInfo = svgConnectorPoints.get(`${block.id}-start`);
+        const endInfo = svgConnectorPoints.get(`${block.id}-end`);
+        if (startInfo && startInfo.element) {
+            startInfo.element.style.opacity = isDimmed ? '0.4' : '';
+            startInfo.element.style.transition = 'opacity 0.3s ease';
+        }
+        if (endInfo && endInfo.element) {
+            endInfo.element.style.opacity = isDimmed ? '0.4' : '';
+            endInfo.element.style.transition = 'opacity 0.3s ease';
+        }
+    }
+
+    /**
       * 卡片悬停处理函数
       */
     function handleBlockHover(block, isHover) {
@@ -3989,11 +4011,13 @@
 
         sameLevelBlocks.forEach(b => {
             b.classList.add('dimmed');
+            setConnectorPointDimmed(b, true);
         });
 
         blocks.forEach(b => {
             if (!relatedBlocks.has(b) && b.id[0] !== blockLevel) {
                 b.classList.add('dimmed');
+                setConnectorPointDimmed(b, true);
             }
         });
 
@@ -4047,6 +4071,7 @@
             if (b === block) return;
             if (relatedBlocks.has(b) && !isInStackedGroup(b) && !collapsedABlocks.includes(b)) return;
             b.classList.add('dimmed');
+            setConnectorPointDimmed(b, true);
         });
 
         // 堆叠卡组变灰
@@ -4093,6 +4118,7 @@
         document.querySelectorAll('.w_contp_item').forEach(b => {
             b.classList.remove('dimmed');
             b.classList.remove('selected');
+            setConnectorPointDimmed(b, false);
         });
         document.querySelectorAll('.folded-block').forEach(folded => {
             folded.closest('.fold-group').classList.remove('dimmed');

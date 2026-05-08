@@ -64,6 +64,14 @@ body {
     font-size: 20px;
 }
 
+/* 主工作区容器 */
+.main-container{
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    padding: 20px;
+}
 /* ========== 统一卡片与连线样式规范 ========== */
 
 .w_cont {

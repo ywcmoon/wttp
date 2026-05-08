@@ -25,8 +25,8 @@
 
     // ==================== DOM 元素引用 ====================
 
-    /** @type {HTMLElement} 画布容器（拖拽/缩放区域） */
-    var mapContainer = document.getElementById('golink-workspace');
+    /** @type {HTMLElement} 画布容器（拖拽/缩放区域） */ 
+    var mainContainer = document.getElementById('main-container');
 
     /** @type {HTMLElement} 内容容器（应用 transform 变换） */
     var contentContainer = document.getElementById('content-container');
@@ -487,7 +487,9 @@
         var dataId = blockId + '-' + type;
         var levelKey = blockId[0].toLowerCase();
         var color = LEVEL_COLORS[levelKey] || '#409eff';
-        var radius = blockId.startsWith('a') ? 10 : 8;
+        var baseRadius = blockId.startsWith('a') ? 10 : 8;
+        var scale = currentZoom / 100;
+        var radius = baseRadius * scale;
 
         var g = document.createElementNS(svgNS, 'g');
         g.setAttribute('class', 'svg-connector-point svg-' + type + '-point');
@@ -498,7 +500,7 @@
         outerCircle.setAttribute('r', String(radius));
         outerCircle.setAttribute('fill', type === 'start' && blockId.startsWith('a') ? color : '#fff');
         outerCircle.setAttribute('stroke', color);
-        outerCircle.setAttribute('stroke-width', '2');
+        outerCircle.setAttribute('stroke-width', String(2 * scale));
         outerCircle.setAttribute('class', 'svg-connector-outer');
         g.appendChild(outerCircle);
 
@@ -507,7 +509,7 @@
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('dominant-baseline', 'central');
             text.setAttribute('fill', '#fff');
-            text.setAttribute('font-size', '10');
+            text.setAttribute('font-size', String(10 * scale));
             text.setAttribute('font-weight', 'bold');
             text.setAttribute('class', 'svg-connector-badge-text');
             text.textContent = '0';
@@ -749,10 +751,10 @@
 
     /**
      * 初始化鼠标滚轮缩放
-     * 绑定到 mapContainer，passive: false 以允许 preventDefault
+     * 绑定到 mainContainer，passive: false 以允许 preventDefault
      */
     function initWheelZoom() {
-        mapContainer.addEventListener('wheel', handleWheelZoom, { passive: false });
+        mainContainer.addEventListener('wheel', handleWheelZoom, { passive: false });
     }
 
     /**
@@ -771,7 +773,7 @@
         e.preventDefault();
         e.stopPropagation();
 
-        var containerRect = mapContainer.getBoundingClientRect();
+        var containerRect = mainContainer.getBoundingClientRect();
         var mouseX = e.clientX - containerRect.left;
         var mouseY = e.clientY - containerRect.top;
 
@@ -824,7 +826,7 @@
      * 算法：计算卡片中心与画布中心的偏移差，调整 groupOffset
      */
     function centerOnCard(cardElement) {
-        var mapRect = mapContainer.getBoundingClientRect();
+        var mapRect = mainContainer.getBoundingClientRect();
         var cardRect = cardElement.getBoundingClientRect();
 
         var cardCenterX = cardRect.left - mapRect.left + cardRect.width / 2;
@@ -847,8 +849,8 @@
      * 支持鼠标和触摸事件
      */
     function initDrag() {
-        mapContainer.addEventListener('mousedown', handleMouseDown);
-        mapContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+        mainContainer.addEventListener('mousedown', handleMouseDown);
+        mainContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
         document.addEventListener('mousemove', handleDragMove);
         document.addEventListener('touchmove', handleDragMove, { passive: false });
         document.addEventListener('mouseup', handleDragEnd);
