@@ -68,7 +68,11 @@
     svg.appendChild(connectorGroup);
 
     const LEVEL_COLORS = {
-        a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB'
+        a: getComputedStyle(document.documentElement).getPropertyValue('--color-level-a').trim() || '#409eff',
+        b: getComputedStyle(document.documentElement).getPropertyValue('--color-level-b').trim() || '#67c23a',
+        c: getComputedStyle(document.documentElement).getPropertyValue('--color-level-c').trim() || '#e6a23c',
+        d: getComputedStyle(document.documentElement).getPropertyValue('--color-level-d').trim() || '#f56c6c',
+        e: getComputedStyle(document.documentElement).getPropertyValue('--color-level-e').trim() || '#E372DB'
     };
 
     // ==================== 卡片拖拽排序状态 ====================
@@ -82,22 +86,50 @@
     let suppressCardClickUntil = 0;
     const DRAG_LONG_PRESS_MS = 0;
 
+    /**
+     * 判断卡片是否为第一层级（level-1）
+     * @param {HTMLElement} block - 卡片元素
+     * @returns {boolean} 如果是第一层级返回 true
+     */
     function isFirstLevelCard(block) {
         return !!block && block.classList.contains('level-1');
     }
 
+    /**
+     * 拖拽结束后短时间内抑制卡片点击导航
+     * 防止拖拽松手时误触发卡片点击跳转
+     * @returns {void}
+     */
     function suppressCardNavigationAfterDrag() {
         suppressCardClickUntil = Date.now() + 500;
     }
 
+    /**
+     * 判断当前是否应该抑制卡片导航（拖拽中或拖拽刚结束）
+     * @returns {boolean} 如果应抑制返回 true
+     */
     function shouldSuppressCardNavigation() {
         return isDraggingCard || Date.now() < suppressCardClickUntil;
     }
 
+    /**
+     * 根据卡片ID获取SVG连接点半径
+     * A组卡片连接点较大（10px），其他层级较小（8px）
+     * @param {string} blockId - 卡片ID
+     * @returns {number} 连接点半径（像素）
+     */
     function getConnectorRadius(blockId) {
         return blockId.startsWith('a') ? 10 : 8;
     }
 
+    /**
+     * 为指定卡片创建SVG连接点（起点或终点）
+     * 创建包含外圆和文字（A组起点）的SVG组元素，绑定拖拽事件
+     *
+     * @param {HTMLElement} block - 目标卡片元素
+     * @param {string} type - 连接点类型：'start'（起点）或 'end'（终点）
+     * @returns {SVGGElement} 创建的SVG组元素
+     */
     function createSvgConnectorPoint(block, type) {
         const blockId = block.id;
         const dataId = `${blockId}-${type}`;
@@ -148,6 +180,12 @@
         return g;
     }
 
+    /**
+     * 初始化所有SVG连接点
+     * 遍历所有卡片，为非末层卡片创建起点，为非首层卡片创建终点
+     * 最后更新所有连接点的位置
+     * @returns {void}
+     */
     function initAllSvgConnectorPoints() {
         connectorGroup.innerHTML = '';
         svgConnectorPoints.clear();
@@ -178,6 +216,12 @@
         updateSvgConnectorPositions();
     }
 
+    /**
+     * 更新所有SVG连接点的位置
+     * 根据卡片在页面中的实际位置，计算并设置SVG连接点的坐标
+     * 隐藏不可见卡片（original-hidden、无offsetParent）的连接点
+     * @returns {void}
+     */
     function updateSvgConnectorPositions() {
         const svgRect = svg.getBoundingClientRect();
 
@@ -234,6 +278,12 @@
         });
     }
 
+    /**
+     * 根据 dataId 获取SVG连接点的坐标
+     * 从 SVG transform 属性中解析 translate 值
+     * @param {string} dataId - 连接点标识符（格式："blockId-start" 或 "blockId-end"）
+     * @returns {{x: number, y: number}} SVG坐标系中的坐标
+     */
     function getSvgPointCoord(dataId) {
         const info = svgConnectorPoints.get(dataId);
         if (!info) return { x: 0, y: 0 };
@@ -246,6 +296,10 @@
         return { x: 0, y: 0 };
     }
 
+    /**
+     * 获取所有起点类型的连接点列表
+     * @returns {Array<{element: SVGGElement, outerCircle: SVGCircleElement, block: HTMLElement, type: string, dataId: string}>}
+     */
     function getStartPts() {
         const pts = [];
         svgConnectorPoints.forEach((info) => {
@@ -361,10 +415,7 @@
 
     window.addEventListener('resize', handleResize);
 
-    const resizeObserver = new ResizeObserver(() => {
-        updateSVGDimensions();
-        updateAllConnections();
-    });
+    const resizeObserver = new ResizeObserver(handleResize);
 
     if (container) {
         resizeObserver.observe(container);
@@ -435,6 +486,15 @@
         return `M ${x1} ${y1} C ${cx} ${y1 + bend}, ${cx} ${y2 - bend}, ${x2} ${y2}`;
     }
 
+    /**
+     * 获取折叠状态下卡片连接点的坐标
+     * 优先查找指定A卡片对应的折叠副本，其次查找原始卡片，最后回退到SVG连接点
+     *
+     * @param {string} blockId - 卡片ID
+     * @param {string} pointType - 连接点类型：'start' 或 'end'
+     * @param {string} groupABlockId - 触发折叠的A卡片ID（用于定位特定折叠组）
+     * @returns {{x: number, y: number}} SVG坐标系中的坐标
+     */
     function getFoldedBlockCoord(blockId, pointType, groupABlockId) {
         const svgRect = svg.getBoundingClientRect();
 
@@ -556,6 +616,13 @@
         return false;
     }
 
+    /**
+     * 从连接点元素获取其所属的卡片元素
+     * 查找方式优先级：closest查找 > data-block-id属性 > data-id映射
+     *
+     * @param {HTMLElement} pt - 连接点元素
+     * @returns {HTMLElement|null} 所属卡片元素，未找到返回null
+     */
     function getBlockFromPoint(pt) {
         if (!pt) return null;
         if (pt.closest) {
@@ -1208,6 +1275,13 @@
         document.addEventListener('mouseup', onConnEnd);
     }
 
+    /**
+     * SVG连接点按下事件处理
+     * 从SVG组元素启动连线拖拽
+     *
+     * @param {MouseEvent} e - 鼠标事件对象
+     * @returns {void}
+     */
     function onSvgPointDown(e) {
         e.preventDefault(); e.stopPropagation();
         const g = e.currentTarget;
@@ -1379,6 +1453,13 @@
         tempPath = null;
     }
 
+    /**
+     * SVG连接点连线拖拽结束事件
+     * 检测释放位置是否命中有效目标连接点，创建连线或取消
+     *
+     * @param {MouseEvent} e - 鼠标事件对象
+     * @returns {void}
+     */
     function onSvgConnEnd(e) {
         if (!isDraggingConn) return;
         document.removeEventListener('mousemove', onConnDrag);
@@ -1552,11 +1633,20 @@
         cross.addEventListener('click', handleDelete);
     }
 
+    /**
+     * 移除所有连线上的删除按钮（红色圆圈和叉号）
+     * @returns {void}
+     */
     function removeDeleteBtn() {
         document.querySelectorAll('.path-delete-btn').forEach(btn => btn.remove());
         document.querySelectorAll('.path-delete-cross').forEach(cross => cross.remove());
     }
 
+    /**
+     * 获取所有折叠A卡片的下游卡片集合
+     * 用于判断卡片是否属于某个折叠组
+     * @returns {Set<HTMLElement>} 所有被折叠影响的卡片集合
+     */
     function getCollapsedDownstreamSet() {
         const set = new Set();
         blocks.filter(b => b.id.startsWith('a') && foldState.get(b)).forEach(a => {
@@ -1565,6 +1655,14 @@
         return set;
     }
 
+    /**
+     * 从指定卡片向上查找第一个可见的根卡片（未被折叠的A卡片）
+     * 在折叠状态下用于确定卡片的有效上级
+     *
+     * @param {HTMLElement} block - 起始卡片
+     * @param {Set<HTMLElement>} excluded - 排除的卡片集合
+     * @returns {HTMLElement|null} 第一个可见的A卡片，未找到返回null
+     */
     function findTopVisibleRoot(block, excluded) {
         const visited = new Set();
         const queue = [block];
@@ -1586,6 +1684,12 @@
         return null;
     }
 
+    /**
+     * 同步SVG连接点与当前卡片列表
+     * 根据层级数量动态为卡片添加或移除起始连接点
+     * 末层卡片自动移除起始连接点，非末层卡片自动创建
+     * @returns {void}
+     */
     function syncConnectorPoints() {
         const maxLevel = levels.length;
         if (maxLevel === 0) return;
@@ -1637,11 +1741,21 @@
         });
     }
 
+    /**
+     * 鼠标移出连线时延迟移除删除按钮
+     * 延迟150ms防止鼠标快速移动时按钮闪烁
+     * @param {MouseEvent} e - 鼠标事件对象
+     * @returns {void}
+     */
     function onPathMouseLeave(e) {
         setTimeout(() => removeDeleteBtn(), 150);
     }
 
-    // ========== 初始化基础事件 ==========
+    /**
+     * 更新所有层级标题的卡片数量显示
+     * 实时统计每个层级下的卡片数量并显示在标题中
+     * @returns {void}
+     */
     function updateLevelTitles() {
         // 更新所有层级标题的卡片数量
         document.querySelectorAll('.w_cont_problem').forEach(column => {
@@ -2172,7 +2286,11 @@
 
 
     /**
-     * 删除某个卡片相关的所有连接
+     * 删除指定卡片相关的所有连接（SVG连线）
+     * 遍历connections数组，移除与目标卡片ID相关的所有连线DOM和引用
+     *
+     * @param {string} cardId - 要删除连接的卡片ID
+     * @returns {void}
      */
     function deleteCardConnections(cardId) {
         const newConnections = connections.filter(conn => {
@@ -2390,6 +2508,14 @@
 
     // ==================== 卡片拖拽排序功能 ====================
 
+    /**
+     * 绑定卡片拖拽手柄事件
+     * 长按手柄触发拖拽，设置短距离移动容差防止误触
+     *
+     * @param {HTMLElement} block - 卡片元素
+     * @param {HTMLElement} dragHandle - 拖拽手柄元素
+     * @returns {void}
+     */
     function bindCardDragHandle(block, dragHandle) {
         dragHandle.addEventListener('mousedown', (e) => {
             if (!isFirstLevelCard(block)) return;
@@ -2416,6 +2542,13 @@
         });
     }
 
+    /**
+     * 为卡片添加拖拽手柄
+     * 仅在首层级卡片上显示拖拽手柄，非首层级移除已有手柄
+     *
+     * @param {HTMLElement} block - 卡片元素
+     * @returns {void}
+     */
     function addCardDragHandle(block) {
         if (!isFirstLevelCard(block)) {
             block.querySelectorAll('.card-drag-handle').forEach(handle => handle.remove());
@@ -2431,6 +2564,14 @@
         bindCardDragHandle(block, dragHandle);
     }
 
+    /**
+     * 开始卡片拖拽
+     * 创建拖拽幽灵元素并启动鼠标跟随
+     *
+     * @param {HTMLElement} block - 被拖拽的卡片
+     * @param {MouseEvent} e - 鼠标事件
+     * @returns {void}
+     */
     function startCardDrag(block, e) {
         if (!isFirstLevelCard(block)) return;
         isDraggingCard = true;
@@ -2453,6 +2594,13 @@
         document.addEventListener('mouseup', onCardDragEnd);
     }
 
+    /**
+     * 卡片拖拽中（鼠标跟随）
+     * 实时更新幽灵元素位置，检测目标卡片并高亮
+     *
+     * @param {MouseEvent} e - 鼠标事件
+     * @returns {void}
+     */
     function onCardDragMove(e) {
         if (!isDraggingCard || !dragGhost || !dragCardBlock) return;
 
@@ -2479,6 +2627,13 @@
         dragTargetBlock = newTarget;
     }
 
+    /**
+     * 卡片拖拽结束
+     * 清理拖拽状态，若命中有效目标则交换位置
+     *
+     * @param {MouseEvent} e - 鼠标事件
+     * @returns {void}
+     */
     function onCardDragEnd(e) {
         clearTimeout(dragLongPressTimer);
         document.removeEventListener('mousemove', onCardDragMove);
@@ -2508,6 +2663,14 @@
         document.body.style.userSelect = '';
     }
 
+    /**
+     * 交换两个卡片的位置（在第一层级内拖拽排序）
+     * 交换两个同级卡片在DOM中的位置，并更新SVG连接和保存状态
+     *
+     * @param {HTMLElement} blockA - 被拖拽的卡片
+     * @param {HTMLElement} blockB - 目标位置卡片
+     * @returns {void}
+     */
     function swapCardPositions(blockA, blockB) {
         if (!isFirstLevelCard(blockA) || !isFirstLevelCard(blockB)) return;
         const parentA = blockA.parentNode;
@@ -2728,6 +2891,11 @@
         hideLevelEditModal();
     }
 
+    /**
+     * 初始化层级编辑弹窗事件
+     * 为每一列的编辑按钮绑定点击事件，以及弹窗的关闭和保存事件
+     * @returns {void}
+     */
     function initLevelEditEvents() {
         // 为编辑图标添加点击事件
         document.querySelectorAll('.w_contp_edit').forEach(editBtn => {
@@ -3274,6 +3442,10 @@
         document.getElementById('connect-children-modal-overlay').classList.remove('hidden');
     }
 
+    /**
+     * 隐藏关联子级弹窗
+     * @returns {void}
+     */
     function hideConnectChildrenModal() {
         document.getElementById('connect-children-modal-overlay').classList.add('hidden');
         currentConnectingBlock = null;
@@ -3387,6 +3559,11 @@
         currentDeletingBlock = null;
     }
 
+    /**
+     * 执行卡片删除操作
+     * 移除卡片DOM、清理相关连线、更新SVG连接点和全局状态
+     * @returns {void}
+     */
     function deleteBlock() {
         if (!currentDeletingBlock) return;
 
@@ -3593,23 +3770,33 @@
         });
     });
 
-    // 导航至questionMapDetail页面
+    /**
+     * 导航至 questionMapDetail 详情页面
+     * 构建当前卡片的关联链并跳转到详情页
+     *
+     * @param {string} cardId - 目标卡片ID
+     * @returns {void}
+     */
     function navigateToQuestionMapDetail(cardId) {
-        // 从ls1中获取关系链数据
-        const ls1 = JSON.parse(localStorage.getItem('ls1') || '{}');
+        const ls1 = StorageManager.get('ls1', {});
         const connections = ls1.connections || [];
 
-        // 构建关系链
         const relationChain = buildRelationChain(cardId, connections);
 
-        // 保存关系链数据到localStorage
-        localStorage.setItem('relationChain', JSON.stringify(relationChain));
+        StorageManager.set('relationChain', relationChain);
 
         // 跳转到questionMapDetail页面
         window.location.href = 'questionMapDetail.html';
     }
 
-    // 构建从当前卡片开始到最下游卡片的关系链
+    /**
+     * 构建从指定卡片到最下游的关系链
+     * 使用BFS遍历所有下游连接，收集路径上的所有卡片ID
+     *
+     * @param {string} startId - 起始卡片ID
+     * @param {Array} connections - 连接关系数组（含 startId, endId 属性）
+     * @returns {string[]} 关系链上的所有卡片ID数组
+     */
     function buildRelationChain(startId, connections) {
         const chain = new Set();
         const queue = [startId];
@@ -4176,12 +4363,9 @@
         simulateBtn.addEventListener('click', () => {
             // 收集完整的层级数据（包括所有层级和连线信息）
             const fullData = collectFullHierarchyData();
-            console.log(fullData);
-            // 将完整数据存储到 localStorage
-            localStorage.setItem('fullHierarchyData', JSON.stringify(fullData));
+            StorageManager.set('fullHierarchyData', fullData);
 
-            // 同时存储第一层级数据（用于兼容）
-            localStorage.setItem('exploreBlocks', JSON.stringify(fullData.level1 || []));
+            StorageManager.set('exploreBlocks', fullData.level1 || []);
 
             // 跳转到 exploreList.html
             // window.location.href = 'exploreList.html';
@@ -4270,7 +4454,11 @@
 
 
     /**
-     * 查找所有关联连线
+     * 查找指定卡片的所有关联连线
+     * 遍历所有连线，返回连接在相关卡片之间的所有连线
+     *
+     * @param {HTMLElement} block - 目标卡片元素
+     * @returns {Set<Object>} 关联连线集合
      */
     function findAllRelatedLinesByBlock(block) {
         const relatedLines = new Set();
@@ -4328,7 +4516,6 @@
      */
     function saveToLocalStorage() {
         try {
-            // 1. 保存连线数据到 ls1（教师标准答案）
             const connectionsData = connections.map(conn => {
                 const startBlock = getBlockFromPoint(conn.startElement);
                 const endBlock = getBlockFromPoint(conn.endElement);
@@ -4337,25 +4524,20 @@
                     endId: endBlock ? endBlock.id : null
                 };
             }).filter(c => c.startId && c.endId);
-            console.log(connectionsData, 'ls1的连接关系');
 
-            // 构建第一层级的所有连接关系链
             const relationChains = buildRelationChains(connectionsData);
-            console.log(relationChains, 'ls1的关系链');
 
             const ls1Data = {
                 connections: connectionsData,
-                relationChains: relationChains, // 包含第一层级的所有连接关系链
+                relationChains: relationChains,
                 timestamp: new Date().toISOString()
             };
-            localStorage.setItem('ls1', JSON.stringify(ls1Data));
+            StorageManager.set('ls1', ls1Data);
 
-            // 2. 生成卡片层级数据到 ls2
             const ls2Data = generateLevelData();
-            localStorage.setItem('ls2', JSON.stringify(ls2Data));
+            StorageManager.set('ls2', ls2Data);
 
-            // 同时也保存到 fullHierarchyData 供 exploreList 使用
-            localStorage.setItem('fullHierarchyData', JSON.stringify(ls2Data));
+            StorageManager.set('fullHierarchyData', ls2Data);
 
         } catch (e) {
             console.error('保存到 localStorage 失败:', e);
@@ -4363,9 +4545,11 @@
     }
 
     /**
-     * 构建第一层级的所有连接关系链
-     * @param {Array} connections 连接数据数组
-     * @returns {Array} 关系链数组，每个元素是一个从第一层级开始的完整关系链
+     * 构建所有第一层级卡片的连接关系链
+     * 从connections数据中提取所有以a开头的卡片起始链
+     *
+     * @param {Array} connections - 连接数据数组，每项包含startId和endId
+     * @returns {Array<string[]>} 关系链数组，每个元素是一个从第一层级开始的完整卡片ID链
      */
     function buildRelationChains(connections) {
         const connectionMap = {};
@@ -4409,7 +4593,10 @@
     }
 
     /**
-     * 从页面提取层级和卡片数据（排除连线）
+     * 从页面DOM提取所有层级的卡片数据
+     * 遍历所有卡片元素，按层级分组生成结构化数据
+     *
+     * @returns {Object} 层级数据对象，包含level1~level5的卡片数组和connections连接信息
      */
     function generateLevelData() {
         const levelData = {
@@ -4458,21 +4645,21 @@
 
     // ==================== localStorage 读取恢复功能 ====================
     /**
-     * 从 localStorage.ls1 读取并恢复连线关系
+     * 从 localStorage 读取并恢复连线关系
+     * 读取StorageManager中保存的连线数据，重建SVG连线
+     * 无数据时自动初始化保存，有连线时清除现有连线后重建
+     *
+     * @returns {void}
      */
     function loadFromLocalStorage() {
         try {
-            // 获取ls1的数据
-            const ls1Data = localStorage.getItem('ls1');
-            if (!ls1Data) {
-                console.log('没有找到ls1数据，使用初始状态');
+            const data = StorageManager.get('ls1', null);
+            if (!data) {
                 saveToLocalStorage();
                 return;
             }
 
-            const data = JSON.parse(ls1Data);
             if (!data.connections || data.connections.length === 0) {
-                console.log('ls1中没有连接数据');
                 return;
             }
 

@@ -4,6 +4,17 @@
     box-sizing: border-box;
 }
 
+:root {
+    --color-level-a: #409eff;
+    --color-level-b: #67c23a;
+    --color-level-c: #e6a23c;
+    --color-level-d: #f56c6c;
+    --color-level-e: #E372DB;
+    --radius-card: 8px;
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --transition-default: all 0.3s ease;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7fa;

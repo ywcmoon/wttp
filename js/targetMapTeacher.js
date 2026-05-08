@@ -1,76 +1,164 @@
+/**
+ * targetMapTeacher.js - 能力图谱教师视图核心脚本
+ * 
+ * 功能说明：
+ *   1. 能力卡片列表渲染（支持拖拽排序、删除、显隐设置）
+ *   2. ECharts 柱状图展示各能力关联的知识点数量
+ *   3. SVG 知识点关系图谱（力导向布局、节点拖拽、缩放平移）
+ *   4. 班级筛选器（按班级过滤能力卡片）
+ *   5. 知识点关联编辑（弹窗选择知识点树）
+ * 
+ * 数据存储键：
+ *   - abilityMapData：能力条目数据
+ *   - abilityMapClasses：班级列表
+ *   - knowledgeTreeData：知识点树形数据
+ * 
+ * 依赖：
+ *   - common.js（StorageManager）
+ *   - ECharts（图表库）
+ *   - Font Awesome（图标）
+ */
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'abilityMapData';
-    const CLASS_KEY = 'abilityMapClasses';
-    const KNOWLEDGE_KEY = 'knowledgeTreeData';
+    // ==================== 存储键常量 ====================
 
-    let abilities = [];
-    let selectedAbilityId = null;
-    let currentClass = 'all';
-    let chartInstance = null;
-    let dragItem = null;
-    let dragStartY = 0;
+    /** @type {string} 能力数据在 localStorage 中的键名 */
+    var STORAGE_KEY = 'abilityMapData';
 
-    let svgScale = 1;
-    let svgPanX = 0;
-    let svgPanY = 0;
-    let isPanning = false;
-    let panStartX = 0;
-    let panStartY = 0;
-    let isDraggingNode = false;
-    let dragNodeId = null;
-    let dragNodeStartX = 0;
-    let dragNodeStartY = 0;
-    let longPressTimer = null;
-    let isLongPress = false;
-    let graphNodes = [];
-    let graphLinks = [];
-    let collapsedNodes = new Set();
+    /** @type {string} 班级列表在 localStorage 中的键名 */
+    var CLASS_KEY = 'abilityMapClasses';
 
-    const classSelector = document.getElementById('class-selector');
-    const selectorDisplay = document.getElementById('selector-display');
-    const selectorDropdown = document.getElementById('selector-dropdown');
-    const selectorText = selectorDisplay.querySelector('.selector-text');
-    const totalCountEl = document.getElementById('ability-total-count');
-    const targetCountEl = document.getElementById('target-count');
-    const targetGroup = document.getElementById('target-group');
-    const targetAddBtn = document.getElementById('target-add-btn');
-    const knowledgeCanvas = document.getElementById('knowledge-canvas');
-    const knowledgeSvg = document.getElementById('knowledge-svg');
-    const knowledgeEmpty = document.getElementById('knowledge-empty');
-    const knowledgeAssociBtn = document.getElementById('knowledge-associ-btn');
+    /** @type {string} 知识点树数据在 localStorage 中的键名 */
+    var KNOWLEDGE_KEY = 'knowledgeTreeData';
 
-    const visibilityModal = document.getElementById('visibility-modal-overlay');
-    const visibilityAbilityName = document.getElementById('visibility-ability-name');
-    const visibilityCheckboxes = document.getElementById('visibility-checkboxes');
-    const visibilityClose = document.getElementById('visibility-modal-close');
-    const visibilityCancel = document.getElementById('visibility-btn-cancel');
-    const visibilityConfirm = document.getElementById('visibility-btn-confirm');
+    // ==================== 核心数据状态 ====================
 
-    const knowledgeModal = document.getElementById('knowledge-modal-overlay');
-    const knowledgeModalClose = document.getElementById('knowledge-modal-close');
-    const knowledgeTreeContainer = document.getElementById('knowledge-tree');
-    const knowledgeTreeCount = document.getElementById('knowledge-tree-count');
-    const knowledgeSelectedCount = document.getElementById('knowledge-selected-count');
-    const knowledgeSelectedList = document.getElementById('knowledge-selected-list');
-    const knowledgeCancel = document.getElementById('knowledge-btn-cancel');
-    const knowledgeConfirm = document.getElementById('knowledge-btn-confirm');
+    /** @type {Array} 能力条目列表 */
+    var abilities = [];
 
-    const confirmModal = document.getElementById('confirm-modal-overlay');
-    const confirmText = document.getElementById('confirm-text');
-    const confirmClose = document.getElementById('confirm-modal-close');
-    const confirmCancel = document.getElementById('confirm-btn-cancel');
-    const confirmConfirm = document.getElementById('confirm-btn-confirm');
+    /** @type {string|null} 当前选中的能力 ID */
+    var selectedAbilityId = null;
 
-    let currentEditingAbilityId = null;
-    let tempSelectedKnowledge = [];
-    let confirmCallback = null;
+    /** @type {string} 当前筛选的班级（'all' 表示全部） */
+    var currentClass = 'all';
 
+    /** @type {Object|null} ECharts 图表实例 */
+    var chartInstance = null;
+
+    /** @type {HTMLElement|null} 正在拖拽排序的能力卡片元素 */
+    var dragItem = null;
+
+    /** @type {number} 拖拽排序起始 Y 坐标 */
+    var dragStartY = 0;
+
+    // ==================== SVG 图谱状态 ====================
+
+    /** @type {number} SVG 画布缩放比例（1 = 100%） */
+    var svgScale = 1;
+
+    /** @type {number} SVG 画布 X 轴平移偏移 */
+    var svgPanX = 0;
+
+    /** @type {number} SVG 画布 Y 轴平移偏移 */
+    var svgPanY = 0;
+
+    /** @type {boolean} 是否正在平移画布 */
+    var isPanning = false;
+
+    /** @type {number} 平移起始 X 坐标 */
+    var panStartX = 0;
+
+    /** @type {number} 平移起始 Y 坐标 */
+    var panStartY = 0;
+
+    /** @type {boolean} 是否正在拖拽图谱节点 */
+    var isDraggingNode = false;
+
+    /** @type {string|null} 当前拖拽的节点 ID */
+    var dragNodeId = null;
+
+    /** @type {number} 节点拖拽起始 X 坐标 */
+    var dragNodeStartX = 0;
+
+    /** @type {number} 节点拖拽起始 Y 坐标 */
+    var dragNodeStartY = 0;
+
+    /** @type {number|null} 长按计时器 ID */
+    var longPressTimer = null;
+
+    /** @type {boolean} 是否触发了长按 */
+    var isLongPress = false;
+
+    /** @type {Array} 图谱节点数据 */
+    var graphNodes = [];
+
+    /** @type {Array} 图谱连线数据 */
+    var graphLinks = [];
+
+    /** @type {Set<string>} 已折叠的父节点 ID 集合 */
+    var collapsedNodes = new Set();
+
+    // ==================== DOM 元素引用 ====================
+
+    var classSelector = document.getElementById('class-selector');
+    var selectorDisplay = document.getElementById('selector-display');
+    var selectorDropdown = document.getElementById('selector-dropdown');
+    var selectorText = selectorDisplay.querySelector('.selector-text');
+    var totalCountEl = document.getElementById('ability-total-count');
+    var targetCountEl = document.getElementById('target-count');
+    var targetGroup = document.getElementById('target-group');
+    var targetAddBtn = document.getElementById('target-add-btn');
+    var knowledgeCanvas = document.getElementById('knowledge-canvas');
+    var knowledgeSvg = document.getElementById('knowledge-svg');
+    var knowledgeEmpty = document.getElementById('knowledge-empty');
+    var knowledgeAssociBtn = document.getElementById('knowledge-associ-btn');
+
+    var visibilityModal = document.getElementById('visibility-modal-overlay');
+    var visibilityAbilityName = document.getElementById('visibility-ability-name');
+    var visibilityCheckboxes = document.getElementById('visibility-checkboxes');
+    var visibilityClose = document.getElementById('visibility-modal-close');
+    var visibilityCancel = document.getElementById('visibility-btn-cancel');
+    var visibilityConfirm = document.getElementById('visibility-btn-confirm');
+
+    var knowledgeModal = document.getElementById('knowledge-modal-overlay');
+    var knowledgeModalClose = document.getElementById('knowledge-modal-close');
+    var knowledgeTreeContainer = document.getElementById('knowledge-tree');
+    var knowledgeTreeCount = document.getElementById('knowledge-tree-count');
+    var knowledgeSelectedCount = document.getElementById('knowledge-selected-count');
+    var knowledgeSelectedList = document.getElementById('knowledge-selected-list');
+    var knowledgeCancel = document.getElementById('knowledge-btn-cancel');
+    var knowledgeConfirm = document.getElementById('knowledge-btn-confirm');
+
+    var confirmModal = document.getElementById('confirm-modal-overlay');
+    var confirmText = document.getElementById('confirm-text');
+    var confirmClose = document.getElementById('confirm-modal-close');
+    var confirmCancel = document.getElementById('confirm-btn-cancel');
+    var confirmConfirm = document.getElementById('confirm-btn-confirm');
+
+    /** @type {string|null} 当前正在编辑知识点关联的能力 ID */
+    var currentEditingAbilityId = null;
+
+    /** @type {Array<string>} 知识点选择弹窗中的临时选中 ID 列表 */
+    var tempSelectedKnowledge = [];
+
+    /** @type {Function|null} 确认弹窗的回调函数 */
+    var confirmCallback = null;
+
+    // ==================== 数据加载与持久化 ====================
+
+    /**
+     * 从 localStorage 加载能力数据
+     * 
+     * 如果 localStorage 中没有数据，则使用默认的 3 条示例数据：
+     *   - 能力1：关联 2 个知识点，无标签
+     *   - 能力2：关联 4 个知识点，无标签
+     *   - 能力3：关联 2 个知识点，带 2 个标签
+     */
     function loadData() {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        var stored = StorageManager.get(STORAGE_KEY, null);
         if (stored) {
-            abilities = JSON.parse(stored);
+            abilities = stored;
         } else {
             abilities = [
                 { id: 'a1', name: '能力1', knowledgeCount: 2, knowledgeIds: ['k1', 'k2'], tags: [], desc: '能力1描述', classes: ['all'], color: '#fdf9ed' },
@@ -81,22 +169,35 @@
         }
     }
 
+    /**
+     * 保存能力数据到 localStorage
+     */
     function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(abilities));
+        StorageManager.set(STORAGE_KEY, abilities);
     }
 
+    /**
+     * 加载班级列表
+     * 
+     * @returns {Array<string>} 班级名称数组，默认 6 个班级
+     */
     function loadClasses() {
-        const stored = localStorage.getItem(CLASS_KEY);
+        var stored = StorageManager.get(CLASS_KEY, null);
         if (stored) {
-            return JSON.parse(stored);
+            return stored;
         }
         return ['一班', '二班', '三班', '四班', '五班', '六班'];
     }
 
+    /**
+     * 加载知识点树数据
+     * 
+     * @returns {Array} 知识点树形数据，默认 4 个父级知识点
+     */
     function loadKnowledgeTree() {
-        const stored = localStorage.getItem(KNOWLEDGE_KEY);
+        var stored = StorageManager.get(KNOWLEDGE_KEY, null);
         if (stored) {
-            return JSON.parse(stored);
+            return stored;
         }
         return [
             { id: 'k1', name: '身体协调', children: [{ id: 'k1-1', name: '上肢协调' }, { id: 'k1-2', name: '下肢协调' }] },
@@ -106,11 +207,25 @@
         ];
     }
 
+    // ==================== 班级筛选器 ====================
+
+    /**
+     * 初始化班级选择下拉框
+     * 
+     * 选项：
+     *   - "全部班级"：显示所有能力
+     *   - 各班级名：仅显示该班级可见的能力
+     * 
+     * 交互：
+     *   - 点击选择器展开/收起下拉列表
+     *   - 选择后自动刷新所有视图
+     *   - 点击页面其他区域关闭下拉框
+     */
     function initClassSelector() {
-        const classes = loadClasses();
+        var classes = loadClasses();
         selectorDropdown.innerHTML = '<div class="selector-option selected" data-value="all">全部班级</div>';
-        classes.forEach(cls => {
-            const option = document.createElement('div');
+        classes.forEach(function (cls) {
+            var option = document.createElement('div');
             option.className = 'selector-option';
             option.setAttribute('data-value', cls);
             option.textContent = cls;
@@ -123,14 +238,14 @@
         });
 
         selectorDropdown.addEventListener('click', function (e) {
-            const option = e.target.closest('.selector-option');
+            var option = e.target.closest('.selector-option');
             if (!option) return;
             e.stopPropagation();
-            const value = option.getAttribute('data-value');
-            const text = option.textContent;
+            var value = option.getAttribute('data-value');
+            var text = option.textContent;
             currentClass = value;
             selectorText.textContent = text;
-            selectorDropdown.querySelectorAll('.selector-option').forEach(o => o.classList.remove('selected'));
+            selectorDropdown.querySelectorAll('.selector-option').forEach(function (o) { o.classList.remove('selected'); });
             option.classList.add('selected');
             classSelector.classList.remove('open');
             renderAll();
@@ -141,6 +256,12 @@
         });
     }
 
+    // ==================== ECharts 图表 ====================
+
+    /**
+     * 初始化 ECharts 柱状图实例
+     * 绑定窗口 resize 事件以自适应图表大小
+     */
     function initChart() {
         chartInstance = echarts.init(document.getElementById('chart-bar'));
         window.addEventListener('resize', function () {
@@ -148,14 +269,23 @@
         });
     }
 
+    /**
+     * 更新柱状图数据
+     * 
+     * 图表配置：
+     *   - X 轴：能力名称（超过 8 个时标签旋转 30°）
+     *   - Y 轴：关联知识点数量
+     *   - 渐变色柱状图（蓝色渐变）
+     *   - 悬浮提示显示具体数值
+     */
     function updateChart() {
-        const filteredAbilities = getFilteredAbilities();
-        const names = filteredAbilities.map(a => a.name);
-        const counts = filteredAbilities.map(a => a.knowledgeCount);
-        const total = counts.reduce((sum, c) => sum + c, 0);
+        var filteredAbilities = getFilteredAbilities();
+        var names = filteredAbilities.map(function (a) { return a.name; });
+        var counts = filteredAbilities.map(function (a) { return a.knowledgeCount; });
+        var total = counts.reduce(function (sum, c) { return sum + c; }, 0);
         totalCountEl.textContent = total;
 
-        const option = {
+        var option = {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: { type: 'shadow' },
@@ -205,34 +335,74 @@
         chartInstance.setOption(option);
     }
 
+    // ==================== 数据筛选 ====================
+
+    /**
+     * 根据当前班级筛选能力列表
+     * 
+     * @returns {Array} 过滤后的能力条目数组
+     * 
+     * 筛选逻辑：
+     *   - currentClass === 'all'：返回全部能力
+     *   - 否则：返回 classes 包含 'all' 或当前班级的能力
+     */
     function getFilteredAbilities() {
         if (currentClass === 'all') return abilities;
-        return abilities.filter(a => a.classes.includes('all') || a.classes.includes(currentClass));
+        return abilities.filter(function (a) {
+            return a.classes.includes('all') || a.classes.includes(currentClass);
+        });
     }
 
+    // ==================== 能力卡片渲染 ====================
+
+    /**
+     * 渲染能力卡片列表
+     * 清空容器后重新创建所有卡片
+     */
     function renderAbilities() {
-        const filtered = getFilteredAbilities();
+        var filtered = getFilteredAbilities();
         targetCountEl.textContent = filtered.length;
         targetGroup.innerHTML = '';
 
-        filtered.forEach(ability => {
-            const item = createAbilityCard(ability);
+        filtered.forEach(function (ability) {
+            var item = createAbilityCard(ability);
             targetGroup.appendChild(item);
         });
     }
 
+    /**
+     * 创建单个能力卡片 DOM 元素
+     * 
+     * @param {Object} ability - 能力数据对象
+     * @returns {HTMLElement} 卡片 DOM 元素
+     * 
+     * 卡片结构：
+     *   - 拖拽手柄（排序用）
+     *   - 删除按钮
+     *   - 知识点数量标签
+     *   - 能力名称
+     *   - 标签列表
+     *   - 描述文本
+     *   - 显隐设置按钮
+     * 
+     * 交互：
+     *   - 点击卡片 → 选中并展示知识点图谱
+     *   - 点击删除 → 确认后删除
+     *   - 点击显隐设置 → 打开班级可见性弹窗
+     *   - 拖拽手柄 → 排序
+     */
     function createAbilityCard(ability) {
-        const item = document.createElement('div');
+        var item = document.createElement('div');
         item.className = 'target-item' + (selectedAbilityId === ability.id ? ' target_active' : '');
         item.setAttribute('data-id', ability.id);
         item.style.backgroundColor = ability.color || '#fff';
 
-        let tagsHtml = '';
+        var tagsHtml = '';
         if (ability.tags && ability.tags.length > 0) {
-            tagsHtml = '<ul class="target_label">' + ability.tags.map(t => '<li>' + t + '</li>').join('') + '</ul>';
+            tagsHtml = '<ul class="target_label">' + ability.tags.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
         }
 
-        let descHtml = '';
+        var descHtml = '';
         if (ability.desc) {
             descHtml = '<div class="target_text">' + ability.desc + '</div>';
         }
@@ -241,11 +411,11 @@
             '<a class="target_drag" href="javascript:"></a>' +
             '<a class="target_dele" data-id="' + ability.id + '"></a>' +
             '<div class="target_cont">' +
-            '<span class="target_points">知识点数：' + ability.knowledgeCount + '</span>' +
-            '<h3 class="target_title">' + ability.name + '</h3>' +
-            tagsHtml +
-            descHtml +
-            '<p class="target_display" data-id="' + ability.id + '">显隐设置</p>' +
+                '<span class="target_points">知识点数：' + ability.knowledgeCount + '</span>' +
+                '<h3 class="target_title">' + ability.name + '</h3>' +
+                tagsHtml +
+                descHtml +
+                '<p class="target_display" data-id="' + ability.id + '">显隐设置</p>' +
             '</div>';
 
         item.addEventListener('click', function (e) {
@@ -274,20 +444,36 @@
         return item;
     }
 
+    /**
+     * 选中指定能力
+     * 
+     * @param {string} id - 能力 ID
+     * 
+     * 行为：
+     *   - 重置 SVG 缩放和平移状态
+     *   - 清除折叠状态
+     *   - 高亮选中的卡片
+     *   - 渲染该能力的知识点图谱
+     */
     function selectAbility(id) {
         selectedAbilityId = id;
         svgScale = 1;
         svgPanX = 0;
         svgPanY = 0;
         collapsedNodes.clear();
-        document.querySelectorAll('.target-item').forEach(item => {
+        document.querySelectorAll('.target-item').forEach(function (item) {
             item.classList.toggle('target_active', item.getAttribute('data-id') === id);
         });
         renderKnowledgeGraph();
     }
 
+    /**
+     * 删除指定能力
+     * 
+     * @param {string} id - 要删除的能力 ID
+     */
     function removeAbility(id) {
-        abilities = abilities.filter(a => a.id !== id);
+        abilities = abilities.filter(function (a) { return a.id !== id; });
         if (selectedAbilityId === id) {
             selectedAbilityId = null;
         }
@@ -295,19 +481,33 @@
         renderAll();
     }
 
+    // ==================== 卡片拖拽排序 ====================
+
+    /**
+     * 开始拖拽排序
+     * 
+     * @param {MouseEvent} e - 鼠标事件
+     * @param {HTMLElement} item - 被拖拽的卡片元素
+     * @param {string} id - 能力 ID
+     * 
+     * 排序逻辑：
+     *   - 监听 mousemove，根据鼠标位置动态调整卡片顺序
+     *   - 当鼠标越过相邻卡片中线时触发位置交换
+     *   - mouseup 时根据最终 DOM 顺序更新 abilities 数组
+     */
     function startDrag(e, item, id) {
         dragItem = item;
         dragStartY = e.clientY;
 
         function onMove(e) {
-            const items = Array.from(targetGroup.children);
-            const currentItem = items.find(i => i === dragItem);
+            var items = Array.from(targetGroup.children);
+            var currentItem = items.find(function (i) { return i === dragItem; });
             if (!currentItem) return;
 
-            items.forEach(i => {
+            items.forEach(function (i) {
                 if (i === dragItem) return;
-                const r = i.getBoundingClientRect();
-                const midY = r.top + r.height / 2;
+                var r = i.getBoundingClientRect();
+                var midY = r.top + r.height / 2;
                 if (e.clientY < midY && currentItem.compareDocumentPosition(i) & Node.DOCUMENT_POSITION_FOLLOWING) {
                     targetGroup.insertBefore(dragItem, i);
                 } else if (e.clientY > midY && currentItem.compareDocumentPosition(i) & Node.DOCUMENT_POSITION_PRECEDING) {
@@ -319,14 +519,14 @@
         function onUp() {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            const newOrder = Array.from(targetGroup.children).map(i => i.getAttribute('data-id'));
-            const reordered = [];
-            newOrder.forEach(id => {
-                const a = abilities.find(a => a.id === id);
+            var newOrder = Array.from(targetGroup.children).map(function (i) { return i.getAttribute('data-id'); });
+            var reordered = [];
+            newOrder.forEach(function (id) {
+                var a = abilities.find(function (a) { return a.id === id; });
                 if (a) reordered.push(a);
             });
-            const remaining = abilities.filter(a => !newOrder.includes(a.id));
-            abilities = [...remaining, ...reordered];
+            var remaining = abilities.filter(function (a) { return !newOrder.includes(a.id); });
+            abilities = remaining.concat(reordered);
             saveData();
             dragItem = null;
         }
@@ -335,6 +535,22 @@
         document.addEventListener('mouseup', onUp);
     }
 
+    // ==================== SVG 知识点图谱渲染 ====================
+
+    /**
+     * 渲染知识点关系图谱
+     * 
+     * 渲染条件：
+     *   - 必须选中一个能力
+     *   - 该能力必须有关联的知识点
+     * 
+     * 布局算法：
+     *   1. 收集所有匹配的知识点（父级 + 独立子级）
+     *   2. 父级节点排列在第一行（y=60）
+     *   3. 父级下的已选子级排列在第二行（y=200），通过连线关联
+     *   4. 独立子级（父级未被选中）也排列在第二行
+     *   5. 节点水平间距自适应画布宽度
+     */
     function renderKnowledgeGraph() {
         if (!selectedAbilityId) {
             knowledgeEmpty.style.display = 'flex';
@@ -342,7 +558,7 @@
             return;
         }
 
-        const ability = abilities.find(a => a.id === selectedAbilityId);
+        var ability = abilities.find(function (a) { return a.id === selectedAbilityId; });
         if (!ability || !ability.knowledgeIds || ability.knowledgeIds.length === 0) {
             knowledgeEmpty.style.display = 'flex';
             knowledgeSvg.style.display = 'none';
@@ -352,23 +568,22 @@
         knowledgeEmpty.style.display = 'none';
         knowledgeSvg.style.display = 'block';
 
-        const tree = loadKnowledgeTree();
+        var tree = loadKnowledgeTree();
         graphNodes = [];
         graphLinks = [];
 
-        const centerX = knowledgeCanvas.clientWidth / 2;
-        const checkedIds = new Set(ability.knowledgeIds);
+        var centerX = knowledgeCanvas.clientWidth / 2;
+        var checkedIds = new Set(ability.knowledgeIds);
 
-        // 收集所有匹配的知识点（父级+子级）
-        const matchedParents = [];
-        const standaloneChildren = [];
-        const childParentMap = new Map();
+        var matchedParents = [];
+        var standaloneChildren = [];
+        var childParentMap = new Map();
 
         function collectMatches(nodes) {
             if (!nodes) return;
-            nodes.forEach(node => {
+            nodes.forEach(function (node) {
                 if (checkedIds.has(node.id)) {
-                    const hasChildren = node.children && node.children.length > 0;
+                    var hasChildren = node.children && node.children.length > 0;
                     if (hasChildren) {
                         matchedParents.push(node);
                     } else {
@@ -376,7 +591,7 @@
                     }
                 }
                 if (node.children) {
-                    node.children.forEach(child => {
+                    node.children.forEach(function (child) {
                         childParentMap.set(child.id, node.id);
                     });
                     collectMatches(node.children);
@@ -385,25 +600,22 @@
         }
         collectMatches(tree);
 
-        // 过滤：如果子级的父级已被勾选，则子级归入父级管理，不当作独立子级
-        const finalStandaloneChildren = standaloneChildren.filter(child => {
-            return !matchedParents.some(p => {
-                return p.children && p.children.some(c => c.id === child.id);
+        var finalStandaloneChildren = standaloneChildren.filter(function (child) {
+            return !matchedParents.some(function (p) {
+                return p.children && p.children.some(function (c) { return c.id === child.id; });
             });
         });
 
-        // 计算每列的可用宽度
-        const totalItems = matchedParents.length + finalStandaloneChildren.length;
-        const spacing = Math.min(500, (knowledgeCanvas.clientWidth - 100) / Math.max(totalItems, 1));
+        var totalItems = matchedParents.length + finalStandaloneChildren.length;
+        var spacing = Math.min(500, (knowledgeCanvas.clientWidth - 100) / Math.max(totalItems, 1));
 
-        // 渲染父级节点（第一行 y=60）
-        let parentX = centerX - (matchedParents.length - 1) * spacing / 2;
+        var parentX = centerX - (matchedParents.length - 1) * spacing / 2;
         if (matchedParents.length === 0) parentX = centerX;
 
-        matchedParents.forEach((kn, i) => {
-            const nodeId = 'kn-' + kn.id;
-            const checkedChildren = kn.children ? kn.children.filter(c => checkedIds.has(c.id)) : [];
-            const hasCheckedChildren = checkedChildren.length > 0;
+        matchedParents.forEach(function (kn, i) {
+            var nodeId = 'kn-' + kn.id;
+            var checkedChildren = kn.children ? kn.children.filter(function (c) { return checkedIds.has(c.id); }) : [];
+            var hasCheckedChildren = checkedChildren.length > 0;
 
             graphNodes.push({
                 id: nodeId,
@@ -415,10 +627,10 @@
             });
 
             if (checkedChildren.length > 0) {
-                const childSpacing = Math.min(130, spacing / Math.max(checkedChildren.length, 1));
-                const childStartX = parentX + i * spacing - (checkedChildren.length - 1) * childSpacing / 2;
-                checkedChildren.forEach((child, j) => {
-                    const childId = 'kn-' + child.id;
+                var childSpacing = Math.min(130, spacing / Math.max(checkedChildren.length, 1));
+                var childStartX = parentX + i * spacing - (checkedChildren.length - 1) * childSpacing / 2;
+                checkedChildren.forEach(function (child, j) {
+                    var childId = 'kn-' + child.id;
                     graphNodes.push({
                         id: childId,
                         name: child.name,
@@ -433,11 +645,10 @@
             }
         });
 
-        // 渲染独立子级节点（第二行 y=200，没有父级关联）
         if (finalStandaloneChildren.length > 0) {
-            const childStartX = centerX - (finalStandaloneChildren.length - 1) * spacing / 2;
-            finalStandaloneChildren.forEach((child, i) => {
-                const childId = 'kn-' + child.id;
+            var childStartX = centerX - (finalStandaloneChildren.length - 1) * spacing / 2;
+            finalStandaloneChildren.forEach(function (child, i) {
+                var childId = 'kn-' + child.id;
                 graphNodes.push({
                     id: childId,
                     name: child.name,
@@ -453,11 +664,18 @@
         drawSvgGraph();
     }
 
+    /**
+     * 在知识点树中查找指定 ID 集合的节点
+     * 
+     * @param {Array} tree - 知识点树
+     * @param {Array<string>} ids - 要查找的 ID 列表
+     * @returns {Array} 匹配的节点数组
+     */
     function findKnowledgeNodes(tree, ids) {
-        const result = [];
+        var result = [];
         function traverse(nodes) {
             if (!nodes) return;
-            nodes.forEach(node => {
+            nodes.forEach(function (node) {
                 if (ids.includes(node.id)) {
                     result.push(node);
                 }
@@ -468,10 +686,15 @@
         return result;
     }
 
+    /**
+     * 获取可见的节点和连线（排除折叠的节点）
+     * 
+     * @returns {Object} { visibleNodes, visibleLinks, hiddenIds }
+     */
     function getVisibleNodesAndLinks() {
-        const hiddenIds = new Set();
-        collapsedNodes.forEach(parentId => {
-            graphLinks.forEach(link => {
+        var hiddenIds = new Set();
+        collapsedNodes.forEach(function (parentId) {
+            graphLinks.forEach(function (link) {
                 if (link.source === parentId) {
                     hiddenIds.add(link.target);
                     collectDescendants(link.target, hiddenIds);
@@ -479,13 +702,19 @@
             });
         });
 
-        const visibleNodes = graphNodes.filter(n => !hiddenIds.has(n.id));
-        const visibleLinks = graphLinks.filter(l => !hiddenIds.has(l.source) && !hiddenIds.has(l.target));
-        return { visibleNodes, visibleLinks, hiddenIds };
+        var visibleNodes = graphNodes.filter(function (n) { return !hiddenIds.has(n.id); });
+        var visibleLinks = graphLinks.filter(function (l) { return !hiddenIds.has(l.source) && !hiddenIds.has(l.target); });
+        return { visibleNodes: visibleNodes, visibleLinks: visibleLinks, hiddenIds: hiddenIds };
     }
 
+    /**
+     * 递归收集所有后代节点 ID
+     * 
+     * @param {string} parentId - 父节点 ID
+     * @param {Set<string>} hiddenIds - 隐藏节点 ID 集合
+     */
     function collectDescendants(parentId, hiddenIds) {
-        graphLinks.forEach(link => {
+        graphLinks.forEach(function (link) {
             if (link.source === parentId) {
                 hiddenIds.add(link.target);
                 collectDescendants(link.target, hiddenIds);
@@ -493,45 +722,58 @@
         });
     }
 
+    /**
+     * 绘制 SVG 图谱
+     * 
+     * 绘制内容：
+     *   - defs：渐变和箭头标记定义
+     *   - 连线组：贝塞尔曲线连线（带箭头）
+     *   - 节点组：圆形节点 + 文字标签
+     *   - 折叠/展开按钮（父节点下方）
+     * 
+     * 交互：
+     *   - 节点拖拽（长按 200ms 激活）
+     *   - 折叠按钮点击
+     *   - 画布平移（空白区域拖拽）
+     *   - 鼠标滚轮缩放
+     */
     function drawSvgGraph() {
         knowledgeSvg.innerHTML = '';
-        const svgNS = 'http://www.w3.org/2000/svg';
+        var svgNS = 'http://www.w3.org/2000/svg';
 
-        const defs = document.createElementNS(svgNS, 'defs');
+        var defs = document.createElementNS(svgNS, 'defs');
 
-        // 父级节点渐变色：由内向外淡化
-        const parentGrad = document.createElementNS(svgNS, 'radialGradient');
+        var parentGrad = document.createElementNS(svgNS, 'radialGradient');
         parentGrad.setAttribute('id', 'parent-node-grad');
         parentGrad.setAttribute('cx', '35%');
         parentGrad.setAttribute('cy', '35%');
         parentGrad.setAttribute('r', '65%');
-        const parentStop1 = document.createElementNS(svgNS, 'stop');
+        var parentStop1 = document.createElementNS(svgNS, 'stop');
         parentStop1.setAttribute('offset', '0%');
         parentStop1.setAttribute('stop-color', '#17e6f5ff');
         parentGrad.appendChild(parentStop1);
-        const parentStop2 = document.createElementNS(svgNS, 'stop');
+        var parentStop2 = document.createElementNS(svgNS, 'stop');
         parentStop2.setAttribute('offset', '100%');
         parentStop2.setAttribute('stop-color', '#bed8b8ff');
         parentGrad.appendChild(parentStop2);
         defs.appendChild(parentGrad);
 
-        // 子级节点渐变色：由内向外淡化
-        const childGrad = document.createElementNS(svgNS, 'radialGradient');
+        var childGrad = document.createElementNS(svgNS, 'radialGradient');
         childGrad.setAttribute('id', 'child-node-grad');
         childGrad.setAttribute('cx', '35%');
         childGrad.setAttribute('cy', '35%');
         childGrad.setAttribute('r', '65%');
-        const childStop1 = document.createElementNS(svgNS, 'stop');
+        var childStop1 = document.createElementNS(svgNS, 'stop');
         childStop1.setAttribute('offset', '0%');
         childStop1.setAttribute('stop-color', '#f0d09aff');
         childGrad.appendChild(childStop1);
-        const childStop2 = document.createElementNS(svgNS, 'stop');
+        var childStop2 = document.createElementNS(svgNS, 'stop');
         childStop2.setAttribute('offset', '100%');
         childStop2.setAttribute('stop-color', '#abf05cff');
         childGrad.appendChild(childStop2);
         defs.appendChild(childGrad);
 
-        const marker = document.createElementNS(svgNS, 'marker');
+        var marker = document.createElementNS(svgNS, 'marker');
         marker.setAttribute('id', 'arrowhead');
         marker.setAttribute('markerWidth', '8');
         marker.setAttribute('markerHeight', '6');
@@ -539,39 +781,41 @@
         marker.setAttribute('refY', '3');
         marker.setAttribute('orient', 'auto');
         marker.setAttribute('markerUnits', 'userSpaceOnUse');
-        const path = document.createElementNS(svgNS, 'path');
+        var path = document.createElementNS(svgNS, 'path');
         path.setAttribute('d', 'M0,0 L8,3 L0,6 L2,3 Z');
         path.setAttribute('fill', '#b8babeff');
         marker.appendChild(path);
         defs.appendChild(marker);
         knowledgeSvg.appendChild(defs);
 
-        const mainGroup = document.createElementNS(svgNS, 'g');
+        var mainGroup = document.createElementNS(svgNS, 'g');
         mainGroup.setAttribute('id', 'svg-main-group');
         mainGroup.setAttribute('transform', 'translate(' + svgPanX + ',' + svgPanY + ') scale(' + svgScale + ')');
         knowledgeSvg.appendChild(mainGroup);
 
-        const { visibleNodes, visibleLinks, hiddenIds } = getVisibleNodesAndLinks();
+        var visibleData = getVisibleNodesAndLinks();
+        var visibleNodes = visibleData.visibleNodes;
+        var visibleLinks = visibleData.visibleLinks;
 
-        const linksGroup = document.createElementNS(svgNS, 'g');
+        var linksGroup = document.createElementNS(svgNS, 'g');
         linksGroup.setAttribute('class', 'svg-links-group');
         mainGroup.appendChild(linksGroup);
 
-        visibleLinks.forEach(link => {
-            const source = graphNodes.find(n => n.id === link.source);
-            const target = graphNodes.find(n => n.id === link.target);
+        visibleLinks.forEach(function (link) {
+            var source = graphNodes.find(function (n) { return n.id === link.source; });
+            var target = graphNodes.find(function (n) { return n.id === link.target; });
             if (!source || !target) return;
 
-            const sourceR = source.type === 'knowledge' ? 22 : 18;
-            const targetR = target.type === 'child' ? 18 : 22;
+            var sourceR = source.type === 'knowledge' ? 22 : 18;
+            var targetR = target.type === 'child' ? 18 : 22;
 
-            const line = document.createElementNS(svgNS, 'path');
-            const sx = source.x;
-            const sy = source.y + sourceR + 4;
-            const tx = target.x;
-            const ty = target.y - targetR - 8;
-            const midY = (sy + ty) / 2;
-            const d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
+            var line = document.createElementNS(svgNS, 'path');
+            var sx = source.x;
+            var sy = source.y + sourceR + 4;
+            var tx = target.x;
+            var ty = target.y - targetR - 8;
+            var midY = (sy + ty) / 2;
+            var d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
             line.setAttribute('d', d);
             line.setAttribute('stroke', '#c0c4cc');
             line.setAttribute('stroke-width', '1.5');
@@ -582,33 +826,31 @@
             linksGroup.appendChild(line);
         });
 
-        const nodesGroup = document.createElementNS(svgNS, 'g');
+        var nodesGroup = document.createElementNS(svgNS, 'g');
         nodesGroup.setAttribute('class', 'svg-nodes-group');
         mainGroup.appendChild(nodesGroup);
 
-        visibleNodes.forEach(node => {
-            const g = document.createElementNS(svgNS, 'g');
+        visibleNodes.forEach(function (node) {
+            var g = document.createElementNS(svgNS, 'g');
             g.setAttribute('class', 'svg-node');
             g.setAttribute('data-id', node.id);
             g.setAttribute('transform', 'translate(' + node.x + ',' + node.y + ')');
             g.style.cursor = 'grab';
 
-            const r = node.type === 'knowledge' ? 22 : 18;
-            const gradId = node.type === 'knowledge' ? 'url(#parent-node-grad)' : 'url(#child-node-grad)';
-            const strokeColor = node.type === 'knowledge' ? '#52b83b' : '#d9942e';
+            var r = node.type === 'knowledge' ? 22 : 18;
+            var gradId = node.type === 'knowledge' ? 'url(#parent-node-grad)' : 'url(#child-node-grad)';
+            var strokeColor = node.type === 'knowledge' ? '#52b83b' : '#d9942e';
 
-            const circle = document.createElementNS(svgNS, 'circle');
+            var circle = document.createElementNS(svgNS, 'circle');
             circle.setAttribute('cx', '0');
             circle.setAttribute('cy', '0');
             circle.setAttribute('r', r);
             circle.setAttribute('fill', gradId);
-            // circle.setAttribute('stroke', '#000');
-            // circle.setAttribute('stroke-width', '2');
             g.appendChild(circle);
 
             var fontSize = r === 22 ? '12' : '11';
 
-            const nameText = document.createElementNS(svgNS, 'text');
+            var nameText = document.createElementNS(svgNS, 'text');
             nameText.setAttribute('x', '0');
             nameText.setAttribute('y', '1');
             nameText.setAttribute('text-anchor', 'middle');
@@ -621,10 +863,10 @@
             g.appendChild(nameText);
 
             if (node.hasChildren) {
-                const isCollapsed = collapsedNodes.has(node.id);
-                const toggleY = r + 4;
+                var isCollapsed = collapsedNodes.has(node.id);
+                var toggleY = r + 4;
 
-                const toggleBg = document.createElementNS(svgNS, 'circle');
+                var toggleBg = document.createElementNS(svgNS, 'circle');
                 toggleBg.setAttribute('cx', '0');
                 toggleBg.setAttribute('cy', String(toggleY));
                 toggleBg.setAttribute('r', '10');
@@ -636,9 +878,8 @@
                 toggleBg.style.cursor = 'pointer';
                 g.appendChild(toggleBg);
 
-                const toggleText = document.createElementNS(svgNS, 'text');
+                var toggleText = document.createElementNS(svgNS, 'text');
                 toggleText.setAttribute('x', '0');
-                toggleText.setAttribute('cy', String(toggleY));
                 toggleText.setAttribute('y', String(toggleY + 1));
                 toggleText.setAttribute('text-anchor', 'middle');
                 toggleText.setAttribute('dominant-baseline', 'middle');
@@ -657,8 +898,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 isLongPress = false;
-                const startX = e.clientX;
-                const startY = e.clientY;
+                var startX = e.clientX;
+                var startY = e.clientY;
                 dragNodeId = node.id;
                 dragNodeStartX = node.x;
                 dragNodeStartY = node.y;
@@ -670,8 +911,8 @@
                 }, 200);
 
                 function onNodeMove(e) {
-                    const dx = e.clientX - startX;
-                    const dy = e.clientY - startY;
+                    var dx = e.clientX - startX;
+                    var dy = e.clientY - startY;
                     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
                         clearTimeout(longPressTimer);
                         if (!isDraggingNode) {
@@ -680,7 +921,7 @@
                         }
                     }
                     if (isDraggingNode) {
-                        const n = graphNodes.find(n => n.id === dragNodeId);
+                        var n = graphNodes.find(function (n) { return n.id === dragNodeId; });
                         if (n) {
                             n.x = dragNodeStartX + dx / svgScale;
                             n.y = dragNodeStartY + dy / svgScale;
@@ -710,13 +951,13 @@
             nodesGroup.appendChild(g);
         });
 
-        knowledgeSvg.querySelectorAll('.toggle-btn').forEach(btn => {
+        knowledgeSvg.querySelectorAll('.toggle-btn').forEach(function (btn) {
             btn.addEventListener('mousedown', function (e) {
                 e.stopPropagation();
             });
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
-                const nodeId = this.getAttribute('data-node-id');
+                var nodeId = this.getAttribute('data-node-id');
                 if (collapsedNodes.has(nodeId)) {
                     collapsedNodes.delete(nodeId);
                 } else {
@@ -730,29 +971,34 @@
         updateZoomDisplay();
     }
 
+    /**
+     * 更新连线位置（节点拖拽后调用）
+     * 重新计算所有可见连线的贝塞尔曲线路径
+     */
     function updateLinks() {
-        const { visibleNodes, visibleLinks } = getVisibleNodesAndLinks();
-        const linksGroup = knowledgeSvg.querySelector('.svg-links-group');
+        var visibleData = getVisibleNodesAndLinks();
+        var visibleLinks = visibleData.visibleLinks;
+        var linksGroup = knowledgeSvg.querySelector('.svg-links-group');
         if (!linksGroup) return;
 
-        const svgNS = 'http://www.w3.org/2000/svg';
+        var svgNS = 'http://www.w3.org/2000/svg';
         linksGroup.innerHTML = '';
 
-        visibleLinks.forEach(link => {
-            const source = graphNodes.find(n => n.id === link.source);
-            const target = graphNodes.find(n => n.id === link.target);
+        visibleLinks.forEach(function (link) {
+            var source = graphNodes.find(function (n) { return n.id === link.source; });
+            var target = graphNodes.find(function (n) { return n.id === link.target; });
             if (!source || !target) return;
 
-            const sourceR = source.type === 'root' ? 28 : 22;
-            const targetR = target.type === 'child' ? 18 : 22;
+            var sourceR = source.type === 'root' ? 28 : 22;
+            var targetR = target.type === 'child' ? 18 : 22;
 
-            const line = document.createElementNS(svgNS, 'path');
-            const sx = source.x;
-            const sy = source.y + sourceR + 4;
-            const tx = target.x;
-            const ty = target.y - targetR - 8;
-            const midY = (sy + ty) / 2;
-            const d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
+            var line = document.createElementNS(svgNS, 'path');
+            var sx = source.x;
+            var sy = source.y + sourceR + 4;
+            var tx = target.x;
+            var ty = target.y - targetR - 8;
+            var midY = (sy + ty) / 2;
+            var d = 'M' + sx + ',' + sy + ' C' + sx + ',' + midY + ' ' + tx + ',' + midY + ' ' + tx + ',' + ty;
             line.setAttribute('d', d);
             line.setAttribute('stroke', '#c0c4cc');
             line.setAttribute('stroke-width', '1.5');
@@ -762,22 +1008,30 @@
         });
     }
 
+    // ==================== SVG 画布平移与缩放 ====================
+
+    /**
+     * 初始化 SVG 画布的平移和缩放交互
+     * 
+     * 缩放：鼠标滚轮，以鼠标位置为中心缩放（范围 20%~300%）
+     * 平移：在空白区域按住鼠标拖拽
+     */
     function initSvgPanZoom() {
         knowledgeSvg.onwheel = function (e) {
             e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            const newScale = Math.max(0.2, Math.min(3, svgScale + delta));
+            var delta = e.deltaY > 0 ? -0.1 : 0.1;
+            var newScale = Math.max(0.2, Math.min(3, svgScale + delta));
 
-            const rect = knowledgeSvg.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+            var rect = knowledgeSvg.getBoundingClientRect();
+            var mouseX = e.clientX - rect.left;
+            var mouseY = e.clientY - rect.top;
 
-            const scaleRatio = newScale / svgScale;
+            var scaleRatio = newScale / svgScale;
             svgPanX = mouseX - scaleRatio * (mouseX - svgPanX);
             svgPanY = mouseY - scaleRatio * (mouseY - svgPanY);
             svgScale = newScale;
 
-            const mainGroup = knowledgeSvg.querySelector('#svg-main-group');
+            var mainGroup = knowledgeSvg.querySelector('#svg-main-group');
             if (mainGroup) {
                 mainGroup.setAttribute('transform', 'translate(' + svgPanX + ',' + svgPanY + ') scale(' + svgScale + ')');
             }
@@ -797,7 +1051,7 @@
             if (!isPanning) return;
             svgPanX = e.clientX - panStartX;
             svgPanY = e.clientY - panStartY;
-            const mainGroup = knowledgeSvg.querySelector('#svg-main-group');
+            var mainGroup = knowledgeSvg.querySelector('#svg-main-group');
             if (mainGroup) {
                 mainGroup.setAttribute('transform', 'translate(' + svgPanX + ',' + svgPanY + ') scale(' + svgScale + ')');
             }
@@ -811,8 +1065,11 @@
         });
     }
 
+    /**
+     * 更新缩放百分比显示（SVG 左上角）
+     */
     function updateZoomDisplay() {
-        let display = knowledgeSvg.querySelector('.zoom-display');
+        var display = knowledgeSvg.querySelector('.zoom-display');
         if (!display) {
             display = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             display.setAttribute('class', 'zoom-display');
@@ -826,16 +1083,31 @@
         display.textContent = Math.round(svgScale * 100) + '%';
     }
 
+    // ==================== 显隐设置弹窗 ====================
+
+    /**
+     * 显示班级可见性设置弹窗
+     * 
+     * @param {string} abilityId - 能力 ID
+     * 
+     * 弹窗内容：
+     *   - "全部班级"复选框（选中后其他班级自动禁用）
+     *   - 各班级复选框
+     * 
+     * 逻辑：
+     *   - 选中"全部班级" → classes = ['all']
+     *   - 取消"全部班级" → classes = 选中的班级列表
+     */
     function showVisibilityModal(abilityId) {
         currentEditingAbilityId = abilityId;
-        const ability = abilities.find(a => a.id === abilityId);
+        var ability = abilities.find(function (a) { return a.id === abilityId; });
         if (!ability) return;
 
         visibilityAbilityName.textContent = '能力名称：' + ability.name;
-        const classes = loadClasses();
+        var classes = loadClasses();
         visibilityCheckboxes.innerHTML = '';
 
-        const allLabel = document.createElement('label');
+        var allLabel = document.createElement('label');
         allLabel.className = 'checkbox-item checkbox-all';
         allLabel.innerHTML =
             '<input type="checkbox" id="visibility-all-classes"' + (ability.classes.includes('all') ? ' checked' : '') + '>' +
@@ -843,16 +1115,16 @@
             '<span class="checkbox-text">全部班级</span>';
         visibilityCheckboxes.appendChild(allLabel);
 
-        const allInput = allLabel.querySelector('input');
+        var allInput = allLabel.querySelector('input');
         allInput.addEventListener('change', function () {
-            const checkboxes = visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input');
-            checkboxes.forEach(cb => { cb.checked = allInput.checked; cb.disabled = allInput.checked; });
+            var checkboxes = visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input');
+            checkboxes.forEach(function (cb) { cb.checked = allInput.checked; cb.disabled = allInput.checked; });
         });
 
-        classes.forEach(cls => {
-            const label = document.createElement('label');
+        classes.forEach(function (cls) {
+            var label = document.createElement('label');
             label.className = 'checkbox-item';
-            const isChecked = ability.classes.includes('all') || ability.classes.includes(cls);
+            var isChecked = ability.classes.includes('all') || ability.classes.includes(cls);
             label.innerHTML =
                 '<input type="checkbox" data-class="' + cls + '"' + (isChecked ? ' checked' : '') + (ability.classes.includes('all') ? ' disabled' : '') + '>' +
                 '<span class="checkbox-custom"></span>' +
@@ -865,16 +1137,21 @@
 
     visibilityClose.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
     visibilityCancel.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
+
+    /**
+     * 显隐设置确认按钮
+     * 保存班级可见性配置
+     */
     visibilityConfirm.addEventListener('click', function () {
-        const ability = abilities.find(a => a.id === currentEditingAbilityId);
+        var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
         if (!ability) return;
 
-        const allCb = visibilityCheckboxes.querySelector('#visibility-all-classes');
+        var allCb = visibilityCheckboxes.querySelector('#visibility-all-classes');
         if (allCb.checked) {
             ability.classes = ['all'];
         } else {
             ability.classes = [];
-            visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input:checked').forEach(cb => {
+            visibilityCheckboxes.querySelectorAll('.checkbox-item:not(.checkbox-all) input:checked').forEach(function (cb) {
                 ability.classes.push(cb.getAttribute('data-class'));
             });
         }
@@ -882,19 +1159,31 @@
         visibilityModal.classList.remove('show');
     });
 
+    // ==================== 知识点关联编辑弹窗 ====================
+
+    /**
+     * 显示知识点选择弹窗
+     * 
+     * @param {Array<string>} selectedIds - 当前已选中的知识点 ID 列表
+     */
     function showKnowledgeModal(selectedIds) {
-        tempSelectedKnowledge = selectedIds ? [...selectedIds] : [];
-        const tree = loadKnowledgeTree();
+        tempSelectedKnowledge = selectedIds ? selectedIds.slice() : [];
+        var tree = loadKnowledgeTree();
         renderKnowledgeTree(tree);
         updateKnowledgeSelectedList();
         knowledgeModal.classList.add('show');
     }
 
+    /**
+     * 渲染知识点树
+     * 
+     * @param {Array} tree - 知识点树形数据
+     */
     function renderKnowledgeTree(tree) {
         knowledgeTreeContainer.innerHTML = '';
-        let totalCount = 0;
+        var totalCount = 0;
         function countNodes(nodes) {
-            nodes.forEach(n => {
+            nodes.forEach(function (n) {
                 totalCount++;
                 if (n.children) countNodes(n.children);
             });
@@ -902,56 +1191,62 @@
         countNodes(tree);
         knowledgeTreeCount.textContent = totalCount;
 
-        tree.forEach(node => {
+        tree.forEach(function (node) {
             knowledgeTreeContainer.appendChild(createTreeNode(node, 0));
         });
     }
 
+    /**
+     * 递归创建知识点树节点 DOM
+     * 
+     * @param {Object} node - 知识点节点数据
+     * @param {number} level - 层级深度
+     * @returns {HTMLElement} 树节点 DOM 元素
+     */
     function createTreeNode(node, level) {
-        const li = document.createElement('li');
+        var li = document.createElement('li');
         li.setAttribute('data-id', node.id);
-        const hasChildren = node.children && node.children.length > 0;
+        var hasChildren = node.children && node.children.length > 0;
 
-        const main = document.createElement('div');
+        var main = document.createElement('div');
         main.className = 'tree-main';
         main.style.paddingLeft = (14 + level * 20) + 'px';
 
         if (hasChildren) {
-            const arrow = document.createElement('span');
+            var arrow = document.createElement('span');
             arrow.className = 'tree-arrow';
             arrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
             arrow.addEventListener('click', function (e) {
                 e.stopPropagation();
                 arrow.classList.toggle('expanded');
-                const children = li.querySelector('.tree-children');
+                var children = li.querySelector('.tree-children');
                 if (children) children.classList.toggle('expanded');
             });
             main.appendChild(arrow);
         } else {
-            const spacer = document.createElement('span');
+            var spacer = document.createElement('span');
             spacer.style.width = '20px';
             spacer.style.display = 'inline-block';
             spacer.style.flexShrink = '0';
             main.appendChild(spacer);
         }
 
-        const text = document.createElement('span');
+        var text = document.createElement('span');
         text.className = 'tree-text';
         text.textContent = node.name;
         text.addEventListener('click', function () {
-            console.log(1)
             if (hasChildren) {
-                const arrow = main.querySelector('.tree-arrow');
-                if (arrow) {
-                    arrow.classList.toggle('expanded');
-                    const children = li.querySelector('.tree-children');
+                var arrowEl = main.querySelector('.tree-arrow');
+                if (arrowEl) {
+                    arrowEl.classList.toggle('expanded');
+                    var children = li.querySelector('.tree-children');
                     if (children) children.classList.toggle('expanded');
                 }
             }
         });
         main.appendChild(text);
 
-        const check = document.createElement('span');
+        var check = document.createElement('span');
         check.className = 'tree-check' + (tempSelectedKnowledge.includes(node.id) ? ' checked' : '');
         check.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -960,15 +1255,13 @@
         });
         main.appendChild(check);
 
-        // 点击整个主区域（除勾选框外）展开/折叠子级
         main.addEventListener('click', function (e) {
-             console.log(2)
             if (e.target.closest('.tree-check')) return;
             if (hasChildren) {
-                const arrow = main.querySelector('.tree-arrow');
-                if (arrow) {
-                    arrow.classList.toggle('expanded');
-                    const children = li.querySelector('.tree-children');
+                var arrowEl = main.querySelector('.tree-arrow');
+                if (arrowEl) {
+                    arrowEl.classList.toggle('expanded');
+                    var children = li.querySelector('.tree-children');
                     if (children) children.classList.toggle('expanded');
                 }
             }
@@ -977,16 +1270,18 @@
         li.appendChild(main);
 
         if (hasChildren) {
-            const childrenUl = document.createElement('ul');
+            var childrenUl = document.createElement('ul');
             childrenUl.className = 'tree-children';
-            node.children.forEach(child => {
+            node.children.forEach(function (child) {
                 childrenUl.appendChild(createTreeNode(child, level + 1));
             });
             li.appendChild(childrenUl);
 
-            if (tempSelectedKnowledge.some(id => node.children.some(c => c.id === id))) {
-                const arrow = main.querySelector('.tree-arrow');
-                if (arrow) arrow.classList.add('expanded');
+            if (tempSelectedKnowledge.some(function (id) {
+                return node.children.some(function (c) { return c.id === id; });
+            })) {
+                var arrowEl = main.querySelector('.tree-arrow');
+                if (arrowEl) arrowEl.classList.add('expanded');
                 childrenUl.classList.add('expanded');
             }
         }
@@ -994,8 +1289,13 @@
         return li;
     }
 
+    /**
+     * 切换知识点选中状态
+     * 
+     * @param {string} id - 知识点 ID
+     */
     function toggleKnowledgeSelection(id) {
-        const idx = tempSelectedKnowledge.indexOf(id);
+        var idx = tempSelectedKnowledge.indexOf(id);
         if (idx >= 0) {
             tempSelectedKnowledge.splice(idx, 1);
         } else {
@@ -1004,15 +1304,18 @@
         updateKnowledgeSelectedList();
     }
 
+    /**
+     * 更新知识点弹窗底部已选列表
+     */
     function updateKnowledgeSelectedList() {
         knowledgeSelectedCount.textContent = tempSelectedKnowledge.length;
         knowledgeSelectedList.innerHTML = '';
 
-        const tree = loadKnowledgeTree();
-        tempSelectedKnowledge.forEach(id => {
-            const name = findKnowledgeName(tree, id);
+        var tree = loadKnowledgeTree();
+        tempSelectedKnowledge.forEach(function (id) {
+            var name = findKnowledgeName(tree, id);
             if (!name) return;
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.className = 'knowledge-selected-item';
             div.innerHTML = '<span>' + name + '</span><span class="remove-btn" data-id="' + id + '"></span>';
             div.querySelector('.remove-btn').addEventListener('click', function () {
@@ -1024,11 +1327,19 @@
         });
     }
 
+    /**
+     * 在知识点树中递归查找名称
+     * 
+     * @param {Array} tree - 知识点树
+     * @param {string} id - 知识点 ID
+     * @returns {string|null} 知识点名称
+     */
     function findKnowledgeName(tree, id) {
-        for (const node of tree) {
+        for (var i = 0; i < tree.length; i++) {
+            var node = tree[i];
             if (node.id === id) return node.name;
             if (node.children) {
-                const result = findKnowledgeName(node.children, id);
+                var result = findKnowledgeName(node.children, id);
                 if (result) return result;
             }
         }
@@ -1037,11 +1348,16 @@
 
     knowledgeModalClose.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
     knowledgeCancel.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
+
+    /**
+     * 知识点弹窗确认按钮
+     * 保存选中的知识点到当前编辑的能力
+     */
     knowledgeConfirm.addEventListener('click', function () {
         if (currentEditingAbilityId) {
-            const ability = abilities.find(a => a.id === currentEditingAbilityId);
+            var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
             if (ability) {
-                ability.knowledgeIds = [...tempSelectedKnowledge];
+                ability.knowledgeIds = tempSelectedKnowledge.slice();
                 ability.knowledgeCount = tempSelectedKnowledge.length;
                 saveData();
                 renderAll();
@@ -1050,13 +1366,24 @@
         knowledgeModal.classList.remove('show');
     });
 
+    /**
+     * 关联知识点按钮 - 打开知识点选择弹窗
+     */
     knowledgeAssociBtn.addEventListener('click', function () {
         if (!selectedAbilityId) return;
         currentEditingAbilityId = selectedAbilityId;
-        const ability = abilities.find(a => a.id === selectedAbilityId);
+        var ability = abilities.find(function (a) { return a.id === selectedAbilityId; });
         showKnowledgeModal(ability ? ability.knowledgeIds : []);
     });
 
+    // ==================== 确认弹窗 ====================
+
+    /**
+     * 显示通用确认弹窗
+     * 
+     * @param {string} text - 确认提示文本
+     * @param {Function} callback - 确认后的回调函数
+     */
     function showConfirm(text, callback) {
         confirmText.textContent = text;
         confirmCallback = callback;
@@ -1071,10 +1398,22 @@
         confirmCallback = null;
     });
 
+    // ==================== 导航按钮 ====================
+
+    /**
+     * 添加能力按钮 - 跳转到目标管理页面
+     */
     targetAddBtn.addEventListener('click', function () {
         window.location.href = 'targetManagement.html';
     });
 
+    // ==================== 全局刷新 ====================
+
+    /**
+     * 刷新所有视图
+     * 更新图表 → 渲染卡片 → 渲染图谱
+     * 如果没有选中能力且有可用能力，自动选中第一个
+     */
     function renderAll() {
         updateChart();
         renderAbilities();
@@ -1084,6 +1423,12 @@
         }
     }
 
+    // ==================== 应用初始化入口 ====================
+
+    /**
+     * 应用初始化
+     * 加载数据 → 初始化班级筛选器 → 初始化图表 → 渲染所有视图
+     */
     function init() {
         loadData();
         initClassSelector();
