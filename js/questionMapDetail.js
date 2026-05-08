@@ -646,6 +646,10 @@
             badge = '<div class="w_contp_inum">0</div>';
         }
 
+        var hasTeacher = block.teacherNote && block.teacherNote !== '<p><br></p>' && block.teacherNote.trim() !== '';
+
+        var teacherStyle = hasTeacher ? '' : ' style="display:none"';
+
         var html =
             '<div class="block-header">' +
                 '<span class="block-title">' + block.title + '</span>' +
@@ -658,6 +662,7 @@
                 '</span>' +
             '</div>' +
             '<div class="block-actions">' +
+                '<span class="w_teachbtn' + teacherStyle + '" data-card-id="' + block.id + '">教师参考</span>' +
                 '<span class="action-btn edit-btn" title="编辑" data-card-id="' + block.id + '" data-title="' + block.title + '">' +
                     '<div class="xcustomSvg">' +
                         '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">' +
@@ -692,6 +697,19 @@
                 var title = this.getAttribute('data-title');
                 var content = this.closest('.w_contp_item').querySelector('.block-content-text').textContent;
                 showEditModal(cardId, title, content);
+            });
+        }
+
+        var teacherBtn = cardElement.querySelector('.w_teachbtn');
+        if (teacherBtn) {
+            teacherBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var cardId = this.getAttribute('data-card-id');
+                var data = StorageManager.get('fullHierarchyData', null);
+                var block = data ? findBlockById(data, cardId) : null;
+                if (block && block.teacherNote) {
+                    showTeacherModal(block.title, block.teacherNote);
+                }
             });
         }
 
@@ -875,6 +893,20 @@
     function hideDetailModal() {
         detailModal.classList.remove('show');
         document.body.style.overflow = '';
+    }
+
+    /**
+     * 显示教师参考弹窗
+     * 使用 innerHTML 展示富文本内容
+     *
+     * @param {string} title - 卡片标题
+     * @param {string} content - 教师参考的 HTML 内容
+     */
+    function showTeacherModal(title, content) {
+        detailModalTitle.textContent = title + ' - 教师参考';
+        detailModalContent.innerHTML = content;
+        detailModal.classList.add('show');
+        document.body.style.overflow = 'hidden';
     }
 
     /**

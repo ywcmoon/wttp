@@ -234,22 +234,16 @@
      *   - mouseup/touchend/mouseleave：结束拖拽
      */
     function enableCardGroupDrag() {
-        var cards = document.querySelectorAll('.w_contp_item');
-        cards.forEach(function (card) {
-            card.removeEventListener('mousedown', handleCardMouseDown);
-            card.removeEventListener('touchstart', handleCardTouchStart, { passive: false });
-        });
+        mainContainer.removeEventListener('mousedown', handleCardMouseDown);
+        mainContainer.removeEventListener('touchstart', handleCardTouchStart, { passive: false });
         document.removeEventListener('mousemove', handleDragMove);
         document.removeEventListener('touchmove', handleDragMove, { passive: false });
         document.removeEventListener('mouseup', handleDragEnd);
         document.removeEventListener('touchend', handleDragEnd);
         document.removeEventListener('mouseleave', handleDragEnd);
 
-        cards.forEach(function (card) {
-            card.addEventListener('mousedown', handleCardMouseDown);
-            card.addEventListener('touchstart', handleCardTouchStart, { passive: false });
-            card.style.cursor = 'grab';
-        });
+        mainContainer.addEventListener('mousedown', handleCardMouseDown);
+        mainContainer.addEventListener('touchstart', handleCardTouchStart, { passive: false });
         document.addEventListener('mousemove', handleDragMove);
         document.addEventListener('touchmove', handleDragMove, { passive: false });
         document.addEventListener('mouseup', handleDragEnd);
@@ -419,13 +413,13 @@
 
         teacherConnections.forEach(function (conn) {
             if (studentConnectionSet.has(conn.startId + '-' + conn.endId)) {
-                renderLine(conn.startId, conn.endId, 'solid', getLineColor(conn.startId, conn.endId));
+                renderGradientLine(conn.startId, conn.endId, 'solid');
             }
         });
 
         teacherConnections.forEach(function (conn) {
             if (!studentConnectionSet.has(conn.startId + '-' + conn.endId)) {
-                renderLine(conn.startId, conn.endId, 'dashed', getLineColor(conn.startId, conn.endId));
+                renderGradientLine(conn.startId, conn.endId, 'dashed');
             }
         });
 
@@ -438,12 +432,12 @@
 
     /**
      * 渲染正确的标准答案连线
-     * 
+     *
      * @param {Array} teacherConnections - 教师标准连线
      */
     function renderCorrectConnections(teacherConnections) {
         teacherConnections.forEach(function (conn) {
-            renderLine(conn.startId, conn.endId, 'solid', getLineColor(conn.startId, conn.endId));
+            renderGradientLine(conn.startId, conn.endId, 'solid');
         });
     }
 
@@ -499,6 +493,81 @@
         path.setAttribute('d', bezier(sx, sy, ex, ey));
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', '2.5');
+
+        if (style === 'dashed') {
+            path.setAttribute('stroke-dasharray', '8,4');
+        }
+
+        svg.insertBefore(path, connectorGroup);
+
+        connections.push({
+            id: connId++,
+            startElement: startElement,
+            endElement: endElement,
+            element: path
+        });
+    }
+
+    /**
+     * 渲染渐变色连线
+     * 创建从起始层级颜色到结束层级颜色的 SVG 渐变
+     *
+     * @param {string} startId - 起始卡片 ID
+     * @param {string} endId - 结束卡片 ID
+     * @param {string} style - 线型：'solid'（实线）或 'dashed'（虚线）
+     */
+    function renderGradientLine(startId, endId, style) {
+        var startInfo = svgConnectorPoints.get(startId + '-start');
+        var endInfo = svgConnectorPoints.get(endId + '-end');
+
+        if (!startInfo || !endInfo) return;
+
+        var startElement = startInfo.element;
+        var endElement = endInfo.element;
+
+        var startTransform = startElement.getAttribute('transform');
+        var startMatch = startTransform && startTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!startMatch) return;
+        var sx = parseFloat(startMatch[1]);
+        var sy = parseFloat(startMatch[2]);
+
+        var endTransform = endElement.getAttribute('transform');
+        var endMatch = endTransform && endTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        if (!endMatch) return;
+        var ex = parseFloat(endMatch[1]);
+        var ey = parseFloat(endMatch[2]);
+
+        var startLevelKey = startId[0].toLowerCase();
+        var endLevelKey = endId[0].toLowerCase();
+        var levelColors = { a: '#409eff', b: '#67c23a', c: '#e6a23c', d: '#f56c6c', e: '#E372DB' };
+        var c1 = levelColors[startLevelKey] || '#409eff';
+        var c2 = levelColors[endLevelKey] || '#67c23a';
+
+        var gradientId = 'grad-compare-' + startId + '-' + endId + '-' + Date.now();
+        var lg = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+        lg.setAttribute('id', gradientId);
+        lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+        lg.setAttribute('x1', String(sx));
+        lg.setAttribute('y1', String(sy));
+        lg.setAttribute('x2', String(ex));
+        lg.setAttribute('y2', String(ey));
+        var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s1.setAttribute('offset', '0%');
+        s1.setAttribute('stop-color', c1);
+        var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        s2.setAttribute('offset', '100%');
+        s2.setAttribute('stop-color', c2);
+        lg.appendChild(s1);
+        lg.appendChild(s2);
+
+        var defs = svg.querySelector('defs');
+        if (defs) defs.appendChild(lg);
+
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', bezier(sx, sy, ex, ey));
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'url(#' + gradientId + ')');
         path.setAttribute('stroke-width', '2.5');
 
         if (style === 'dashed') {

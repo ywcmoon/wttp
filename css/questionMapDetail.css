@@ -131,6 +131,19 @@ body {
     border-color: #f56c6c;
 }
 
+/* 教师参考按钮：蓝色文字、可点击 */
+.w_teachbtn {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 32px;
+    padding: 0 10px;
+}
+
+.w_teachbtn:hover {
+    text-decoration: none;
+}
+
 /* 操作按钮内SVG图标悬停时变为白色 */
 .action-btn:hover svg path {
     fill: #fff !important;

@@ -575,7 +575,12 @@
                     if (idx >= 0) {
                         tags[idx] = newName.trim();
                         saveTags();
+                        var selectedIdx = tempTagSelected.indexOf(tag);
+                        if (selectedIdx >= 0) {
+                            tempTagSelected[selectedIdx] = newName.trim();
+                        }
                         renderTagList();
+                        renderTagSelectedList();
                         abilities.forEach(function (a) {
                             if (a.tags && a.tags.includes(tag)) {
                                 var tagIdx = a.tags.indexOf(tag);

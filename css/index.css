@@ -553,6 +553,7 @@ body.is-connecting .block-actions {
     fill: none;
     stroke-width: 2.5;
     stroke-dasharray: none;
+    pointer-events: stroke;
 }
 
 /* 跨层级连线使用渐变色，增强视觉层次感 */
@@ -608,9 +609,10 @@ body.is-connecting .block-actions {
     filter: drop-shadow(0 0 3px rgba(64, 158, 255, 0.8));
 }
 
-/* 隐藏连线 */
+/* 隐藏连线：完全透明且禁止鼠标事件 */
 .path-line.hidden {
     opacity: 0;
+    pointer-events: none;
 }
 
 /* 加粗连线 */
