@@ -204,6 +204,8 @@
         var ls3 = StorageManager.get('ls3', { connections: [] });
 
         renderCompareConnections(ls1.connections, ls3.connections);
+
+        updateBadges();
     }
 
     /**
@@ -217,6 +219,8 @@
         var ls1 = StorageManager.get('ls1', { connections: [] });
 
         renderCorrectConnections(ls1.connections);
+
+        updateBadges();
 
         showZoomIndicator();
 

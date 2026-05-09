@@ -65,6 +65,14 @@ body {
     z-index: 2;
 }
 
+/* 教师参考按钮：默认隐藏 */
+.w_teachbtn {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
+}
+
 /* ==================== 组件样式 ==================== */
 /* 返回按钮组件 */
 

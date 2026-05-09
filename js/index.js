@@ -106,6 +106,7 @@
     const svg = document.getElementById('connections-svg');
     /** @type {HTMLElement} 工作区容器，用于计算布局 */
     const container = document.getElementById('main-container');
+    var editModal = document.getElementById('edit-block-modal-overlay');
 
     // ==================== 核心状态变量 ====================
     /**
@@ -143,6 +144,9 @@
     const connectorGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     connectorGroup.setAttribute('id', 'connector-points-group');
     svg.appendChild(connectorGroup);
+
+    /** @type {number|null} 删除按钮移除定时器ID */
+    let removeDeleteBtnTimer = null;
 
     const LEVEL_COLORS = {
         a: getComputedStyle(document.documentElement).getPropertyValue('--color-level-a').trim() || '#409eff',
@@ -1651,6 +1655,10 @@
      * @returns {void}
      */
     function onPathMouseEnter(e) {
+        if (removeDeleteBtnTimer) {
+            clearTimeout(removeDeleteBtnTimer);
+            removeDeleteBtnTimer = null;
+        }
         removeDeleteBtn();
         const path = e.target;
         if (!path.classList.contains('path-line')) return;
@@ -1687,13 +1695,42 @@
                 svg.removeChild(conn.element);
                 connections = connections.filter(c => c.id !== conn.id);
                 updateBadges();
-                saveToLocalStorage(); // 删除连线后也保存
+                saveToLocalStorage();
             }
             removeDeleteBtn();
         };
 
         deleteBtn.addEventListener('click', handleDelete);
         cross.addEventListener('click', handleDelete);
+
+        deleteBtn.addEventListener('mouseenter', function () {
+            if (removeDeleteBtnTimer) {
+                clearTimeout(removeDeleteBtnTimer);
+                removeDeleteBtnTimer = null;
+            }
+        });
+        deleteBtn.addEventListener('mouseleave', function () {
+            if (removeDeleteBtnTimer) {
+                clearTimeout(removeDeleteBtnTimer);
+            }
+            removeDeleteBtnTimer = setTimeout(function () {
+                removeDeleteBtn();
+            }, 150);
+        });
+        cross.addEventListener('mouseenter', function () {
+            if (removeDeleteBtnTimer) {
+                clearTimeout(removeDeleteBtnTimer);
+                removeDeleteBtnTimer = null;
+            }
+        });
+        cross.addEventListener('mouseleave', function () {
+            if (removeDeleteBtnTimer) {
+                clearTimeout(removeDeleteBtnTimer);
+            }
+            removeDeleteBtnTimer = setTimeout(function () {
+                removeDeleteBtn();
+            }, 150);
+        });
     }
 
     /**
@@ -1701,6 +1738,10 @@
      * @returns {void}
      */
     function removeDeleteBtn() {
+        if (removeDeleteBtnTimer) {
+            clearTimeout(removeDeleteBtnTimer);
+            removeDeleteBtnTimer = null;
+        }
         document.querySelectorAll('.path-delete-btn').forEach(btn => btn.remove());
         document.querySelectorAll('.path-delete-cross').forEach(cross => cross.remove());
     }
@@ -1811,7 +1852,12 @@
      * @returns {void}
      */
     function onPathMouseLeave(e) {
-        setTimeout(() => removeDeleteBtn(), 150);
+        if (removeDeleteBtnTimer) {
+            clearTimeout(removeDeleteBtnTimer);
+        }
+        removeDeleteBtnTimer = setTimeout(function () {
+            removeDeleteBtn();
+        }, 150);
     }
 
     /**
@@ -2893,10 +2939,6 @@
         document.getElementById('modal-close').addEventListener('click', () => { hideModal(); clearForm(); });
         document.getElementById('btn-cancel').addEventListener('click', () => { hideModal(); clearForm(); });
         document.getElementById('btn-confirm').addEventListener('click', (e) => { e.preventDefault(); submitForm(); });
-        // 移除点击透明层隐藏弹窗的功能
-        // document.getElementById('modal-overlay').addEventListener('click', (e) => {
-        //     if (e.target.id === 'modal-overlay') { hideModal(); clearForm(); }
-        // });
         document.getElementById('add-form').addEventListener('submit', (e) => { e.preventDefault(); submitForm(); });
     }
 
@@ -3347,7 +3389,7 @@
      * @param {HTMLElement} block - 要编辑的卡片DOM元素
      * @returns {void}
      */
-    function showEditBlockModal(block) {
+    function showEditModal(block) {
         currentEditingBlock = block;
         const title = block.querySelector('.block-title').textContent;
         const content = block.querySelector('.block-content-text').innerHTML;
@@ -3390,7 +3432,7 @@
         window.editBlockEditorDesc.root.innerHTML = content;
         window.editBlockEditorTeacher.root.innerHTML = teacherContent;
 
-        document.getElementById('edit-block-modal-overlay').classList.remove('hidden');
+        editModal.classList.remove('hidden');
         document.getElementById('edit-block-name').focus();
 
     }
@@ -3399,8 +3441,8 @@
      * 隐藏编辑卡片弹窗
      * @returns {void}
      */
-    function hideEditBlockModal() {
-        document.getElementById('edit-block-modal-overlay').classList.add('hidden');
+    function hideEditModal() {
+        editModal.classList.add('hidden');
         currentEditingBlock = null;
     }
 
@@ -3415,7 +3457,10 @@
         const desc = window.editBlockEditorDesc.root.innerHTML;
         const teacher = window.editBlockEditorTeacher.root.innerHTML;
 
-        if (!name) return;
+        if (!name.trim()) {
+            alert('标题不能为空');
+            return;
+        }
 
         // 更新卡片内容
         currentEditingBlock.querySelector('.block-title').textContent = name;
@@ -3432,10 +3477,10 @@
             }
         }
 
-        updateAllFolds();
-        updateAllLines();
+        // updateAllFolds();
+        // updateAllLines();
         saveToLocalStorage();
-        hideEditBlockModal();
+        hideEditModal();
     }
 
     // ==================== 关联子级功能 ====================
@@ -3738,7 +3783,7 @@
         if (editBtn) {
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                showEditBlockModal(block);
+                showEditModal(block);
             });
         }
 
@@ -4229,7 +4274,7 @@
             // 编辑按钮
             if (e.target.closest('.edit-btn')) {
                 e.stopPropagation();
-                showEditBlockModal(block);
+                showEditModal(block);
                 return;
             }
 
@@ -4268,22 +4313,16 @@
         });
 
         // 编辑卡片弹窗事件
-        document.getElementById('edit-block-modal-close').addEventListener('click', hideEditBlockModal);
-        document.getElementById('edit-block-btn-cancel').addEventListener('click', hideEditBlockModal);
-        // 移除点击透明层隐藏弹窗的功能
-        // document.getElementById('edit-block-modal-overlay').addEventListener('click', (e) => {
-        //     if (e.target === document.getElementById('edit-block-modal-overlay')) {
-        //         hideEditBlockModal();
-        //     }
-        // });
+        document.getElementById('edit-block-modal-close').addEventListener('click', hideEditModal);
+        document.getElementById('edit-block-btn-cancel').addEventListener('click', hideEditModal);
         document.getElementById('edit-block-btn-confirm').addEventListener('click', (e) => {
             e.preventDefault();
             saveEditBlock();
         });
-        document.getElementById('edit-block-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveEditBlock();
-        });
+        // document.getElementById('edit-block-form').addEventListener('submit', (e) => {
+        //     e.preventDefault();
+        //     saveEditBlock();
+        // });
 
         // 关联子级弹窗事件
         document.getElementById('connect-children-modal-close').addEventListener('click', hideConnectChildrenModal);
@@ -4338,7 +4377,7 @@
             e.stopPropagation();
 
             if (actionBtn.classList.contains('edit-btn')) {
-                showEditBlockModal(sourceBlock);
+                showEditModal(sourceBlock);
             } else if (actionBtn.classList.contains('connect-btn')) {
                 showConnectChildrenModal(sourceBlock);
             } else if (actionBtn.classList.contains('delete-btn')) {

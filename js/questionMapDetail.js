@@ -633,7 +633,7 @@
         if (!container) return;
 
         var cardElement = document.createElement('div');
-        cardElement.className = 'w_contp_item level-' + level;
+        cardElement.className = 'w_contp_item level-' + level + ' draggable-block';
         cardElement.id = 'card-' + block.id;
         cardElement.setAttribute('data-card-id', block.id);
         cardElement.setAttribute('data-level', level);
@@ -652,29 +652,30 @@
 
         var html =
             '<div class="block-header">' +
-                '<span class="block-title">' + block.title + '</span>' +
+            '<span class="block-title">' + block.title + '</span>' +
             '</div>' +
             '<div class="block-content">' +
-                '<div class="block-content-text">' + block.desc + '</div>' +
-                '<span class="w_contp_btn detail-btn" data-card-id="' + block.id + '" data-title="' + block.title + '">' +
-                    '详情' +
-                    '<i class="fas fa-chevron-right"></i>' +
-                '</span>' +
+            '<div class="block-content-text">' + block.desc + '</div>' +
+            '<span class="w_contp_btn detail-btn" data-card-id="' + block.id + '" data-title="' + block.title + '">' +
+            '详情' +
+            '<i class="fas fa-chevron-right"></i>' +
+            '</span>' +
             '</div>' +
             '<div class="block-actions">' +
-                '<span class="w_teachbtn' + teacherStyle + '" data-card-id="' + block.id + '">教师参考</span>' +
-                '<span class="action-btn edit-btn" title="编辑" data-card-id="' + block.id + '" data-title="' + block.title + '">' +
-                    '<div class="xcustomSvg">' +
-                        '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-                            '<path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>' +
-                            '<path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>' +
-                            '<path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>' +
-                            '<path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>' +
-                            '<path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>' +
-                        '</svg>' +
-                    '</div>' +
-                '</span>' +
+            '<span class="action-btn edit-btn" title="编辑" data-card-id="' + block.id + '" data-title="' + block.title + '">' +
+            '<div class="xcustomSvg">' +
+            '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M3.11727 11.8925L11.0722 3.9375L13.4587 6.32399L5.50376 14.2789L2.9913 15.1164C2.55156 15.263 2.13321 14.8446 2.27978 14.4049L3.11727 11.8925Z" fill="#606266"></path>' +
+            '<path d="M11.8677 3.142L12.2655 2.74426C12.9245 2.08525 13.9929 2.08525 14.652 2.74426C15.311 3.40327 15.311 4.47173 14.652 5.13074L14.2542 5.52849L11.8677 3.142Z" fill="#606266"></path>' +
+            '<path d="M10.4474 13.926H9.09744V15.276H10.4474V13.926Z" fill="#606266"></path>' +
+            '<path d="M13.3725 13.926H12.0225V15.276H13.3725V13.926Z" fill="#606266"></path>' +
+            '<path d="M14.9469 13.926H16.2969V15.276H14.9469V13.926Z" fill="#606266"></path>' +
+            '</svg>' +
             '</div>' +
+            '</span>' +
+
+            '</div>' +
+            '<span class="w_teachbtn' + teacherStyle + '" data-card-id="' + block.id + '">教师参考</span>' +
             badge;
 
         cardElement.innerHTML = html;
@@ -692,11 +693,17 @@
         var editBtn = cardElement.querySelector('.edit-btn');
         if (editBtn) {
             editBtn.addEventListener('click', function (e) {
+                const block = e.target.closest('.draggable-block');
+                if (!block) return;
                 e.stopPropagation();
-                var cardId = this.getAttribute('data-card-id');
-                var title = this.getAttribute('data-title');
-                var content = this.closest('.w_contp_item').querySelector('.block-content-text').textContent;
-                showEditModal(cardId, title, content);
+                // var cardId = this.getAttribute('data-card-id');
+                // var title = this.getAttribute('data-title');
+                // var content = this.closest('.w_contp_item').querySelector('.block-content-text').textContent;
+
+                // showEditModal(cardId, title, content);
+
+                showEditModal(block);
+                return;
             });
         }
 
@@ -921,18 +928,73 @@
      *   - 工具栏：加粗、斜体、下划线、删除线、引用、代码块、列表、标题、链接
      *   - 懒初始化：首次调用时创建编辑器实例
      */
-    function showEditModal(cardId, title, desc) {
-        currentEditingBlock = cardId;
-        editBlockNameInput.value = title;
+    // function showEditModal(cardId, title, desc) {
+    //     currentEditingBlock = cardId;
+    //     editBlockNameInput.value = title;
 
-        var data = StorageManager.get('fullHierarchyData', null);
-        var teacherNote = '';
-        if (data) {
-            var block = findBlockById(data, cardId);
-            if (block && block.teacherNote) {
-                teacherNote = block.teacherNote;
-            }
-        }
+    //     var data = StorageManager.get('fullHierarchyData', null);
+    //     var teacherNote = '';
+    //     if (data) {
+    //         var block = findBlockById(data, cardId);
+    //         if (block && block.teacherNote) {
+    //             teacherNote = block.teacherNote;
+    //         }
+    //     }
+
+    //     if (!window.editBlockEditorDesc) {
+    //         window.editBlockEditorDesc = new Quill('#edit-block-desc', {
+    //             theme: 'snow',
+    //             modules: {
+    //                 toolbar: [
+    //                     ['bold', 'italic', 'underline', 'strike'],
+    //                     ['blockquote', 'code-block'],
+    //                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    //                     [{ 'header': [1, 2, 3, false] }],
+    //                     ['link'],
+    //                     ['clean']
+    //                 ]
+    //             }
+    //         });
+    //     }
+
+    //     if (!window.editBlockEditorTeacher) {
+    //         window.editBlockEditorTeacher = new Quill('#edit-block-teacher', {
+    //             theme: 'snow',
+    //             modules: {
+    //                 toolbar: [
+    //                     ['bold', 'italic', 'underline', 'strike'],
+    //                     ['blockquote', 'code-block'],
+    //                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    //                     [{ 'header': [1, 2, 3, false] }],
+    //                     ['link'],
+    //                     ['clean']
+    //                 ]
+    //             }
+    //         });
+    //     }
+
+    //     window.editBlockEditorDesc.root.innerHTML = desc || '';
+    //     window.editBlockEditorTeacher.root.innerHTML = teacherNote || '';
+
+    //     editModal.classList.add('show');
+    //     document.body.style.overflow = 'hidden';
+    // }
+
+    /**
+     * 显示编辑卡片弹窗
+     * 打开编辑卡片的模态框，并初始化富文本编辑器
+     *
+     * @param {HTMLElement} block - 要编辑的卡片DOM元素
+     * @returns {void}
+     */
+    function showEditModal(block) {
+        console.log(block)
+        currentEditingBlock = block;
+        const title = block.querySelector('.block-title').textContent;
+        const content = block.querySelector('.block-content-text').innerHTML;
+        const teacherContent = block.querySelector('.w_teachbtn')?.dataset.teacherContent || '';
+
+        document.getElementById('edit-block-name').value = title;
 
         if (!window.editBlockEditorDesc) {
             window.editBlockEditorDesc = new Quill('#edit-block-desc', {
@@ -966,11 +1028,14 @@
             });
         }
 
-        window.editBlockEditorDesc.root.innerHTML = desc || '';
-        window.editBlockEditorTeacher.root.innerHTML = teacherNote || '';
+        window.editBlockEditorDesc.root.innerHTML = content;
+        window.editBlockEditorTeacher.root.innerHTML = teacherContent;
 
         editModal.classList.add('show');
         document.body.style.overflow = 'hidden';
+        // document.getElementById('edit-block-modal-overlay').classList.remove('hidden');
+        // document.getElementById('edit-block-name').focus();
+
     }
 
     /**
@@ -992,26 +1057,76 @@
      *
      * 保存后自动刷新视图
      */
-    function confirmEdit() {
-        var newTitle = editBlockNameInput.value;
+    // function confirmEdit() {
+    //     var newTitle = editBlockNameInput.value;
 
-        if (!newTitle.trim()) {
+    //     if (!newTitle.trim()) {
+    //         alert('标题不能为空');
+    //         return;
+    //     }
+
+    //     var newDesc = window.editBlockEditorDesc ? window.editBlockEditorDesc.root.innerHTML : '';
+    //     var newTeacher = window.editBlockEditorTeacher ? window.editBlockEditorTeacher.root.innerHTML : '';
+
+    //     updateBlockData(currentEditingBlock, newTitle, newDesc, newTeacher);
+    //     hideEditModal();
+
+    //     var relationChain = StorageManager.get('relationChain', null);
+    //     if (relationChain) {
+    //         showRelationChain(relationChain);
+    //     } else {
+    //         loadBlockData();
+    //     }
+    // }
+
+    /**
+     * 判断富文本 HTML 是否有实际内容（过滤空标签）
+     * @param {string} html
+     * @returns {boolean}
+     */
+    function hasMeaningfulHtml(html) {
+        if (!html) return false;
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        const text = (div.textContent || '').replace(/\s+/g, '').trim();
+        const hasMedia = !!div.querySelector('img,video,iframe,table,ul,ol,li,blockquote,pre,code');
+        return text.length > 0 || hasMedia;
+    }
+
+    /**
+    * 保存编辑的卡片内容
+    * @returns {void}
+    */
+    function saveEditBlock() {
+        if (!currentEditingBlock) return;
+
+        const name = document.getElementById('edit-block-name').value;
+        const desc = window.editBlockEditorDesc.root.innerHTML;
+        const teacher = window.editBlockEditorTeacher.root.innerHTML;
+
+        if (!name.trim()) {
             alert('标题不能为空');
             return;
         }
+        // 更新卡片内容
+        currentEditingBlock.querySelector('.block-title').textContent = name;
+        currentEditingBlock.querySelector('.block-content-text').innerHTML = desc;
 
-        var newDesc = window.editBlockEditorDesc ? window.editBlockEditorDesc.root.innerHTML : '';
-        var newTeacher = window.editBlockEditorTeacher ? window.editBlockEditorTeacher.root.innerHTML : '';
-
-        updateBlockData(currentEditingBlock, newTitle, newDesc, newTeacher);
-        hideEditModal();
-
-        var relationChain = StorageManager.get('relationChain', null);
-        if (relationChain) {
-            showRelationChain(relationChain);
-        } else {
-            loadBlockData();
+        const teachBtn = currentEditingBlock.querySelector('.w_teachbtn');
+        if (teachBtn) {
+            if (hasMeaningfulHtml(teacher)) {
+                teachBtn.style.display = 'block';
+                teachBtn.dataset.teacherContent = teacher;
+            } else {
+                teachBtn.style.display = 'none';
+                delete teachBtn.dataset.teacherContent;
+            }
         }
+
+        // updateAllFolds();
+        // updateAllLines();
+        // saveToLocalStorage(); 
+        hideEditModal(); 
     }
 
     /**
@@ -1103,7 +1218,11 @@
                 hideEditModal();
             }
         });
-        editModalConfirm.addEventListener('click', confirmEdit);
+        editModalConfirm.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveEditBlock();
+        });
+
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
