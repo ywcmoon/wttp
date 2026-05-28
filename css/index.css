@@ -105,6 +105,7 @@ body {
 /* 列编辑图标 */
 .w_contp_edit {
     transition: color 0.3s;
+    cursor: pointer;
 }
 
 .w_contp_edit:hover {

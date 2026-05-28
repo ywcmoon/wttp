@@ -915,70 +915,7 @@
         detailModal.classList.add('show');
         document.body.style.overflow = 'hidden';
     }
-
-    /**
-     * 显示编辑弹窗
-     *
-     * @param {string} cardId - 卡片 ID
-     * @param {string} title - 卡片标题
-     * @param {string} desc - 卡片描述（HTML 格式）
-     *
-     * 编辑器配置：
-     *   - 两个 Quill 富文本编辑器（描述 + 教师备注）
-     *   - 工具栏：加粗、斜体、下划线、删除线、引用、代码块、列表、标题、链接
-     *   - 懒初始化：首次调用时创建编辑器实例
-     */
-    // function showEditModal(cardId, title, desc) {
-    //     currentEditingBlock = cardId;
-    //     editBlockNameInput.value = title;
-
-    //     var data = StorageManager.get('fullHierarchyData', null);
-    //     var teacherNote = '';
-    //     if (data) {
-    //         var block = findBlockById(data, cardId);
-    //         if (block && block.teacherNote) {
-    //             teacherNote = block.teacherNote;
-    //         }
-    //     }
-
-    //     if (!window.editBlockEditorDesc) {
-    //         window.editBlockEditorDesc = new Quill('#edit-block-desc', {
-    //             theme: 'snow',
-    //             modules: {
-    //                 toolbar: [
-    //                     ['bold', 'italic', 'underline', 'strike'],
-    //                     ['blockquote', 'code-block'],
-    //                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    //                     [{ 'header': [1, 2, 3, false] }],
-    //                     ['link'],
-    //                     ['clean']
-    //                 ]
-    //             }
-    //         });
-    //     }
-
-    //     if (!window.editBlockEditorTeacher) {
-    //         window.editBlockEditorTeacher = new Quill('#edit-block-teacher', {
-    //             theme: 'snow',
-    //             modules: {
-    //                 toolbar: [
-    //                     ['bold', 'italic', 'underline', 'strike'],
-    //                     ['blockquote', 'code-block'],
-    //                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    //                     [{ 'header': [1, 2, 3, false] }],
-    //                     ['link'],
-    //                     ['clean']
-    //                 ]
-    //             }
-    //         });
-    //     }
-
-    //     window.editBlockEditorDesc.root.innerHTML = desc || '';
-    //     window.editBlockEditorTeacher.root.innerHTML = teacherNote || '';
-
-    //     editModal.classList.add('show');
-    //     document.body.style.overflow = 'hidden';
-    // }
+ 
 
     /**
      * 显示编辑卡片弹窗
@@ -1024,7 +961,8 @@
                         ['link'],
                         ['clean']
                     ]
-                }
+                },
+                placeholder: '教师参考内容仅您可见，用于辅助备课。可填写：教学目标、解析思路、教学建议、常见误区等'
             });
         }
 
