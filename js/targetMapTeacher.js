@@ -2,7 +2,7 @@
  * targetMapTeacher.js - 能力图谱教师视图核心脚本
  *
  * 功能概述：
- *   1. 能力卡片列表渲染（支持拖拽排序、删除、显隐设置）
+ *   1. 能力卡片列表渲染（支持拖拽排序、删除、开放班级）
  *   2. ECharts 柱状图展示各能力关联的知识点数量
  *   3. SVG 知识点关系图谱（力导向布局、节点拖拽、缩放平移）
  *   4. 班级筛选器（按班级过滤能力卡片）
@@ -18,7 +18,7 @@
  *   七、卡片拖拽排序
  *   八、SVG知识点图谱渲染
  *   九、SVG画布平移与缩放
- *   十、显隐设置弹窗
+ *   十、开放班级弹窗
  *   十一、知识点关联编辑弹窗
  *   十二、确认弹窗
  *   十三、事件绑定与初始化
@@ -412,12 +412,12 @@
      *   - 能力名称
      *   - 标签列表
      *   - 描述文本
-     *   - 显隐设置按钮
+     *   - 开放班级按钮
      *
      * 交互：
      *   - 点击卡片 → 选中并展示知识点图谱
      *   - 点击删除 → 确认后删除
-     *   - 点击显隐设置 → 打开班级可见性弹窗
+     *   - 点击开放班级 → 打开班级可见性弹窗
      *   - 拖拽手柄 → 排序
      */
     function createAbilityCard(ability) {
@@ -444,7 +444,7 @@
                 '<h3 class="target_title">' + ability.name + '</h3>' +
                 tagsHtml +
                 descHtml +
-                '<p class="target_display" data-id="' + ability.id + '">显隐设置</p>' +
+                '<p class="target_display" data-id="' + ability.id + '">开放班级</p>' +
             '</div>';
 
         item.addEventListener('click', function (e) {
@@ -1119,7 +1119,7 @@
     }
 
     /* ============================================================
-     * 十、显隐设置弹窗
+     * 十、开放班级弹窗
      * ============================================================ */
 
     /**
@@ -1140,7 +1140,7 @@
         var ability = abilities.find(function (a) { return a.id === abilityId; });
         if (!ability) return;
 
-        visibilityAbilityName.textContent = '能力名称：' + ability.name;
+        visibilityAbilityName.textContent = '名称：' + ability.name;
         var classes = loadClasses();
         visibilityCheckboxes.innerHTML = '';
 
@@ -1395,13 +1395,13 @@
         }
     }
 
-    // --- 显隐设置弹窗事件 ---
+    // --- 开放班级弹窗事件 ---
 
     visibilityClose.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
     visibilityCancel.addEventListener('click', function () { visibilityModal.classList.remove('show'); });
 
     /**
-     * 显隐设置确认按钮 - 保存班级可见性配置
+     * 开放班级确认按钮 - 保存班级可见性配置
      */
     visibilityConfirm.addEventListener('click', function () {
         var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });

@@ -780,6 +780,7 @@ body {
 .visibility-checkboxes {
     display: flex;
     flex-wrap: wrap;
+    padding-left: 5%;
 }
 
 /* 复选框项：三列布局 */

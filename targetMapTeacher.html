@@ -3,7 +3,7 @@
 
 <!--
   页面：能力图谱（教师端）
-  功能：展示能力图谱的统计数据和关联关系，支持班级筛选、能力卡片管理、知识点关联、显隐设置
+  功能：展示能力图谱的统计数据和关联关系，支持班级筛选、能力卡片管理、知识点关联、开放班级
   依赖：ECharts 图表库、Font Awesome 图标库、common.css、targetMapTeacher.css
 -->
 
@@ -95,11 +95,11 @@
 
     <!-- ==================== 弹窗容器 ==================== -->
 
-    <!-- 显隐设置弹窗：控制能力卡片对哪些班级可见 -->
+    <!-- 开放班级弹窗：控制能力卡片对哪些班级可见 -->
     <div class="modal-overlay" id="visibility-modal-overlay">
         <div class="modal-content visibility-modal">
             <div class="modal-header">
-                <h3 id="visibility-modal-title">显隐设置</h3>
+                <h3 id="visibility-modal-title">开放班级</h3>
                 <button class="modal-close" id="visibility-modal-close">
                     <i class="fas fa-times"></i>
                 </button>
@@ -108,7 +108,7 @@
                 <div class="visibility-setting">
                     <div class="visibility-title" id="visibility-ability-name"></div>
                     <div class="visibility-card">
-                        <p class="visibility-subtitle">开放班级</p>
+                        <!-- <p class="visibility-subtitle">开放班级</p> -->
                         <div class="visibility-checkboxes" id="visibility-checkboxes">
                             <label class="checkbox-item checkbox-all">
                                 <input type="checkbox" id="visibility-all-classes">
