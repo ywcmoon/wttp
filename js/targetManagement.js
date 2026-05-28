@@ -353,13 +353,13 @@
      * 九、初始化入口
      * ============================================================ */
 
-    function init() {
+    async function init() {
         loadData();
         initTagFilter();
         bindEvents();
         renderTable();
 
-        abilityEditor = new AbilityEdit({
+        abilityEditor = await new AbilityEdit({
             getAbilities: function () { return abilities; },
             saveAbilities: saveAbilities,
             getTags: function () { return tags; },

@@ -1424,12 +1424,12 @@
      * 应用初始化
      * 加载数据 → 初始化班级筛选器 → 初始化图表 → 渲染所有视图
      */
-    function init() {
+    async function init() {
         loadData();
         initClassSelector();
         initChart();
 
-        abilityEditor = new AbilityEdit({
+        abilityEditor = await new AbilityEdit({
             getAbilities: function () { return abilities; },
             saveAbilities: function () { saveData(); },
             getTags: function () {
