@@ -56,6 +56,9 @@
     /** @type {Array} 能力条目列表 */
     var abilities = [];
 
+    /** @type {Array<string>} 标签列表 */
+    var tags = [];
+
     /** @type {string|null} 当前选中的能力 ID */
     var selectedAbilityId = null;
 
@@ -70,6 +73,9 @@
 
     /** @type {number} 拖拽排序起始 Y 坐标 */
     var dragStartY = 0;
+
+    /** @type {Object|null} 能力编辑公共模块实例 */
+    var abilityEditor = null;
 
     // --- 1.3 SVG 图谱状态 ---
 
@@ -140,29 +146,11 @@
     var visibilityCancel = document.getElementById('visibility-btn-cancel');
     var visibilityConfirm = document.getElementById('visibility-btn-confirm');
 
-    var knowledgeModal = document.getElementById('knowledge-modal-overlay');
-    var knowledgeModalClose = document.getElementById('knowledge-modal-close');
-    var knowledgeTreeContainer = document.getElementById('knowledge-tree');
-    var knowledgeTreeCount = document.getElementById('knowledge-tree-count');
-    var knowledgeSelectedCount = document.getElementById('knowledge-selected-count');
-    var knowledgeSelectedList = document.getElementById('knowledge-selected-list');
-    var knowledgeCancel = document.getElementById('knowledge-btn-cancel');
-    var knowledgeConfirm = document.getElementById('knowledge-btn-confirm');
+    var knowledgeModal, knowledgeModalClose, knowledgeTreeContainer, knowledgeTreeCount, knowledgeSelectedCount, knowledgeSelectedList, knowledgeCancel, knowledgeConfirm;
 
-    var confirmModal = document.getElementById('confirm-modal-overlay');
-    var confirmText = document.getElementById('confirm-text');
-    var confirmClose = document.getElementById('confirm-modal-close');
-    var confirmCancel = document.getElementById('confirm-btn-cancel');
-    var confirmConfirm = document.getElementById('confirm-btn-confirm');
-
-    /** @type {string|null} 当前正在编辑知识点关联的能力 ID */
     var currentEditingAbilityId = null;
 
-    /** @type {Array<string>} 知识点选择弹窗中的临时选中 ID 列表 */
     var tempSelectedKnowledge = [];
-
-    /** @type {Function|null} 确认弹窗的回调函数 */
-    var confirmCallback = null;
 
     /* ============================================================
      * 二、数据加载与持久化
@@ -188,6 +176,9 @@
             ];
             saveData();
         }
+
+        var storedTags = StorageManager.get('targetTags', null);
+        tags = storedTags || ['标签1', '标签2', '标签3'];
     }
 
     /**
@@ -457,7 +448,7 @@
 
         item.querySelector('.target_dele').addEventListener('click', function (e) {
             e.stopPropagation();
-            showConfirm('该内容及其与知识点的关联关系将一并删除，确认删除？', function () {
+            abilityEditor.confirm('该内容及其与知识点的关联关系将一并删除，确认删除？', function () {
                 removeAbility(ability.id);
             });
         });
@@ -465,6 +456,13 @@
         item.querySelector('.target_display').addEventListener('click', function (e) {
             e.stopPropagation();
             showVisibilityModal(ability.id);
+        });
+
+        item.querySelector('.target_edit').addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (abilityEditor) {
+                abilityEditor.open(ability.id);
+            }
         });
 
         item.querySelector('.target_drag').addEventListener('mousedown', function (e) {
@@ -1368,18 +1366,6 @@
      * 十二、确认弹窗
      * ============================================================ */
 
-    /**
-     * 显示通用确认弹窗
-     *
-     * @param {string} text - 确认提示文本
-     * @param {Function} callback - 确认后的回调函数
-     */
-    function showConfirm(text, callback) {
-        confirmText.textContent = text;
-        confirmCallback = callback;
-        confirmModal.classList.add('show');
-    }
-
     /* ============================================================
      * 十三、事件绑定与初始化
      * ============================================================ */
@@ -1423,47 +1409,6 @@
         visibilityModal.classList.remove('show');
     });
 
-    // --- 知识点关联编辑弹窗事件 ---
-
-    knowledgeModalClose.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
-    knowledgeCancel.addEventListener('click', function () { knowledgeModal.classList.remove('show'); });
-
-    /**
-     * 知识点弹窗确认按钮 - 保存选中的知识点到当前编辑的能力
-     */
-    knowledgeConfirm.addEventListener('click', function () {
-        if (currentEditingAbilityId) {
-            var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
-            if (ability) {
-                ability.knowledgeIds = tempSelectedKnowledge.slice();
-                ability.knowledgeCount = tempSelectedKnowledge.length;
-                saveData();
-                renderAll();
-            }
-        }
-        knowledgeModal.classList.remove('show');
-    });
-
-    /**
-     * 关联知识点按钮 - 打开知识点选择弹窗
-     */
-    knowledgeAssociBtn.addEventListener('click', function () {
-        if (!selectedAbilityId) return;
-        currentEditingAbilityId = selectedAbilityId;
-        var ability = abilities.find(function (a) { return a.id === selectedAbilityId; });
-        showKnowledgeModal(ability ? ability.knowledgeIds : []);
-    });
-
-    // --- 确认弹窗事件 ---
-
-    confirmClose.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
-    confirmCancel.addEventListener('click', function () { confirmModal.classList.remove('show'); confirmCallback = null; });
-    confirmConfirm.addEventListener('click', function () {
-        confirmModal.classList.remove('show');
-        if (confirmCallback) confirmCallback();
-        confirmCallback = null;
-    });
-
     // --- 导航按钮 ---
 
     /**
@@ -1483,6 +1428,58 @@
         loadData();
         initClassSelector();
         initChart();
+
+        abilityEditor = new AbilityEdit({
+            getAbilities: function () { return abilities; },
+            saveAbilities: function () { saveData(); },
+            getTags: function () {
+                return tags;
+            },
+            saveTags: function () {
+                StorageManager.set('targetTags', tags);
+            },
+            getKnowledgeTree: function () { return loadKnowledgeTree(); },
+            onSaved: function (ability) { renderAll(); },
+            tagColors: ['#F77763', '#67c23a', '#5AC482', '#409eff', '#e6a23c']
+        });
+
+        knowledgeModal = document.getElementById('knowledge-modal-overlay');
+        knowledgeModalClose = document.getElementById('knowledge-modal-close');
+        knowledgeTreeContainer = document.getElementById('knowledge-tree');
+        knowledgeTreeCount = document.getElementById('knowledge-tree-count');
+        knowledgeSelectedCount = document.getElementById('knowledge-selected-count');
+        knowledgeSelectedList = document.getElementById('knowledge-selected-list');
+        knowledgeCancel = document.getElementById('knowledge-btn-cancel');
+        knowledgeConfirm = document.getElementById('knowledge-btn-confirm');
+
+        knowledgeModalClose.addEventListener('click', function () {
+            window._abilityEditKnowledgeMode = false;
+            knowledgeModal.classList.remove('show');
+        });
+        knowledgeCancel.addEventListener('click', function () {
+            window._abilityEditKnowledgeMode = false;
+            knowledgeModal.classList.remove('show');
+        });
+        knowledgeConfirm.addEventListener('click', function () {
+            if (window._abilityEditKnowledgeMode) return;
+            if (currentEditingAbilityId) {
+                var ability = abilities.find(function (a) { return a.id === currentEditingAbilityId; });
+                if (ability) {
+                    ability.knowledgeIds = tempSelectedKnowledge.slice();
+                    ability.knowledgeCount = tempSelectedKnowledge.length;
+                    saveData();
+                    renderAll();
+                }
+            }
+            knowledgeModal.classList.remove('show');
+        });
+        knowledgeAssociBtn.addEventListener('click', function () {
+            if (!selectedAbilityId) return;
+            currentEditingAbilityId = selectedAbilityId;
+            var ability = abilities.find(function (a) { return a.id === selectedAbilityId; });
+            showKnowledgeModal(ability ? ability.knowledgeIds : []);
+        });
+
         renderAll();
     }
 

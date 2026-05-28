@@ -126,57 +126,7 @@
         </div>
     </div>
 
-    <!-- 知识点关联弹窗：树形结构选择关联的知识点 -->
-    <div class="modal-overlay" id="knowledge-modal-overlay">
-        <div class="modal-content knowledge-modal">
-            <div class="modal-header">
-                <h3>关联知识点</h3>
-                <button class="modal-close" id="knowledge-modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="knowledge-modal-content">
-                    <div class="knowledge-modal-left">
-                        <div class="knowledge-modal-left-header">
-                            <span class="knowledge-count">共 <em id="knowledge-tree-count">0</em> 个知识点</span>
-                        </div>
-                        <ul class="knowledge-tree" id="knowledge-tree"></ul>
-                    </div>
-                    <div class="knowledge-modal-right">
-                        <div class="knowledge-selected-header">
-                            已选中 <span id="knowledge-selected-count">0</span> 个
-                        </div>
-                        <div class="knowledge-selected-list" id="knowledge-selected-list"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" id="knowledge-btn-cancel">取消</button>
-                <button class="btn btn-confirm" id="knowledge-btn-confirm">确定</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 通用确认弹窗：用于删除等操作的二次确认 -->
-    <div class="modal-overlay" id="confirm-modal-overlay">
-        <div class="modal-content confirm-modal">
-            <div class="modal-header">
-                <h3>提示</h3>
-                <button class="modal-close" id="confirm-modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="confirm-text" id="confirm-text"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-cancel" id="confirm-btn-cancel">取消</button>
-                <button class="btn btn-confirm" id="confirm-btn-confirm">确定</button>
-            </div>
-        </div>
-    </div>
-
+    <script src="js/abilityEdit.js"></script>
     <script src="js/targetMapTeacher.js"></script>
 </body>
 

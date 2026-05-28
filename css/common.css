@@ -593,7 +593,7 @@ body {
 
 /* --- 3.10 弹窗组件 --- */
 
-/* 遮罩层：固定定位、半透明黑色背景、居中 */
+/* 遮罩层：固定定位、半透明背景、居中 */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -601,8 +601,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
+    background: rgba(16, 26, 41, 0.76);
+    z-index: 1000;
     align-items: center;
     justify-content: center;
 }
@@ -611,107 +611,72 @@ body {
     display: flex;
 }
 
-.modal-overlay.hidden {
-    display: none;
-}
-
-/* 弹窗主体：白色背景、圆角、最大高度限制、滚动 */
-.modal {
+/* 弹窗内容：白色背景、圆角、下滑动画 */
+.modal-content {
     background: #fff;
     border-radius: 8px;
-    width: 600px;
-    max-width: 90%;
-    max-height: 90vh;
-    overflow: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: modalSlideIn 0.3s;
 }
 
-/* 弹窗头部：标题与关闭按钮 */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 弹窗头部 */
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #e4e7ed;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f2f2f2;
 }
 
-.modal-title {
-    font-size: 18px;
+.modal-header h3 {
+    font-size: 16px;
+    color: #181e33;
     font-weight: 600;
-    color: #303133;
-    margin: 0;
 }
 
-/* 关闭按钮：大号字体、悬停变蓝 */
+/* 弹窗关闭按钮 */
 .modal-close {
-    font-size: 24px;
-    color: #909399;
-    cursor: pointer;
-    line-height: 1;
-    transition: color 0.3s;
     background: none;
     border: none;
+    color: #acb4bf;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.3s;
 }
 
 .modal-close:hover {
-    color: #409eff;
+    color: #3a8bff;
 }
 
 /* 弹窗内容区 */
 .modal-body {
-    padding: 20px;
+    padding: 0;
 }
 
-/* 弹窗底部：按钮右对齐 */
+/* 弹窗底部 */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 20px;
-    border-top: 1px solid #e4e7ed;
+    padding: 16px 24px;
+    border-top: 1px solid #f2f2f2;
 }
 
-/* --- 3.11 表单组件 --- */
-
-/* 表单组：底部间距 */
-.form-group {
-    margin-bottom: 20px;
-}
-
-/* 表单标签：块级、加粗 */
-.form-group label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #606266;
-    margin-bottom: 8px;
-}
-
-/* 必填标记：红色星号 */
-.required {
-    color: #f56c6c;
-}
-
-/* 表单输入框：全宽、边框、聚焦高亮 */
-.form-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #606266;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #409eff;
-}
-
-/* 通用按钮：内边距、圆角、过渡 */
+/* 弹窗按钮 */
 .btn {
-    padding: 10px 24px;
+    padding: 8px 24px;
     border-radius: 4px;
     font-size: 14px;
     cursor: pointer;
@@ -719,26 +684,398 @@ body {
     border: none;
 }
 
-/* 取消按钮：浅灰背景 */
 .btn-cancel {
-    background: #f5f7fa;
-    color: #606266;
-    border: 1px solid #e4e7ed;
+    background: #fff;
+    color: #3a8bff;
+    border: 1px solid #8cbbff;
 }
 
 .btn-cancel:hover {
-    background: #e4e7ed;
-    border-color: #c0c4cc;
+    background: #f0f6ff;
 }
 
-/* 确认按钮：蓝色背景、白色文字 */
 .btn-confirm {
-    background: #409eff;
+    background: linear-gradient(322deg, #5a33ff 0%, #6cc7ff 100%);
     color: #fff;
+    box-shadow: 0 2px 9px rgba(103, 161, 255, 0.5);
 }
 
 .btn-confirm:hover {
-    background: #66b1ff;
+    opacity: 0.9;
+}
+
+/* 文字按钮 */
+.btn-text {
+    background: none;
+    border: none;
+    color: #3a8bff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+}
+
+.btn-text:hover {
+    opacity: 0.8;
+}
+
+/* 小按钮 */
+.btn-sm {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* 添加按钮：虚线边框 */
+.btn-add {
+    background: none;
+    border: 1px dashed #3a8bff;
+    color: #3a8bff;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.btn-add:hover {
+    background: #f0f6ff;
+}
+
+/* --- 编辑弹窗 --- */
+
+.create-modal {
+    width: 600px;
+    min-width: 600px;
+}
+
+/* 表单组 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #303133;
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #f56c6c;
+}
+
+.form-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #606266;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    border-color: #3a8bff;
+}
+
+.form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #606266;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-textarea:focus {
+    border-color: #3a8bff;
+}
+
+.form-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 32px;
+}
+
+.form-tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #fff;
+}
+
+.form-tag-item .tag-remove {
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.form-tag-item .tag-remove:hover {
+    opacity: 1;
+}
+
+/* --- 标签管理弹窗 --- */
+
+.tag-modal {
+    width: 840px;
+    min-width: 840px;
+}
+
+.tag-modal-content {
+    display: flex;
+    height: 470px;
+}
+
+.tag-modal-left {
+    flex: 1;
+    border-right: 1px solid #f2f2f2;
+    display: flex;
+    flex-direction: column;
+}
+
+.tag-modal-left-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.tag-search {
+    flex: 1;
+}
+
+.tag-search-input {
+    width: 100%;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 12px;
+    outline: none;
+}
+
+.tag-search-input:focus {
+    border-color: #3a8bff;
+}
+
+.tag-new-form {
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f6ff;
+}
+
+.tag-new-form .form-input {
+    flex: 1;
+    height: 30px;
+}
+
+.tag-new-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.tag-list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.tag-list li {
+    position: relative;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.tag-list li:hover {
+    background: #f0f6ff;
+}
+
+.tag-list li .tag-name {
+    flex: 1;
+    font-size: 14px;
+    color: #181e33;
+}
+
+.tag-list li .tag-check {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #c5cfdb;
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.tag-list li .tag-check.checked {
+    background: #3a8bff;
+    border-color: #3a8bff;
+}
+
+.tag-list li .tag-check.checked::after {
+    content: '\2713';
+    color: #fff;
+    font-size: 12px;
+}
+
+.tag-list li .tag-actions {
+    display: none;
+    gap: 8px;
+    margin: 0 8px;
+}
+
+.tag-list li:hover .tag-actions {
+    display: flex;
+}
+
+.tag-list li .tag-actions a {
+    font-size: 12px;
+    color: #3a8bff;
+    cursor: pointer;
+}
+
+.tag-list li .tag-actions a.delete {
+    color: #f56c6c;
+}
+
+.tag-modal-right {
+    width: 259px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tag-selected-header {
+    padding: 0 24px;
+    height: 50px;
+    line-height: 50px;
+    font-size: 12px;
+    color: #a8a8b3;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.tag-selected-list {
+    flex: 1;
+    padding: 10px 24px;
+    overflow-y: auto;
+}
+
+.tag-selected-item {
+    position: relative;
+    display: inline-block;
+    margin: 0 12px 12px 0;
+    padding: 4px 9px;
+    line-height: 20px;
+    font-size: 14px;
+    color: #131b26;
+    border: dashed #d5e2f1 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tag-selected-item:hover {
+    opacity: 0.7;
+}
+
+.tag-selected-item .tag-remove-btn {
+    display: none;
+    width: 16px;
+    height: 16px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag-selected-item:hover .tag-remove-btn {
+    display: flex;
+}
+
+.tag-selected-item .tag-remove-btn::after {
+    content: '\d7';
+    color: #fff;
+    font-size: 12px;
+    line-height: 1;
+}
+
+/* --- 知识点选择弹窗 --- */
+
+.knowledge-modal {
+    width: 840px;
+    min-width: 840px;
+}
+
+.knowledge-modal-content {
+    display: flex;
+    height: 470px;
+}
+
+.knowledge-modal-left {
+    flex: 1;
+    border-right: 1px solid #f2f2f2;
+    display: flex;
+    flex-direction: column;
+}
+
+.knowledge-modal-left-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #f2f2f2;
+}
+
+.knowledge-count {
+    font-size: 14px;
+    color: #8a8b99;
+}
+
+.knowledge-count em {
+    font-style: normal;
+    color: #3a8bff;
+}
+
+/* --- 确认弹窗 --- */
+
+.confirm-modal {
+    width: 440px;
+    min-width: 440px;
+}
+
+.confirm-text {
+    padding: 24px;
+    font-size: 14px;
+    color: #474c59;
+    line-height: 1.8;
 }
 
 /* --- 3.12 知识树组件 --- */
