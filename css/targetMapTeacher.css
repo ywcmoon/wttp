@@ -250,7 +250,6 @@ body {
     align-items: center;
     height: 20px;
     line-height: 20px;
-    margin-bottom: 20px;
 }
 
 /* 目标列表头部文字 */
@@ -279,12 +278,13 @@ body {
     opacity: 0.8;
 }
 
-/* 目标列表主体：固定宽度380px、最大高度780px、可滚动 */
+/* 目标列表主体 */
 .target_body {
-    width: 380px;
     max-height: 780px;
     overflow-y: auto;
-    padding-right: 20px;
+}
+.target_cont .target_gap{
+    padding: 5px 0;
 }
 
 /* 滚动条样式 */
@@ -314,7 +314,7 @@ body {
 }
 
 /* 卡片间距 */
-.target_item + .target_item {
+.target_item+.target_item {
     margin-top: 24px;
 }
 
@@ -418,8 +418,7 @@ body {
 }
 
 /* 目标标签列表 */
-.target_label {
-    margin-top: 6px;
+.target_label { 
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -450,30 +449,47 @@ body {
     -webkit-box-orient: vertical;
 }
 
-/* 目标查看详情按钮 */
-.target_display {
-    position: relative;
-    margin-top: 12px;
-    color: #3a8bff;
-    font-size: 14px;
-    line-height: 20px;
+.target_operate{
     text-align: right;
-    cursor: pointer;
-    display: inline-block;
-    padding: 4px 8px;
-    margin-right: -8px;
+    color: #3a8bff;
+      font-size: 14px;
+       line-height: 20px;
 }
 
-.target_display:hover {
+
+/* 目标查看详情按钮 */
+.target_display, .target_edit { 
+    /* position: relative; */
+    /* margin-top: 12px;  */
+    /* font-size: 14px; */ 
+    cursor: pointer;
+    /* display: inline-block; */
+    padding: 4px 8px;
+    /* margin-right: -8px; */
+}
+
+ 
+.target_display:hover, .target_edit:hover {
     opacity: 0.8;
     background: rgba(58, 139, 255, 0.08);
     border-radius: 4px;
+}
+
+
+.target-item {
+    margin: 1rem 0;
+
+}
+
+.target-item .target_cont {
+    background-color: rgb(240, 251, 239)  
 }
 
 /* 目标卡片激活状态：渐变蓝色背景、阴影 */
 .target_active {
     background: linear-gradient(45deg, #1273ff, #7ad0ff) !important;
     box-shadow: 0 3px 12px rgba(112, 154, 217, 0.2);
+    border: 1px solid #7ad0ff;
 }
 
 /* 激活状态右侧箭头指示器 */
@@ -656,6 +672,7 @@ body {
         opacity: 0;
         transform: translateY(-50px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -820,12 +837,12 @@ body {
 }
 
 /* 复选框选中状态：蓝色填充、对勾图标 */
-.checkbox-item input[type="checkbox"]:checked + .checkbox-custom {
+.checkbox-item input[type="checkbox"]:checked+.checkbox-custom {
     background: #3a8bff;
     border-color: #3a8bff;
 }
 
-.checkbox-item input[type="checkbox"]:checked + .checkbox-custom::after {
+.checkbox-item input[type="checkbox"]:checked+.checkbox-custom::after {
     content: '\2713';
     color: #fff;
     font-size: 12px;
@@ -893,6 +910,7 @@ body {
 /* 中等屏幕适配（≤1200px）：双栏改为纵向 */
 
 @media (max-width: 1200px) {
+
     /* 双栏纵向排列 */
     .between {
         flex-direction: column;
@@ -920,6 +938,7 @@ body {
 /* 移动端适配（≤768px） */
 
 @media (max-width: 768px) {
+
     /* 页面内边距缩小 */
     .ability-page {
         padding: 12px;

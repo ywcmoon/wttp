@@ -428,27 +428,30 @@
 
         var tagsHtml = '';
         if (ability.tags && ability.tags.length > 0) {
-            tagsHtml = '<ul class="target_label">' + ability.tags.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
+            tagsHtml = '<ul class="target_label target_gap">' + ability.tags.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
         }
 
         var descHtml = '';
         if (ability.desc) {
-            descHtml = '<div class="target_text">' + ability.desc + '</div>';
+            descHtml = '<p class="target_text target_gap">' + ability.desc + '</p>';
         }
 
         item.innerHTML =
             '<a class="target_drag" href="javascript:"></a>' +
             '<a class="target_dele" data-id="' + ability.id + '"></a>' +
             '<div class="target_cont">' +
-                '<span class="target_points">知识点数：' + ability.knowledgeCount + '</span>' +
-                '<h3 class="target_title">' + ability.name + '</h3>' +
+                '<span class="target_points target_gap">知识点数：' + ability.knowledgeCount + '</span>' +
+                '<h3 class="target_title target_gap">' + ability.name + '</h3>' +
                 tagsHtml +
                 descHtml +
-                '<p class="target_display" data-id="' + ability.id + '">开放班级</p>' +
+                '<p class="target_operate" >'+ 
+                    '<span class="target_display" data-id="' + ability.id + '">开放班级</span>' +
+                    '<span class="target_edit" data-id="' + ability.id + '">编辑</span>' +
+                '</p>'
             '</div>';
 
         item.addEventListener('click', function (e) {
-            if (e.target.closest('.target_dele') || e.target.closest('.target_display') || e.target.closest('.target_drag')) return;
+            if (e.target.closest('.target_dele') || e.target.closest('.target_display')|| e.target.closest('.target_edit') || e.target.closest('.target_drag')) return;
             selectAbility(ability.id);
         });
 
